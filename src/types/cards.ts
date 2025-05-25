@@ -66,6 +66,7 @@ export interface HandResult {
   bankerPair: boolean;
   playerTotal: number;
   bankerTotal: number;
+  natural: boolean;
   timestamp: number;
   handNumber: number;
 }

@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { useBaccaratStore } from './stores/baccaratStore';
 import type { Suit } from './types/cards';
+import { testSupabaseConnection } from './utils/testSupabase';
 
 const store = useBaccaratStore();
 
@@ -30,8 +31,11 @@ const getEdgeClass = (edge: number): string => {
   return 'edge-neutral';
 };
 
-onMounted(() => {
+onMounted(async () => {
   store.initializeShoe();
+
+  // Test Supabase connection
+  await testSupabaseConnection();
 });
 </script>
 

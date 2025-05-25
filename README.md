@@ -31,9 +31,12 @@ A sophisticated Vue 3 application for advanced baccarat analysis, featuring edge
 - **Vue 3**: Modern reactive framework with Composition API
 - **TypeScript**: Type-safe development
 - **Pinia**: State management
+- **Supabase**: PostgreSQL database with real-time capabilities
 - **Tailwind CSS**: Utility-first CSS framework
 - **Chart.js**: Data visualization
 - **Vite**: Fast build tool
+- **ESLint & Prettier**: Code quality and formatting
+- **Husky**: Git hooks for code quality
 
 ## Installation
 
@@ -45,12 +48,34 @@ cd improved_baccarat_assistant
 # Install dependencies
 yarn install
 
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
 # Start development server
 yarn dev
 
 # Build for production
 yarn build
+
+# Run linting and formatting
+yarn lint
+yarn format
 ```
+
+## Database Setup
+
+This application uses Supabase for data persistence. Follow the comprehensive setup guide:
+
+**📖 [Supabase Setup Guide](./SUPABASE_SETUP.md)**
+
+The database provides:
+
+- **Persistent Game Sessions**: Save and resume baccarat games
+- **Hand History**: Complete tracking of all hands played
+- **Burned Card Analysis**: Store and analyze burned cards impact
+- **Edge Calculation History**: Track edge calculations over time
+- **Pattern Analysis**: Historical pattern recognition and trends
 
 ## Usage
 
@@ -127,16 +152,31 @@ src/
 ├── types/              # TypeScript type definitions
 ├── composables/        # Vue composables
 ├── utils/              # Utility functions
+├── services/           # External service integrations
+├── lib/                # Third-party library configurations
 └── views/              # Page components
 ```
+
+### Code Quality
+
+This project includes comprehensive code quality tools:
+
+- **ESLint**: Modern flat config with Vue 3 + TypeScript rules
+- **Prettier**: Consistent code formatting
+- **Husky**: Pre-commit hooks for quality assurance
+- **Commitlint**: Conventional commit message enforcement
+- **TypeScript**: Strict type checking for better reliability
 
 ### Adding New Features
 
 1. Define types in `src/types/`
-2. Add store actions in `src/stores/baccaratStore.ts`
-3. Create composables for complex logic
-4. Build UI components
-5. Add tests
+2. Add database schema changes (if needed)
+3. Update `src/services/databaseService.ts` for data operations
+4. Add store actions in `src/stores/baccaratStore.ts`
+5. Create composables for complex logic
+6. Build UI components
+7. Add tests
+8. Ensure code passes linting and formatting checks
 
 ## Contributing
 
