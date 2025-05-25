@@ -1,7 +1,11 @@
 <template>
   <div
     class="playing-card-container"
-    :class="[`card-${size}`, { 'card-clickable': clickable }, cardStateClass]"
+    :class="[
+      `card-${size}`,
+      { 'card-clickable': clickable, 'card-horizontal': horizontal },
+      cardStateClass,
+    ]"
     @click="handleClick"
   >
     <svg class="playing-card-svg" viewBox="0 0 169 244" xmlns="http://www.w3.org/2000/svg">
@@ -475,6 +479,7 @@ interface Props {
   showCount?: boolean;
   count?: number;
   disabled?: boolean;
+  horizontal?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -483,6 +488,7 @@ const props = withDefaults(defineProps<Props>(), {
   isCardBack: false,
   showCount: false,
   disabled: false,
+  horizontal: false,
 });
 
 const emit = defineEmits<{
@@ -585,6 +591,11 @@ const handleClick = () => {
 .card-disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.card-horizontal {
+  transform: rotate(90deg);
+  transform-origin: center;
 }
 
 .card-empty .playing-card-svg {

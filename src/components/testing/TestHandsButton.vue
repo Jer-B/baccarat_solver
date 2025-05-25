@@ -1,5 +1,5 @@
 <template>
-  <div class="flex gap-2">
+  <div class="flex gap-2 flex-wrap">
     <button
       @click="addSampleHands"
       class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
@@ -11,6 +11,20 @@
       class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
     >
       Add Random Hand
+    </button>
+    <button
+      @click="setupEdgeSortingDemo"
+      class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
+      title="Simulate high-card rich shoe for edge sorting advantage"
+    >
+      Edge Sorting Demo
+    </button>
+    <button
+      @click="setupPairBettingDemo"
+      class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+      title="Simulate favorable conditions for pair betting"
+    >
+      Pair Betting Demo
     </button>
   </div>
 </template>
@@ -134,6 +148,14 @@ function addSampleHands() {
   sampleHands.forEach(hand => {
     store.addHandResult(hand);
   });
+}
+
+function setupEdgeSortingDemo() {
+  store.setupEdgeSortingDemo();
+}
+
+function setupPairBettingDemo() {
+  store.setupPairBettingDemo();
 }
 
 function addRandomHand() {

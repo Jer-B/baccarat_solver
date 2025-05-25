@@ -18,6 +18,8 @@ A sophisticated Vue 3 application for advanced baccarat analysis, featuring edge
 - **Confidence Levels**: Statistical confidence in edge calculations
 - **Penetration Analysis**: Track shoe penetration and its impact on accuracy
 - **Conditional Probabilities**: Calculate probabilities based on recent outcomes
+- **Monte Carlo Simulations**: Advanced risk analysis and outcome projections
+- **Kelly Criterion**: Optimal bet sizing calculations for bankroll management
 
 ### User Interface
 
@@ -102,6 +104,376 @@ The database provides:
 1. Enable "Edge Sorting" in settings
 2. Mark cards as high/low based on orientation
 3. Monitor edge sorting advantage
+
+## Monte Carlo Simulations & Advanced Analytics
+
+The application features sophisticated Monte Carlo simulation capabilities for risk analysis and outcome projections.
+
+### Monte Carlo Features
+
+#### **Automatic Simulation Triggers**
+
+The Monte Carlo system runs simulations automatically under two conditions:
+
+1. **Interval-Based Auto-Run**
+
+   - Configurable to run every N hands (default: 3 hands)
+   - Can be enabled/disabled via checkbox
+   - Maintains consistent simulation schedule
+   - Shows countdown: "Auto-run: In 2 hands"
+
+2. **Edge-Triggered Auto-Run**
+   - Monitors all edge calculations continuously
+   - Triggers when significant changes detected
+   - Works regardless of auto-run on/off setting
+   - Shows status: "Edge-triggered" when activated
+
+#### **Edge Change Thresholds**
+
+Simulations trigger automatically when edges change by:
+
+- **Player/Banker Edges**: ≥0.5% change
+- **Pair Bet Edges**: ≥2.0% change (more volatile)
+- **Edge Sorting Advantage**: ≥1.0% change
+
+#### **Smart Logic**
+
+- **No Double-Triggers**: Prevents multiple runs on same hand
+- **Pattern Preservation**: Regular intervals continue unaffected
+- **Universal Monitoring**: Edge detection works with auto-run on/off
+- **Threshold-Based**: Only triggers on meaningful changes
+
+### Simulation Results
+
+Each Monte Carlo run provides:
+
+- **Expected Value**: Projected outcome over 100 hands
+- **Probability of Profit**: Likelihood of positive returns
+- **95% Confidence Range**: Statistical outcome boundaries
+- **Risk of Ruin**: Probability of losing entire bankroll
+
+### Kelly Criterion & Optimal Betting
+
+Advanced bankroll management using the Kelly Criterion for mathematically optimal bet sizing:
+
+#### **Real-Time Kelly Calculations**
+
+- **Optimal Bet Size**: Precise dollar amount based on current bankroll
+- **Kelly Percentage**: Recommended percentage of total bankroll
+- **Win Probability**: Dynamic calculation based on current edges
+- **Average Win/Loss**: Historical performance metrics
+- **Edge Analysis**: Current mathematical advantage
+
+#### **Dynamic Updates**
+
+The Kelly system updates automatically when:
+
+- **Cards are dealt/burned**: Shoe composition changes
+- **Betting statistics change**: Win/loss history updates
+- **Edge calculations shift**: House edge modifications
+- **Significant changes detected**: ≥25% bet size changes trigger visual indicators
+
+#### **Visual Change Indicators**
+
+- **Kelly Notifications**: Temporary notifications for significant changes (5-second display)
+- **Change Badges**: Green (↗️ increase) or Red (↘️ decrease) percentage indicators
+- **Animation Effects**: Subtle pulsing and bouncing for attention
+- **Previous Value Display**: Shows last bet size for comparison
+
+#### **Safety Features**
+
+- **High Kelly Warnings**: Alerts when Kelly percentage >25% of bankroll
+- **Fractional Kelly Recommendation**: Suggests 25-50% of calculated Kelly for safety
+- **Risk Assessment**: Integrated with Monte Carlo risk scenarios
+- **Bankroll Protection**: Conservative approach to prevent over-betting
+
+#### **Kelly Formula Implementation**
+
+```
+f = (bp - q) / b
+
+Where:
+f = Kelly percentage
+b = Odds received (average win / average loss)
+p = Probability of winning
+q = Probability of losing (1 - p)
+```
+
+#### **Practical Usage**
+
+1. **Monitor Real-Time Updates**: Kelly bet size updates with each card dealt
+2. **Follow Change Indicators**: Pay attention to significant change notifications
+3. **Consider Fractional Kelly**: Use 25-50% of calculated amount for safety
+4. **Integrate with Risk Analysis**: Combine with Monte Carlo risk scenarios
+5. **Adjust for Bankroll**: Ensure bet sizes align with actual bankroll
+
+### Usage Modes
+
+#### **Auto-Run Enabled**
+
+```
+☑️ Auto-run every [3] hands
+Status: "Auto-run: In 2 hands" or "Auto-run: Edge-triggered"
+```
+
+#### **Auto-Run Disabled**
+
+```
+☐ Auto-run every [3] hands (greyed out)
+Status: "Edge-monitoring: Edge-monitoring active" or "Edge-monitoring: Edge-triggered"
+```
+
+### Configuration
+
+1. **Enable/Disable Auto-Run**: Check/uncheck the auto-run checkbox
+2. **Set Interval**: Adjust the number field (1-20 hands)
+3. **Manual Override**: Click "Run Monte Carlo" anytime
+4. **Instant Changes**: All settings take effect immediately
+
+### Visual Indicators
+
+- **Purple Badges**: Auto-run mode active
+- **Orange Badges**: Edge-monitoring only mode
+- **Countdown Display**: Shows hands until next scheduled run
+- **Trigger Status**: Indicates reason for last simulation
+
+### Performance Metrics
+
+The system calculates advanced performance analytics:
+
+- **Sharpe Ratio**: Risk-adjusted return measurement
+- **Maximum Drawdown**: Largest peak-to-trough decline
+- **Profit Factor**: Gross profit ÷ Gross loss ratio
+- **Recovery Factor**: Net profit ÷ Maximum drawdown
+- **Variance Analysis**: Standard deviation and risk metrics
+
+### Risk Scenario Detection
+
+The Monte Carlo system automatically detects and visually highlights high-risk scenarios without intrusive alerts:
+
+#### **Risk Categories**
+
+1. **High Risk of Ruin** ⚠️
+
+   - Triggers: ≥15% chance of losing entire bankroll
+   - Critical: ≥30% risk of ruin
+   - Visual: Red/orange border on risk metrics
+
+2. **Low Profit Probability** 📉
+
+   - Triggers: ≤40% chance of profit
+   - Critical: ≤25% profit probability
+   - Visual: Color-coded probability display
+
+3. **Negative Expected Value** 💸
+
+   - Triggers: Any negative expected value
+   - Critical: ≤-$100 expected loss
+   - Visual: Red highlighting with warning icons
+
+4. **High Volatility** 🎢
+   - Triggers: >$500 confidence range spread
+   - Critical: >$1000 range spread
+   - Visual: Yellow borders and volatility indicators
+
+#### **Visual Risk Indicators**
+
+- **Risk Level Badges**: CRITICAL/HIGH/MEDIUM/LOW risk labels
+- **Color-Coded Metrics**: Red (critical), Orange (high), Yellow (medium), Green (low)
+- **Icon Warnings**: Emoji indicators for specific risk types
+- **Border Highlights**: Colored borders around risky metrics
+- **Scenario Details**: Comprehensive risk breakdown with recommendations
+
+#### **Risk Recommendations**
+
+The system provides contextual advice based on detected scenarios:
+
+- **Critical Risk**: "Consider stopping or significantly reducing bet sizes"
+- **High Risk**: "Exercise caution and consider smaller bet sizes"
+- **Medium Risk**: "Monitor closely and adjust strategy as needed"
+
+#### **Real-Time Monitoring**
+
+- **Continuous Assessment**: Risk levels update with each Monte Carlo run
+- **No Intrusive Alerts**: Visual indicators only, no pop-ups or notifications
+- **Comprehensive Coverage**: All major risk factors monitored simultaneously
+- **Actionable Intelligence**: Clear recommendations for risk mitigation
+
+## Advanced Settings & Configuration
+
+The application provides comprehensive configuration options for all major systems, accessible through the **Advanced Settings** panel (⚙️ button).
+
+### Settings Panel Overview
+
+The Advanced Settings panel features three main tabs:
+
+1. **Calculation Triggers**: Edge change detection and auto-calculation settings
+2. **Kelly Optimization**: Kelly Criterion parameters and behavior
+3. **Monte Carlo**: Simulation parameters and risk thresholds
+
+All settings take effect **immediately** upon change, providing real-time control over system behavior.
+
+### Calculation Triggers Configuration
+
+#### **Auto-Calculate Edges**
+
+- **Purpose**: Automatically recalculate edges when conditions change
+- **Default**: Enabled
+- **Impact**: Ensures edge calculations stay current with shoe composition
+
+#### **Edge Change Thresholds**
+
+Configure sensitivity for triggering recalculations:
+
+| Setting            | Default | Range    | Purpose                            |
+| ------------------ | ------- | -------- | ---------------------------------- |
+| Player/Banker Edge | 0.5%    | 0.1%-10% | Main bet edge sensitivity          |
+| Pair Edges         | 0.5%    | 0.1%-10% | Pair bet edge sensitivity          |
+| Edge Sorting       | 0.5%    | 0.1%-10% | Edge sorting advantage sensitivity |
+
+#### **Shoe Composition Triggers**
+
+- **Significant Card Change**: 10% (1%-50%)
+  - Triggers when card composition changes by this percentage
+- **Minimum Penetration**: 0.5 (0.1-1.0)
+  - Only trigger after this much shoe penetration
+
+#### **Quick Presets**
+
+- **Conservative (0.01%)**: Very sensitive, frequent recalculations
+- **Balanced (0.005%)**: Moderate sensitivity (default)
+- **Aggressive (0.001%)**: Extremely sensitive, maximum responsiveness
+
+### Kelly Optimization Configuration
+
+#### **Core Kelly Settings**
+
+| Setting              | Default    | Range    | Purpose                                    |
+| -------------------- | ---------- | -------- | ------------------------------------------ |
+| **Enable Kelly**     | ✓          | On/Off   | Master toggle for Kelly calculations       |
+| **Bankroll Amount**  | $1,000     | $100-$1M | Total bankroll for percentage calculations |
+| **Fractional Kelly** | 0.5 (50%)  | 0.1-1.0  | Safety multiplier for Kelly percentage     |
+| **Max Kelly %**      | 0.25 (25%) | 0.01-0.5 | Maximum percentage of bankroll to bet      |
+
+#### **Kelly Notifications**
+
+- **Change Threshold**: 0.25 (25%) - Notify when bet size changes by this percentage
+- **Auto-Adjust Bet Size**: Off - Automatically adjust recommendations
+
+#### **Kelly Safety Features**
+
+- **Fractional Kelly**: Reduces full Kelly by safety factor (e.g., 50% of calculated)
+- **Maximum Limits**: Caps Kelly percentage regardless of calculation
+- **High Kelly Warnings**: Visual alerts when exceeding safe thresholds
+- **Change Notifications**: 5-second notifications for significant changes
+
+#### **Kelly Presets**
+
+| Preset           | Fractional | Max % | Threshold | Auto-Adjust |
+| ---------------- | ---------- | ----- | --------- | ----------- |
+| **Conservative** | 25%        | 15%   | 50%       | Off         |
+| **Balanced**     | 50%        | 25%   | 25%       | On          |
+| **Aggressive**   | 75%        | 40%   | 15%       | On          |
+
+### Monte Carlo Configuration
+
+#### **Simulation Parameters**
+
+| Setting               | Default | Range    | Purpose                   |
+| --------------------- | ------- | -------- | ------------------------- |
+| **Simulations**       | 10,000  | 1K-100K  | Number of simulation runs |
+| **Hands to Simulate** | 100     | 10-1,000 | Projection horizon        |
+
+**Performance vs. Accuracy Trade-offs:**
+
+- **1K-5K simulations**: Fast but less precise
+- **10K-25K simulations**: Balanced accuracy and speed
+- **50K+ simulations**: High accuracy but slower
+
+#### **Risk Alert Thresholds**
+
+Configure when risk scenarios trigger visual warnings:
+
+| Risk Type                   | Default | Range        | Triggers When                            |
+| --------------------------- | ------- | ------------ | ---------------------------------------- |
+| **High Risk of Ruin**       | 15%     | 1%-50%       | Bankruptcy probability exceeds threshold |
+| **Low Profit Probability**  | 40%     | 10%-80%      | Profit chance falls below threshold      |
+| **Negative Expected Value** | $0      | Any negative | Expected value becomes negative          |
+| **High Volatility**         | $500    | $100-$5K     | Confidence range exceeds threshold       |
+
+#### **Monte Carlo Presets**
+
+| Preset       | Simulations | Hands | Risk Thresholds | Use Case         |
+| ------------ | ----------- | ----- | --------------- | ---------------- |
+| **Fast**     | 5K          | 50    | Relaxed         | Quick estimates  |
+| **Balanced** | 10K         | 100   | Standard        | General use      |
+| **Accurate** | 25K         | 200   | Strict          | Precise analysis |
+
+### Real-Time Configuration Benefits
+
+#### **Immediate Effect**
+
+- All settings changes apply instantly
+- No restart or reload required
+- Real-time feedback on setting impacts
+
+#### **Dynamic Adaptation**
+
+- Adjust sensitivity based on game conditions
+- Fine-tune risk tolerance during play
+- Optimize performance vs. accuracy trade-offs
+
+#### **Contextual Optimization**
+
+- **High-Stakes Games**: Use accurate Monte Carlo, conservative Kelly
+- **Practice Sessions**: Use fast Monte Carlo, aggressive Kelly
+- **Tournament Play**: Use balanced settings with strict risk thresholds
+
+### Configuration Best Practices
+
+#### **For Beginners**
+
+1. Start with **Balanced** presets across all systems
+2. Enable all auto-calculation features
+3. Use conservative Kelly settings (25% fractional)
+4. Monitor risk indicators closely
+
+#### **For Advanced Users**
+
+1. Customize thresholds based on playing style
+2. Use aggressive edge detection for maximum responsiveness
+3. Adjust Kelly parameters based on risk tolerance
+4. Fine-tune Monte Carlo parameters for specific scenarios
+
+#### **For Professional Play**
+
+1. Use accurate Monte Carlo settings (25K+ simulations)
+2. Implement strict risk thresholds
+3. Enable all monitoring and notification features
+4. Regularly review and adjust based on performance
+
+### Settings Persistence
+
+- All settings are automatically saved to browser storage
+- Settings persist across sessions
+- Database integration preserves settings across devices
+- Export/import functionality for settings backup
+
+### Best Practices
+
+1. **Keep Auto-Run Enabled**: Ensures regular risk assessment
+2. **Monitor Edge Triggers**: Pay attention to edge-triggered runs
+3. **Use Kelly Sizing**: Follow optimal bet size recommendations
+4. **Review Confidence Intervals**: Understand outcome ranges
+5. **Track Performance Metrics**: Monitor long-term statistics
+6. **Watch Risk Indicators**: Pay attention to visual risk warnings
+7. **Follow Risk Recommendations**: Adjust strategy based on detected scenarios
+8. **Use Fractional Kelly**: Consider 25-50% of calculated Kelly for safety
+9. **Monitor Kelly Changes**: React to significant bet size change notifications
+10. **Integrate All Systems**: Combine Monte Carlo, Kelly, and risk analysis for optimal decisions
+11. **Customize Settings**: Adjust thresholds and parameters based on your playing style
+12. **Use Presets**: Start with presets and fine-tune based on experience
+13. **Monitor Performance**: Regularly review how settings affect your results
 
 ## Mathematical Background
 

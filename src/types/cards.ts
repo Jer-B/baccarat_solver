@@ -53,8 +53,10 @@ export interface PatternAnalysis {
   streakAnalysis: {
     currentPlayerStreak: number;
     currentBankerStreak: number;
+    currentTieStreak: number;
     longestPlayerStreak: number;
     longestBankerStreak: number;
+    longestTieStreak: number;
   };
 }
 
