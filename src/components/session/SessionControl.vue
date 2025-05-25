@@ -23,7 +23,7 @@
           v-if="store.ui.sessionActive && store.ui.sessionStartTime"
           class="text-sm text-gray-600"
         >
-          Duration: {{ formatSessionDuration() }}
+          Duration: {{ sessionDuration }}
         </div>
       </div>
 
@@ -140,6 +140,9 @@ const formatSessionDuration = (): string => {
 const startDurationTimer = () => {
   if (durationInterval) clearInterval(durationInterval);
 
+  // Update immediately
+  sessionDuration.value = formatSessionDuration();
+
   durationInterval = setInterval(() => {
     sessionDuration.value = formatSessionDuration();
   }, 1000);
@@ -154,7 +157,7 @@ const stopDurationTimer = () => {
 };
 
 onMounted(() => {
-  if (store.ui.sessionActive) {
+  if (store.ui.sessionActive && store.ui.sessionStartTime) {
     startDurationTimer();
   }
 });
