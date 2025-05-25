@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -12,11 +9,9 @@ export default {
         'baccarat-gold': '#ffc107',
       },
       fontFamily: {
-        'mono': ['Monaco', 'Menlo', 'Ubuntu Mono', 'monospace'],
-      }
+        mono: ['Monaco', 'Menlo', 'Ubuntu Mono', 'monospace'],
+      },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
-} 
+  plugins: [require('@tailwindcss/forms')],
+};

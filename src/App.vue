@@ -9,7 +9,7 @@ const tabs = [
   { id: 'game', name: 'Game' },
   { id: 'analysis', name: 'Analysis' },
   { id: 'burned', name: 'Burned Cards' },
-  { id: 'settings', name: 'Settings' }
+  { id: 'settings', name: 'Settings' },
 ];
 
 const getCardColor = (suit: Suit): string => {
@@ -21,7 +21,7 @@ const getSuitSymbol = (suit: Suit): string => {
     hearts: '♥',
     diamonds: '♦',
     clubs: '♣',
-    spades: '♠'
+    spades: '♠',
   };
   return symbols[suit];
 };
@@ -45,18 +45,11 @@ onMounted(() => {
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold">Advanced Baccarat Assistant</h1>
           <div class="flex items-center space-x-4">
-            <span class="text-sm">
-              Remaining: {{ store.totalCardsRemaining }} cards
-            </span>
+            <span class="text-sm"> Remaining: {{ store.totalCardsRemaining }} cards </span>
             <span class="text-sm">
               Penetration: {{ (store.currentPenetration * 100).toFixed(1) }}%
             </span>
-            <button
-              @click="store.initializeShoe()"
-              class="btn-secondary text-sm"
-            >
-              New Shoe
-            </button>
+            <button @click="store.initializeShoe()" class="btn-secondary text-sm">New Shoe</button>
           </div>
         </div>
       </div>
@@ -74,7 +67,7 @@ onMounted(() => {
               'py-4 px-2 border-b-2 font-medium text-sm transition-colors',
               store.ui.selectedTab === tab.id
                 ? 'border-baccarat-green text-baccarat-green'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
             ]"
           >
             {{ tab.name }}
@@ -187,8 +180,9 @@ onMounted(() => {
         <div class="card bg-blue-50 border-blue-200">
           <h2 class="text-xl font-semibold mb-2 text-blue-800">Recommendation</h2>
           <p class="text-blue-700">
-            Best bet: <strong>{{ store.bestBetRecommendation.name }}</strong>
-            ({{ (store.bestBetRecommendation.edge * 100).toFixed(3) }}% edge)
+            Best bet: <strong>{{ store.bestBetRecommendation.name }}</strong> ({{
+              (store.bestBetRecommendation.edge * 100).toFixed(3)
+            }}% edge)
           </p>
         </div>
       </div>
@@ -232,7 +226,9 @@ onMounted(() => {
           <h2 class="text-xl font-semibold mb-4">Burned Cards Analysis</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 class="font-medium text-gray-700 mb-2">Total Burned: {{ store.burnedCardAnalysis.totalBurned }}</h3>
+              <h3 class="font-medium text-gray-700 mb-2">
+                Total Burned: {{ store.burnedCardAnalysis.totalBurned }}
+              </h3>
               <div class="text-sm text-gray-600">
                 Confidence Level: {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
               </div>
@@ -253,9 +249,7 @@ onMounted(() => {
           <h2 class="text-xl font-semibold mb-4">Settings</h2>
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Number of Decks
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-1"> Number of Decks </label>
               <select
                 v-model="store.settings.numberOfDecks"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

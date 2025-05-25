@@ -76,4 +76,4 @@ export interface BurnedCardAnalysis {
   burnedBySuit: Map<Suit, number>;
   estimatedImpact: number;
   confidenceLevel: number;
-} 
+}

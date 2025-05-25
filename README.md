@@ -5,6 +5,7 @@ A sophisticated Vue 3 application for advanced baccarat analysis, featuring edge
 ## Features
 
 ### Core Functionality
+
 - **Real-time Edge Calculations**: Dynamic calculation of house edges for all bet types
 - **Burned Card Tracking**: Track and analyze the impact of burned cards on probabilities
 - **Cut Card Analysis**: Calculate the impact of cut card position on game dynamics
@@ -12,12 +13,14 @@ A sophisticated Vue 3 application for advanced baccarat analysis, featuring edge
 - **Edge Sorting Support**: Tools for edge sorting analysis and advantage calculation
 
 ### Advanced Mathematical Features
+
 - **Hypergeometric Distribution**: Accurate probability calculations based on remaining cards
 - **Confidence Levels**: Statistical confidence in edge calculations
 - **Penetration Analysis**: Track shoe penetration and its impact on accuracy
 - **Conditional Probabilities**: Calculate probabilities based on recent outcomes
 
 ### User Interface
+
 - **Modern Design**: Clean, responsive interface built with Tailwind CSS
 - **Real-time Updates**: Live updates of all calculations and statistics
 - **Tabbed Navigation**: Organized interface with dedicated sections for different analyses
@@ -52,21 +55,25 @@ yarn build
 ## Usage
 
 ### Basic Setup
+
 1. Configure the number of decks (6 or 8)
 2. Set the cut card position
 3. Enable desired tracking features
 
 ### Tracking Burned Cards
+
 1. Enable "Track Burned Cards" in settings
 2. Input burned cards as they occur
 3. Monitor the impact on edge calculations
 
 ### Pattern Analysis
+
 1. Enable "Show Pattern Analysis" in settings
 2. Input hand results to build pattern history
 3. View streak analysis and trends
 
 ### Edge Sorting
+
 1. Enable "Edge Sorting" in settings
 2. Mark cards as high/low based on orientation
 3. Monitor edge sorting advantage
@@ -74,6 +81,7 @@ yarn build
 ## Mathematical Background
 
 ### Edge Calculations
+
 The application uses precise mathematical formulas to calculate house edges:
 
 - **Player Bet**: Standard edge of -1.06%
@@ -82,18 +90,23 @@ The application uses precise mathematical formulas to calculate house edges:
 - **Pair Bets**: Standard edge of -10.76%
 
 These edges are dynamically adjusted based on:
+
 - Burned card composition
 - Cut card position
 - Edge sorting information
 
 ### Burned Card Impact
+
 The system tracks burned cards and calculates their impact using:
+
 - Hypergeometric distribution for probability adjustments
 - Confidence levels based on sample size
 - Estimated impact on each bet type
 
 ### Pattern Analysis
+
 Statistical analysis includes:
+
 - Streak identification and analysis
 - Chopping pattern recognition
 - Alternating pattern detection
@@ -102,6 +115,7 @@ Statistical analysis includes:
 ## Development
 
 ### Project Structure
+
 ```
 src/
 ├── components/          # Vue components
@@ -117,6 +131,7 @@ src/
 ```
 
 ### Adding New Features
+
 1. Define types in `src/types/`
 2. Add store actions in `src/stores/baccaratStore.ts`
 3. Create composables for complex logic
