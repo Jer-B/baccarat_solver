@@ -98,6 +98,8 @@ interface BaccaratState {
     showAdvancedFeatures: boolean;
     isCalculating: boolean;
     globalToggleMode: boolean; // When true, all toggles are active; when false, all sections are hidden by default
+    sessionActive: boolean; // Track if a gaming session is active
+    sessionStartTime: number | null; // Timestamp when session started
     visibility: {
       shoeComposition: {
         cutCardInfo: boolean;
@@ -244,6 +246,8 @@ export const useBaccaratStore = defineStore('baccarat', {
       showAdvancedFeatures: false,
       isCalculating: false,
       globalToggleMode: true, // Default to showing all sections
+      sessionActive: false, // Session starts inactive
+      sessionStartTime: null, // No session started yet
       visibility: {
         shoeComposition: {
           cutCardInfo: true,
@@ -485,6 +489,14 @@ export const useBaccaratStore = defineStore('baccarat', {
         player: calculateHandValue(state.shoe.currentHand.player),
         banker: calculateHandValue(state.shoe.currentHand.banker),
       };
+    },
+
+    // Check if actions are allowed (session must be active)
+    canPerformActions: state => state.ui.sessionActive,
+
+    // Check if there's a hand to clear
+    hasHandToClear: state => {
+      return state.shoe.currentHand.player.length > 0 || state.shoe.currentHand.banker.length > 0;
     },
   },
 
@@ -1057,6 +1069,21 @@ export const useBaccaratStore = defineStore('baccarat', {
 
     setGlobalVisibility(visible: boolean) {
       this.ui.globalToggleMode = visible;
+    },
+
+    startSession() {
+      this.ui.sessionActive = true;
+      this.ui.sessionStartTime = Date.now();
+      // Initialize a fresh shoe when starting a session
+      this.initializeShoe();
+    },
+
+    endSession() {
+      this.ui.sessionActive = false;
+      this.ui.sessionStartTime = null;
+      // Clear current hand and reset betting stats when ending session
+      this.shoe.currentHand = { player: [], banker: [] };
+      this.resetBettingStats();
     },
 
     setupEdgeSortingDemo() {

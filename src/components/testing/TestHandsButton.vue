@@ -2,26 +2,50 @@
   <div class="flex gap-2 flex-wrap">
     <button
       @click="addSampleHands"
-      class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+      :class="[
+        'px-4 py-2 rounded text-sm transition-colors',
+        disabled
+          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          : 'bg-green-500 text-white hover:bg-green-600',
+      ]"
+      :disabled="disabled"
     >
       Add Sample Hands
     </button>
     <button
       @click="addRandomHand"
-      class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+      :class="[
+        'px-4 py-2 rounded text-sm transition-colors',
+        disabled
+          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          : 'bg-blue-500 text-white hover:bg-blue-600',
+      ]"
+      :disabled="disabled"
     >
       Add Random Hand
     </button>
     <button
       @click="setupEdgeSortingDemo"
-      class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
+      :class="[
+        'px-4 py-2 rounded text-sm transition-colors',
+        disabled
+          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          : 'bg-orange-500 text-white hover:bg-orange-600',
+      ]"
+      :disabled="disabled"
       title="Simulate high-card rich shoe for edge sorting advantage"
     >
       Edge Sorting Demo
     </button>
     <button
       @click="setupPairBettingDemo"
-      class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+      :class="[
+        'px-4 py-2 rounded text-sm transition-colors',
+        disabled
+          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          : 'bg-purple-500 text-white hover:bg-purple-600',
+      ]"
+      :disabled="disabled"
       title="Simulate favorable conditions for pair betting"
     >
       Pair Betting Demo
@@ -32,6 +56,15 @@
 <script setup lang="ts">
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import type { HandResult, Card, Rank, Suit, CardValue } from '@/types/cards';
+
+// Props
+interface Props {
+  disabled?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  disabled: false,
+});
 
 const store = useBaccaratStore();
 
@@ -44,6 +77,7 @@ function createCard(rank: string, suit: string, value: number): Card {
 }
 
 function addSampleHands() {
+  if (props.disabled) return;
   // Add a variety of sample hands to test the scoreboard
   const sampleHands: HandResult[] = [
     {
@@ -151,14 +185,17 @@ function addSampleHands() {
 }
 
 function setupEdgeSortingDemo() {
+  if (props.disabled) return;
   store.setupEdgeSortingDemo();
 }
 
 function setupPairBettingDemo() {
+  if (props.disabled) return;
   store.setupPairBettingDemo();
 }
 
 function addRandomHand() {
+  if (props.disabled) return;
   const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
   const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];

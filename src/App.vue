@@ -9,6 +9,7 @@ import CardCompositionChart from './components/charts/CardCompositionChart.vue';
 import PlayingCard from './components/cards/PlayingCard.vue';
 import PayoutSettings from './components/settings/PayoutSettings.vue';
 import AdvancedAnalytics from './components/analytics/AdvancedAnalytics.vue';
+import SessionControl from './components/session/SessionControl.vue';
 
 const store = useBaccaratStore();
 
@@ -78,6 +79,11 @@ const getHandStatus = (): string => {
 };
 
 const clearCurrentHand = (): void => {
+  // Only allow clearing if session is active and there's actually a hand to clear
+  if (!store.canPerformActions || !store.hasHandToClear) {
+    return;
+  }
+
   // If there was a bet placed and cards were dealt, settle the bet first
   if (
     currentRoundBet.hasBet &&
@@ -110,8 +116,12 @@ const currentRoundBet = reactive({
 });
 
 const isBettingAllowed = (): boolean => {
-  // Betting is only allowed when no cards are on the table (new round)
-  return store.shoe.currentHand.player.length === 0 && store.shoe.currentHand.banker.length === 0;
+  // Betting is only allowed when session is active and no cards are on the table (new round)
+  return (
+    store.canPerformActions &&
+    store.shoe.currentHand.player.length === 0 &&
+    store.shoe.currentHand.banker.length === 0
+  );
 };
 
 const placeBet = (): void => {
@@ -216,6 +226,11 @@ const startNewRound = (): void => {
   currentRoundBet.betAmount = 0;
 };
 
+const canClearHand = (): boolean => {
+  // Can only clear hand if session is active and there's something to clear (hand or bet)
+  return store.canPerformActions && (store.hasHandToClear || currentRoundBet.hasBet);
+};
+
 onMounted(async () => {
   store.initializeShoe();
 
@@ -250,7 +265,7 @@ onMounted(async () => {
             </div>
 
             <!-- Test Buttons -->
-            <TestHandsButton />
+            <TestHandsButton :disabled="!store.canPerformActions" />
           </div>
         </div>
       </div>
@@ -281,6 +296,9 @@ onMounted(async () => {
     <main class="container mx-auto px-4 py-6">
       <!-- Game Tab -->
       <div v-if="store.ui.selectedTab === 'game'" class="space-y-6">
+        <!-- Session Control -->
+        <SessionControl />
+
         <!-- Card Composition Chart -->
         <CardCompositionChart />
 
@@ -554,7 +572,13 @@ onMounted(async () => {
                       startNewRound();
                       store.resetBettingStats();
                     "
-                    class="w-full px-4 py-2 bg-gray-500 text-white rounded-md font-medium hover:bg-gray-600 transition-colors text-sm"
+                    :class="[
+                      'w-full px-4 py-2 rounded-md font-medium transition-colors text-sm',
+                      store.canPerformActions
+                        ? 'bg-gray-500 text-white hover:bg-gray-600'
+                        : 'bg-gray-400 text-gray-200 cursor-not-allowed',
+                    ]"
+                    :disabled="!store.canPerformActions"
                   >
                     New Round & Reset
                   </button>
@@ -694,12 +718,13 @@ onMounted(async () => {
                 <h2 class="text-xl font-semibold">Current Hand</h2>
                 <button
                   @click="clearCurrentHand()"
-                  class="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors"
-                  :disabled="
-                    store.shoe.currentHand.player.length === 0 &&
-                    store.shoe.currentHand.banker.length === 0 &&
-                    !currentRoundBet.hasBet
-                  "
+                  :class="[
+                    'px-3 py-1 rounded-md text-sm transition-colors',
+                    canClearHand()
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-gray-400 text-gray-200 cursor-not-allowed',
+                  ]"
+                  :disabled="!canClearHand()"
                 >
                   {{ currentRoundBet.hasBet ? 'Complete Round' : 'Clear Hand' }}
                 </button>
