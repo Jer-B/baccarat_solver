@@ -7,9 +7,7 @@ const store = useBaccaratStore();
 
 const tabs = [
   { id: 'game', name: 'Game' },
-  { id: 'analysis', name: 'Analysis' },
   { id: 'burned', name: 'Burned Cards' },
-  { id: 'settings', name: 'Settings' },
 ];
 
 const getCardColor = (suit: Suit): string => {
@@ -44,11 +42,80 @@ onMounted(() => {
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold">Advanced Baccarat Assistant</h1>
-          <div class="flex items-center space-x-4">
-            <span class="text-sm"> Remaining: {{ store.totalCardsRemaining }} cards </span>
-            <span class="text-sm">
-              Penetration: {{ (store.currentPenetration * 100).toFixed(1) }}%
-            </span>
+          <div class="flex items-center space-x-6">
+            <!-- Game Status -->
+            <div class="flex items-center space-x-4 text-sm">
+              <span>Remaining: {{ store.totalCardsRemaining }} cards</span>
+              <span>Penetration: {{ (store.currentPenetration * 100).toFixed(1) }}%</span>
+            </div>
+
+            <!-- Settings Controls -->
+            <div class="flex items-center space-x-4 text-sm">
+              <!-- Number of Decks -->
+              <div class="flex items-center space-x-2">
+                <label class="text-white">Decks:</label>
+                <select
+                  v-model="store.settings.numberOfDecks"
+                  class="text-gray-900 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-white"
+                >
+                  <option :value="6">6</option>
+                  <option :value="8">8</option>
+                </select>
+              </div>
+
+              <!-- Cut Card Position -->
+              <div class="flex items-center space-x-2">
+                <label class="text-white">Cut:</label>
+                <input
+                  v-model.number="store.settings.cutCardPosition"
+                  type="number"
+                  min="10"
+                  max="50"
+                  class="text-gray-900 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-white"
+                />
+              </div>
+
+              <!-- Toggle Settings -->
+              <div class="flex items-center space-x-3">
+                <label class="flex items-center space-x-1 cursor-pointer">
+                  <input
+                    v-model="store.settings.trackBurnedCards"
+                    type="checkbox"
+                    class="rounded text-baccarat-green focus:ring-white"
+                  />
+                  <span class="text-xs">Burned</span>
+                </label>
+
+                <label class="flex items-center space-x-1 cursor-pointer">
+                  <input
+                    v-model="store.settings.autoCalculateEdges"
+                    type="checkbox"
+                    class="rounded text-baccarat-green focus:ring-white"
+                  />
+                  <span class="text-xs">Auto</span>
+                </label>
+
+                <label class="flex items-center space-x-1 cursor-pointer">
+                  <input
+                    v-model="store.settings.showPatternAnalysis"
+                    type="checkbox"
+                    class="rounded text-baccarat-green focus:ring-white"
+                  />
+                  <span class="text-xs">Patterns</span>
+                </label>
+
+                <label class="flex items-center space-x-1 cursor-pointer">
+                  <input
+                    v-model="store.settings.isEdgeSortingEnabled"
+                    type="checkbox"
+                    class="rounded text-baccarat-green focus:ring-white"
+                  />
+                  <span class="text-xs">Edge Sort</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Action Button -->
             <button @click="store.initializeShoe()" class="btn-secondary text-sm">New Shoe</button>
           </div>
         </div>
@@ -185,11 +252,9 @@ onMounted(() => {
             }}% edge)
           </p>
         </div>
-      </div>
 
-      <!-- Analysis Tab -->
-      <div v-if="store.ui.selectedTab === 'analysis'" class="space-y-6">
-        <div class="card">
+        <!-- Pattern Analysis (moved from Analysis tab) -->
+        <div v-if="store.settings.showPatternAnalysis" class="card">
           <h2 class="text-xl font-semibold mb-4">Pattern Analysis</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="text-center">
@@ -238,71 +303,6 @@ onMounted(() => {
               <div class="text-sm text-gray-600">
                 Estimated Impact: {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings Tab -->
-      <div v-if="store.ui.selectedTab === 'settings'" class="space-y-6">
-        <div class="card">
-          <h2 class="text-xl font-semibold mb-4">Settings</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"> Number of Decks </label>
-              <select
-                v-model="store.settings.numberOfDecks"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option :value="6">6 Decks</option>
-                <option :value="8">8 Decks</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Cut Card Position (cards from bottom)
-              </label>
-              <input
-                v-model.number="store.settings.cutCardPosition"
-                type="number"
-                min="10"
-                max="50"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div class="space-y-2">
-              <label class="flex items-center">
-                <input
-                  v-model="store.settings.trackBurnedCards"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">Track Burned Cards</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  v-model="store.settings.autoCalculateEdges"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">Auto Calculate Edges</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  v-model="store.settings.showPatternAnalysis"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">Show Pattern Analysis</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  v-model="store.settings.isEdgeSortingEnabled"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">Enable Edge Sorting</span>
-              </label>
             </div>
           </div>
         </div>
