@@ -9,11 +9,11 @@
   }
   
   .card-red {
-    @apply text-card-red;
+    @apply text-red-600;
   }
   
   .card-black {
-    @apply text-card-black;
+    @apply text-gray-800;
   }
   
   .btn-primary {
