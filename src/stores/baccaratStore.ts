@@ -151,6 +151,18 @@ export const useBaccaratStore = defineStore('baccarat', {
     },
 
     handHistory: state => state.history.hands,
+
+    // Calculate current hand values using baccarat rules
+    currentHandValues: state => {
+      const calculateHandValue = (cards: Card[]): number => {
+        return cards.reduce((sum, card) => sum + card.value, 0) % 10;
+      };
+
+      return {
+        player: calculateHandValue(state.shoe.currentHand.player),
+        banker: calculateHandValue(state.shoe.currentHand.banker),
+      };
+    },
   },
 
   actions: {

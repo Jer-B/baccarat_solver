@@ -2,7 +2,7 @@
   <div class="bg-white rounded-lg shadow-lg p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Scoreboard</h3>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <button
           @click="activeView = 'bigroad'"
           :class="[
@@ -24,6 +24,39 @@
           ]"
         >
           Bead Plate
+        </button>
+        <button
+          @click="activeView = 'bigeyeboy'"
+          :class="[
+            'px-3 py-1 text-sm rounded',
+            activeView === 'bigeyeboy'
+              ? 'bg-green-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+          ]"
+        >
+          Big Eye Boy
+        </button>
+        <button
+          @click="activeView = 'smallroad'"
+          :class="[
+            'px-3 py-1 text-sm rounded',
+            activeView === 'smallroad'
+              ? 'bg-purple-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+          ]"
+        >
+          Small Road
+        </button>
+        <button
+          @click="activeView = 'cockroachpig'"
+          :class="[
+            'px-3 py-1 text-sm rounded',
+            activeView === 'cockroachpig'
+              ? 'bg-orange-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+          ]"
+        >
+          Cockroach Pig
         </button>
         <button
           @click="clearScoreboard"
@@ -56,6 +89,11 @@
 
     <!-- Big Road View -->
     <div v-if="activeView === 'bigroad'" class="scoreboard-container">
+      <div class="pattern-description mb-3 p-2 bg-blue-50 rounded text-sm">
+        <strong>Big Road:</strong> Main tracking grid showing Player (P), Banker (B), and Tie (T)
+        results. Results form columns - same outcomes go down, different outcomes start new columns.
+        Pairs shown as dots.
+      </div>
       <div class="big-road-grid">
         <div v-for="(row, rowIndex) in bigRoadGrid" :key="rowIndex" class="big-road-row">
           <div
@@ -82,6 +120,11 @@
 
     <!-- Bead Plate View -->
     <div v-if="activeView === 'beadplate'" class="scoreboard-container">
+      <div class="pattern-description mb-3 p-2 bg-blue-50 rounded text-sm">
+        <strong>Bead Plate:</strong> Chronological display of all results in order from left to
+        right, top to bottom. Circular dots show Player (Blue), Banker (Red), Tie (Green). P/B
+        letters indicate pairs.
+      </div>
       <div class="bead-plate-grid">
         <div v-for="(row, rowIndex) in beadPlateGrid" :key="rowIndex" class="bead-plate-row">
           <div
@@ -99,6 +142,66 @@
                 <span v-if="cell.bankerPair" class="bead-pair-dot">B</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Big Eye Boy View -->
+    <div v-if="activeView === 'bigeyeboy'" class="scoreboard-container">
+      <div class="pattern-description mb-3 p-2 bg-green-50 rounded text-sm">
+        <strong>Big Eye Boy:</strong> Tracks pattern regularity by comparing current column with
+        previous column. Red = irregular pattern, Blue = regular pattern. Starts from hand 2.
+      </div>
+      <div class="pattern-grid">
+        <div v-for="(row, rowIndex) in bigEyeBoyGrid" :key="rowIndex" class="pattern-row">
+          <div
+            v-for="(cell, colIndex) in row"
+            :key="colIndex"
+            :class="['pattern-cell', cell.result ? `pattern-${cell.result}` : 'empty']"
+            :title="getPatternTooltip(cell, 'Big Eye Boy')"
+          >
+            <div v-if="cell.result" :class="['pattern-dot', `dot-${cell.result}`]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Small Road View -->
+    <div v-if="activeView === 'smallroad'" class="scoreboard-container">
+      <div class="pattern-description mb-3 p-2 bg-purple-50 rounded text-sm">
+        <strong>Small Road:</strong> Compares current column with column 2 positions back. Red =
+        different pattern, Blue = same pattern. Starts from hand 3.
+      </div>
+      <div class="pattern-grid">
+        <div v-for="(row, rowIndex) in smallRoadGrid" :key="rowIndex" class="pattern-row">
+          <div
+            v-for="(cell, colIndex) in row"
+            :key="colIndex"
+            :class="['pattern-cell', cell.result ? `pattern-${cell.result}` : 'empty']"
+            :title="getPatternTooltip(cell, 'Small Road')"
+          >
+            <div v-if="cell.result" :class="['pattern-dot', `dot-${cell.result}`]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cockroach Pig View -->
+    <div v-if="activeView === 'cockroachpig'" class="scoreboard-container">
+      <div class="pattern-description mb-3 p-2 bg-orange-50 rounded text-sm">
+        <strong>Cockroach Pig:</strong> Compares current column with column 3 positions back. Red =
+        different pattern, Blue = same pattern. Starts from hand 4.
+      </div>
+      <div class="pattern-grid">
+        <div v-for="(row, rowIndex) in cockroachPigGrid" :key="rowIndex" class="pattern-row">
+          <div
+            v-for="(cell, colIndex) in row"
+            :key="colIndex"
+            :class="['pattern-cell', cell.result ? `pattern-${cell.result}` : 'empty']"
+            :title="getPatternTooltip(cell, 'Cockroach Pig')"
+          >
+            <div v-if="cell.result" :class="['pattern-dot', `dot-${cell.result}`]"></div>
           </div>
         </div>
       </div>
@@ -131,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, type Ref } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import type { HandResult } from '@/types/cards';
 
@@ -143,13 +246,17 @@ interface ScoreboardCell {
 }
 
 const store = useBaccaratStore();
-const activeView = ref<'bigroad' | 'beadplate'>('bigroad');
+const activeView = ref<'bigroad' | 'beadplate' | 'bigeyeboy' | 'smallroad' | 'cockroachpig'>(
+  'bigroad'
+);
 
 // Grid dimensions
 const GRID_ROWS = 6;
 const GRID_COLS = 20;
 const BEAD_ROWS = 6;
 const BEAD_COLS = 22;
+const PATTERN_ROWS = 6;
+const PATTERN_COLS = 20;
 
 // Initialize grids
 const bigRoadGrid = ref<ScoreboardCell[][]>(
@@ -177,6 +284,51 @@ const beadPlateGrid = ref<ScoreboardCell[][]>(
           result: null,
           playerPair: false,
           bankerPair: false,
+          handNumber: 0,
+        }))
+    )
+);
+
+// Pattern analysis grids
+interface PatternCell {
+  result: 'red' | 'blue' | null;
+  handNumber: number;
+}
+
+const bigEyeBoyGrid = ref<PatternCell[][]>(
+  Array(PATTERN_ROWS)
+    .fill(null)
+    .map(() =>
+      Array(PATTERN_COLS)
+        .fill(null)
+        .map(() => ({
+          result: null,
+          handNumber: 0,
+        }))
+    )
+);
+
+const smallRoadGrid = ref<PatternCell[][]>(
+  Array(PATTERN_ROWS)
+    .fill(null)
+    .map(() =>
+      Array(PATTERN_COLS)
+        .fill(null)
+        .map(() => ({
+          result: null,
+          handNumber: 0,
+        }))
+    )
+);
+
+const cockroachPigGrid = ref<PatternCell[][]>(
+  Array(PATTERN_ROWS)
+    .fill(null)
+    .map(() =>
+      Array(PATTERN_COLS)
+        .fill(null)
+        .map(() => ({
+          result: null,
           handNumber: 0,
         }))
     )
@@ -223,6 +375,7 @@ watch(
   (newHands: HandResult[]) => {
     updateBigRoad(newHands);
     updateBeadPlate(newHands);
+    updatePatternAnalysis(newHands);
   },
   { deep: true }
 );
@@ -322,6 +475,189 @@ function updateBeadPlate(hands: HandResult[]) {
   });
 }
 
+// Pattern Analysis Functions
+function updatePatternAnalysis(hands: HandResult[]) {
+  updateBigEyeBoy(hands);
+  updateSmallRoad(hands);
+  updateCockroachPig(hands);
+}
+
+// Big Eye Boy - Compares current column with previous column
+function updateBigEyeBoy(hands: HandResult[]) {
+  clearPatternGrid(bigEyeBoyGrid);
+
+  if (hands.length < 2) return;
+
+  const bigRoadColumns = getBigRoadColumns(hands);
+  let patternCol = 0;
+  let patternRow = 0;
+
+  for (let i = 1; i < bigRoadColumns.length; i++) {
+    const currentColumn = bigRoadColumns[i];
+    const previousColumn = bigRoadColumns[i - 1];
+
+    // Compare patterns
+    const isRegular = compareColumns(currentColumn, previousColumn, 1);
+    const result = isRegular ? 'blue' : 'red';
+
+    if (patternRow < PATTERN_ROWS && patternCol < PATTERN_COLS) {
+      bigEyeBoyGrid.value[patternRow][patternCol] = {
+        result,
+        handNumber: i + 1,
+      };
+    }
+
+    // Move to next position
+    patternRow++;
+    if (patternRow >= PATTERN_ROWS) {
+      patternCol++;
+      patternRow = 0;
+    }
+  }
+}
+
+// Small Road - Compares current column with column 2 positions back
+function updateSmallRoad(hands: HandResult[]) {
+  clearPatternGrid(smallRoadGrid);
+
+  if (hands.length < 3) return;
+
+  const bigRoadColumns = getBigRoadColumns(hands);
+  let patternCol = 0;
+  let patternRow = 0;
+
+  for (let i = 2; i < bigRoadColumns.length; i++) {
+    const currentColumn = bigRoadColumns[i];
+    const compareColumn = bigRoadColumns[i - 2];
+
+    // Compare patterns
+    const isSame = compareColumns(currentColumn, compareColumn, 2);
+    const result = isSame ? 'blue' : 'red';
+
+    if (patternRow < PATTERN_ROWS && patternCol < PATTERN_COLS) {
+      smallRoadGrid.value[patternRow][patternCol] = {
+        result,
+        handNumber: i + 1,
+      };
+    }
+
+    // Move to next position
+    patternRow++;
+    if (patternRow >= PATTERN_ROWS) {
+      patternCol++;
+      patternRow = 0;
+    }
+  }
+}
+
+// Cockroach Pig - Compares current column with column 3 positions back
+function updateCockroachPig(hands: HandResult[]) {
+  clearPatternGrid(cockroachPigGrid);
+
+  if (hands.length < 4) return;
+
+  const bigRoadColumns = getBigRoadColumns(hands);
+  let patternCol = 0;
+  let patternRow = 0;
+
+  for (let i = 3; i < bigRoadColumns.length; i++) {
+    const currentColumn = bigRoadColumns[i];
+    const compareColumn = bigRoadColumns[i - 3];
+
+    // Compare patterns
+    const isSame = compareColumns(currentColumn, compareColumn, 3);
+    const result = isSame ? 'blue' : 'red';
+
+    if (patternRow < PATTERN_ROWS && patternCol < PATTERN_COLS) {
+      cockroachPigGrid.value[patternRow][patternCol] = {
+        result,
+        handNumber: i + 1,
+      };
+    }
+
+    // Move to next position
+    patternRow++;
+    if (patternRow >= PATTERN_ROWS) {
+      patternCol++;
+      patternRow = 0;
+    }
+  }
+}
+
+// Helper function to get Big Road columns structure
+function getBigRoadColumns(hands: HandResult[]): string[][] {
+  const columns: string[][] = [];
+  let currentColumn: string[] = [];
+  let lastResult: string | null = null;
+
+  hands.forEach(hand => {
+    const result = hand.winner;
+
+    // Skip ties for column structure
+    if (result === 'tie') return;
+
+    if (result === lastResult) {
+      // Same result - add to current column
+      currentColumn.push(result);
+    } else {
+      // Different result - start new column
+      if (currentColumn.length > 0) {
+        columns.push([...currentColumn]);
+      }
+      currentColumn = [result];
+      lastResult = result;
+    }
+  });
+
+  // Add the last column
+  if (currentColumn.length > 0) {
+    columns.push([...currentColumn]);
+  }
+
+  return columns;
+}
+
+// Helper function to compare two columns for pattern analysis
+function compareColumns(current: string[], compare: string[], offset: number): boolean {
+  // For Big Eye Boy (offset 1): Check if pattern is regular
+  if (offset === 1) {
+    // Regular if both columns have same length or both are different lengths
+    return current.length === compare.length;
+  }
+
+  // For Small Road and Cockroach Pig: Check if patterns are the same
+  if (current.length !== compare.length) return false;
+
+  // Compare each position
+  for (let i = 0; i < current.length; i++) {
+    if (current[i] !== compare[i]) return false;
+  }
+
+  return true;
+}
+
+// Helper function to clear pattern grids
+function clearPatternGrid(grid: Ref<PatternCell[][]>) {
+  grid.value = Array(PATTERN_ROWS)
+    .fill(null)
+    .map(() =>
+      Array(PATTERN_COLS)
+        .fill(null)
+        .map(() => ({
+          result: null,
+          handNumber: 0,
+        }))
+    );
+}
+
+// Helper function for pattern tooltips
+function getPatternTooltip(cell: PatternCell, patternName: string): string {
+  if (!cell.result) return '';
+
+  const color = cell.result === 'red' ? 'Red' : 'Blue';
+  return `${patternName} - Hand #${cell.handNumber}: ${color}`;
+}
+
 // Helper functions
 function getResultSymbol(result: string): string {
   switch (result) {
@@ -353,6 +689,7 @@ function clearScoreboard() {
 // Initialize on mount
 updateBigRoad(store.handHistory);
 updateBeadPlate(store.handHistory);
+updatePatternAnalysis(store.handHistory);
 </script>
 
 <style scoped>
@@ -449,5 +786,40 @@ updateBeadPlate(store.handHistory);
 .bead-pair-dot {
   @apply text-white bg-black rounded-full w-3 h-3 flex items-center justify-center text-xs leading-none;
   font-size: 8px;
+}
+
+/* Pattern Grid Styles */
+.pattern-grid {
+  @apply grid gap-1;
+  grid-template-rows: repeat(6, 1fr);
+}
+
+.pattern-row {
+  @apply flex gap-1;
+}
+
+.pattern-cell {
+  @apply w-6 h-6 border border-gray-300 flex items-center justify-center relative;
+  min-width: 24px;
+}
+
+.pattern-cell.empty {
+  @apply bg-white;
+}
+
+.pattern-dot {
+  @apply w-4 h-4 rounded-full;
+}
+
+.dot-red {
+  @apply bg-red-500;
+}
+
+.dot-blue {
+  @apply bg-blue-500;
+}
+
+.pattern-description {
+  @apply text-sm text-gray-700;
 }
 </style>

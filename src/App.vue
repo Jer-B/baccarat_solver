@@ -1,36 +1,68 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useBaccaratStore } from './stores/baccaratStore';
-import type { Suit } from './types/cards';
+
 import { testSupabaseConnection } from './utils/testSupabase';
 import BaccaratScoreboard from './components/scoreboard/BaccaratScoreboard.vue';
 import TestHandsButton from './components/testing/TestHandsButton.vue';
+import CardCompositionChart from './components/charts/CardCompositionChart.vue';
+import PlayingCard from './components/cards/PlayingCard.vue';
 
 const store = useBaccaratStore();
 
-const tabs = [
-  { id: 'game', name: 'Game' },
-  { id: 'burned', name: 'Burned Cards' },
-];
-
-const getCardColor = (suit: Suit): string => {
-  return suit === 'hearts' || suit === 'diamonds' ? 'card-red' : 'card-black';
-};
-
-const getSuitSymbol = (suit: Suit): string => {
-  const symbols = {
-    hearts: '♥',
-    diamonds: '♦',
-    clubs: '♣',
-    spades: '♠',
-  };
-  return symbols[suit];
-};
+const tabs = [{ id: 'game', name: 'Game' }];
 
 const getEdgeClass = (edge: number): string => {
   if (edge > 0) return 'edge-positive';
   if (edge < 0) return 'edge-negative';
   return 'edge-neutral';
+};
+
+// Hand summary methods
+const getCurrentWinner = (): string => {
+  const playerValue = store.currentHandValues.player;
+  const bankerValue = store.currentHandValues.banker;
+
+  if (playerValue > bankerValue) return 'Player';
+  if (bankerValue > playerValue) return 'Banker';
+  return 'Tie';
+};
+
+const getCurrentWinnerClass = (): string => {
+  const winner = getCurrentWinner();
+  if (winner === 'Player') return 'text-blue-600';
+  if (winner === 'Banker') return 'text-red-600';
+  return 'text-green-600';
+};
+
+const getHandStatus = (): string => {
+  const playerCards = store.shoe.currentHand.player.length;
+  const bankerCards = store.shoe.currentHand.banker.length;
+  const playerValue = store.currentHandValues.player;
+  const bankerValue = store.currentHandValues.banker;
+
+  // Check for naturals
+  if ((playerValue >= 8 || bankerValue >= 8) && playerCards === 2 && bankerCards === 2) {
+    return 'Natural';
+  }
+
+  // Check if hand is complete (both have 2 or 3 cards)
+  if (playerCards >= 2 && bankerCards >= 2) {
+    if (playerCards === 2 && bankerCards === 2) {
+      // Check if more cards needed based on baccarat rules
+      if (playerValue <= 5 || bankerValue <= 5) {
+        return 'In Progress';
+      }
+      return 'Complete';
+    }
+    return 'Complete';
+  }
+
+  return 'In Progress';
+};
+
+const clearCurrentHand = (): void => {
+  store.shoe.currentHand = { player: [], banker: [] };
 };
 
 onMounted(async () => {
@@ -124,8 +156,22 @@ onMounted(async () => {
             <!-- Test Buttons -->
             <TestHandsButton />
 
-            <!-- Action Button -->
-            <button @click="store.initializeShoe()" class="btn-secondary text-sm">New Shoe</button>
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-2">
+              <button
+                @click="clearCurrentHand()"
+                class="btn-secondary text-sm"
+                :disabled="
+                  store.shoe.currentHand.player.length === 0 &&
+                  store.shoe.currentHand.banker.length === 0
+                "
+              >
+                Clear Hand
+              </button>
+              <button @click="store.initializeShoe()" class="btn-secondary text-sm">
+                New Shoe
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -156,8 +202,29 @@ onMounted(async () => {
     <main class="container mx-auto px-4 py-6">
       <!-- Game Tab -->
       <div v-if="store.ui.selectedTab === 'game'" class="space-y-6">
-        <!-- Scoreboard -->
-        <BaccaratScoreboard />
+        <!-- Burned Cards Analysis -->
+        <div class="card">
+          <h2 class="text-xl font-semibold mb-4">Burned Cards Analysis</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-medium text-gray-700 mb-2">
+                Total Burned: {{ store.burnedCardAnalysis.totalBurned }}
+              </h3>
+              <div class="text-sm text-gray-600">
+                Confidence Level: {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
+              </div>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-700 mb-2">Impact</h3>
+              <div class="text-sm text-gray-600">
+                Estimated Impact: {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Composition Chart -->
+        <CardCompositionChart />
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Current Hand -->
@@ -166,40 +233,128 @@ onMounted(async () => {
               <h2 class="text-xl font-semibold mb-4">Current Hand</h2>
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 class="font-medium text-gray-700 mb-2">Player</h3>
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-gray-700">Player</h3>
+                    <div class="flex items-center space-x-2">
+                      <div
+                        class="text-lg font-bold"
+                        :class="[
+                          store.shoe.currentHand.player.length > 0
+                            ? 'text-blue-600'
+                            : 'text-gray-400',
+                          store.currentHandValues.player >= 8 &&
+                          store.shoe.currentHand.player.length > 0
+                            ? 'bg-yellow-100 px-2 py-1 rounded'
+                            : '',
+                        ]"
+                      >
+                        {{
+                          store.shoe.currentHand.player.length > 0
+                            ? store.currentHandValues.player
+                            : '-'
+                        }}
+                      </div>
+                      <div
+                        v-if="
+                          store.currentHandValues.player >= 8 &&
+                          store.shoe.currentHand.player.length > 0
+                        "
+                        class="text-xs font-semibold text-yellow-700 bg-yellow-200 px-2 py-1 rounded"
+                      >
+                        Natural
+                      </div>
+                    </div>
+                  </div>
                   <div class="flex space-x-2">
-                    <div
+                    <PlayingCard
                       v-for="(card, index) in store.shoe.currentHand.player"
                       :key="index"
-                      class="w-16 h-24 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center text-sm font-bold"
-                      :class="getCardColor(card.suit)"
-                    >
-                      {{ card.rank }}{{ getSuitSymbol(card.suit) }}
-                    </div>
-                    <div
+                      :card="card"
+                      size="medium"
+                    />
+                    <PlayingCard
                       v-if="store.shoe.currentHand.player.length === 0"
-                      class="w-16 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400"
-                    >
-                      ?
-                    </div>
+                      is-card-back
+                      size="medium"
+                    />
                   </div>
                 </div>
                 <div>
-                  <h3 class="font-medium text-gray-700 mb-2">Banker</h3>
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-gray-700">Banker</h3>
+                    <div class="flex items-center space-x-2">
+                      <div
+                        class="text-lg font-bold"
+                        :class="[
+                          store.shoe.currentHand.banker.length > 0
+                            ? 'text-red-600'
+                            : 'text-gray-400',
+                          store.currentHandValues.banker >= 8 &&
+                          store.shoe.currentHand.banker.length > 0
+                            ? 'bg-yellow-100 px-2 py-1 rounded'
+                            : '',
+                        ]"
+                      >
+                        {{
+                          store.shoe.currentHand.banker.length > 0
+                            ? store.currentHandValues.banker
+                            : '-'
+                        }}
+                      </div>
+                      <div
+                        v-if="
+                          store.currentHandValues.banker >= 8 &&
+                          store.shoe.currentHand.banker.length > 0
+                        "
+                        class="text-xs font-semibold text-yellow-700 bg-yellow-200 px-2 py-1 rounded"
+                      >
+                        Natural
+                      </div>
+                    </div>
+                  </div>
                   <div class="flex space-x-2">
-                    <div
+                    <PlayingCard
                       v-for="(card, index) in store.shoe.currentHand.banker"
                       :key="index"
-                      class="w-16 h-24 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center text-sm font-bold"
-                      :class="getCardColor(card.suit)"
-                    >
-                      {{ card.rank }}{{ getSuitSymbol(card.suit) }}
-                    </div>
-                    <div
+                      :card="card"
+                      size="medium"
+                    />
+                    <PlayingCard
                       v-if="store.shoe.currentHand.banker.length === 0"
-                      class="w-16 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400"
-                    >
-                      ?
+                      is-card-back
+                      size="medium"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hand Summary -->
+              <div
+                v-if="
+                  store.shoe.currentHand.player.length > 0 &&
+                  store.shoe.currentHand.banker.length > 0
+                "
+                class="mt-4 pt-4 border-t border-gray-200"
+              >
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div class="text-center">
+                    <div class="font-medium text-gray-700">Current Winner</div>
+                    <div class="text-lg font-bold" :class="getCurrentWinnerClass()">
+                      {{ getCurrentWinner() }}
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div class="font-medium text-gray-700">Cards Dealt</div>
+                    <div class="text-lg font-bold text-gray-600">
+                      {{
+                        store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length
+                      }}
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div class="font-medium text-gray-700">Hand Status</div>
+                    <div class="text-lg font-bold text-gray-600">
+                      {{ getHandStatus() }}
                     </div>
                   </div>
                 </div>
@@ -257,13 +412,16 @@ onMounted(async () => {
 
         <!-- Best Bet Recommendation -->
         <div class="card bg-blue-50 border-blue-200">
-          <h2 class="text-xl font-semibold mb-2 text-blue-800">Recommendation</h2>
+          <h2 class="text-xl font-semibold mb-2 text-blue-800">Bet Recommendation</h2>
           <p class="text-blue-700">
             Best bet: <strong>{{ store.bestBetRecommendation.name }}</strong> ({{
               (store.bestBetRecommendation.edge * 100).toFixed(3)
             }}% edge)
           </p>
         </div>
+
+        <!-- Scoreboard -->
+        <BaccaratScoreboard />
 
         <!-- Pattern Analysis (moved from Analysis tab) -->
         <div v-if="store.settings.showPatternAnalysis" class="card">
@@ -292,29 +450,6 @@ onMounted(async () => {
                 {{ store.patternAnalysis.streakAnalysis.longestBankerStreak }}
               </div>
               <div class="text-sm text-gray-600">Longest Banker Streak</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Burned Cards Tab -->
-      <div v-if="store.ui.selectedTab === 'burned'" class="space-y-6">
-        <div class="card">
-          <h2 class="text-xl font-semibold mb-4">Burned Cards Analysis</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 class="font-medium text-gray-700 mb-2">
-                Total Burned: {{ store.burnedCardAnalysis.totalBurned }}
-              </h3>
-              <div class="text-sm text-gray-600">
-                Confidence Level: {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
-              </div>
-            </div>
-            <div>
-              <h3 class="font-medium text-gray-700 mb-2">Impact</h3>
-              <div class="text-sm text-gray-600">
-                Estimated Impact: {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
-              </div>
             </div>
           </div>
         </div>
