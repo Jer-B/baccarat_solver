@@ -8,7 +8,9 @@ import type {
   BurnedCardAnalysis,
   Rank,
   Suit,
+  CardValue,
 } from '../types/cards';
+import { useProfessionalBurnEstimation } from '../composables/useProfessionalBurnEstimation';
 
 interface BettingStats {
   totalHands: number;
@@ -327,6 +329,10 @@ export const useBaccaratStore = defineStore('baccarat', {
         return null;
       }
 
+      // Get professional burn estimation
+      const burnEstimation = useProfessionalBurnEstimation();
+      const professionalRec = burnEstimation.professionalRecommendation.value;
+
       const bets = [
         { name: 'Player', edge: edges.playerEdge, type: 'player' },
         { name: 'Banker', edge: edges.bankerEdge, type: 'banker' },
@@ -337,9 +343,15 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       // Calculate Kelly percentage for each bet type
       const kellyBets = bets.map(bet => {
+        // Adjust edge based on professional burn analysis
+        let adjustedEdge = bet.edge;
+        if (professionalRec) {
+          adjustedEdge += professionalRec.edgeAdjustment;
+        }
+
         // Simplified Kelly calculation: f = (bp - q) / b
         // where b = odds, p = win probability, q = loss probability
-        const winProbability = Math.max(0.01, Math.min(0.99, 0.5 + bet.edge)); // Adjust probability based on edge
+        const winProbability = Math.max(0.01, Math.min(0.99, 0.5 + adjustedEdge)); // Adjust probability based on edge
         const lossProbability = 1 - winProbability;
 
         // Get payout odds for each bet type
@@ -360,13 +372,20 @@ export const useBaccaratStore = defineStore('baccarat', {
             break;
         }
 
-        const kellyPercentage = Math.max(0, (odds * winProbability - lossProbability) / odds);
+        let kellyPercentage = Math.max(0, (odds * winProbability - lossProbability) / odds);
+
+        // Apply professional burn estimation adjustments
+        if (professionalRec) {
+          kellyPercentage *= professionalRec.kellyPercentage / 0.02; // Scale based on professional recommendation
+        }
 
         return {
           ...bet,
           kellyPercentage,
           winProbability,
           odds,
+          adjustedEdge,
+          burnAdjustment: professionalRec?.edgeAdjustment || 0,
         };
       });
 
@@ -498,10 +517,18 @@ export const useBaccaratStore = defineStore('baccarat', {
     hasHandToClear: state => {
       return state.shoe.currentHand.player.length > 0 || state.shoe.currentHand.banker.length > 0;
     },
+
+    // Check if we can add more cards (max 6 total in baccarat)
+    canAddMoreCards: state => {
+      const totalCards =
+        state.shoe.currentHand.player.length + state.shoe.currentHand.banker.length;
+      return totalCards < 6;
+    },
   },
 
   actions: {
     initializeShoe() {
+      console.log('Initializing shoe with', this.settings.numberOfDecks, 'decks');
       const newShoe = new Map<string, number>();
       const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
       const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -522,6 +549,15 @@ export const useBaccaratStore = defineStore('baccarat', {
       this.history.hands = [];
       this.history.currentHandNumber = 0;
       this.resetAnalysis();
+
+      console.log(
+        'Shoe initialized with',
+        newShoe.size,
+        'card types and',
+        this.shoe.totalCards,
+        'total cards'
+      );
+      console.log('Sample card counts:', Array.from(newShoe.entries()).slice(0, 5));
 
       // Recalculate edges for fresh shoe
       if (this.settings.calculationTriggers.autoCalculateEdges) {
@@ -545,6 +581,107 @@ export const useBaccaratStore = defineStore('baccarat', {
         if (this.settings.calculationTriggers.autoCalculateEdges) {
           this.recalculateEdges();
         }
+      }
+    },
+
+    // Draw a random card from the shoe
+    drawRandomCard(): Card | null {
+      const availableCards: { key: string; count: number; rank: Rank; suit: Suit }[] = [];
+
+      // Collect all available cards
+      for (const [key, count] of this.shoe.remainingCards.entries()) {
+        if (count > 0) {
+          const [rank, suit] = key.split('-') as [Rank, Suit];
+          availableCards.push({ key, count, rank, suit });
+        }
+      }
+
+      if (availableCards.length === 0) {
+        return null; // No cards left
+      }
+
+      // Create weighted array for random selection
+      const weightedCards: { rank: Rank; suit: Suit }[] = [];
+      for (const cardType of availableCards) {
+        for (let i = 0; i < cardType.count; i++) {
+          weightedCards.push({ rank: cardType.rank, suit: cardType.suit });
+        }
+      }
+
+      // Select random card
+      const randomIndex = Math.floor(Math.random() * weightedCards.length);
+      const selectedCard = weightedCards[randomIndex];
+
+      // Create card object with proper value
+      const card: Card = {
+        rank: selectedCard.rank,
+        suit: selectedCard.suit,
+        value: this.getCardValue(selectedCard.rank),
+        timestamp: Date.now(),
+      };
+
+      return card;
+    },
+
+    // Burn a card (remove from shoe and track)
+    burnCard(card: Card): void {
+      // Update card count
+      this.updateCardCount(card, -1);
+
+      // Track as burned card
+      this.trackBurnedCard(card);
+    },
+
+    // Apply suspected burn card with confidence weighting
+    applySuspectedBurn(card: Card, confidence: number): void {
+      // Weight the impact based on confidence level
+      const weightedDelta = -(confidence / 100);
+
+      // Partially update card count based on confidence
+      const key = `${card.rank}-${card.suit}`;
+      const currentCount = this.shoe.remainingCards.get(key) || 0;
+      const adjustedCount = Math.max(0, currentCount + weightedDelta);
+      this.shoe.remainingCards.set(key, adjustedCount);
+
+      // Track as suspected burn with confidence metadata
+      const suspectedBurnCard = {
+        ...card,
+        isBurned: true,
+        confidence,
+        timestamp: Date.now(),
+        handNumber: this.history.currentHandNumber,
+      };
+
+      this.shoe.burnedCards.push(suspectedBurnCard);
+      this.updateBurnedCardAnalysis(card);
+
+      // Recalculate edges with new information
+      if (this.settings.calculationTriggers.autoCalculateEdges) {
+        this.recalculateEdges();
+      }
+    },
+
+    // Helper method to get card value for baccarat
+    getCardValue(rank: Rank): CardValue {
+      switch (rank) {
+        case 'A':
+          return 1;
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          return parseInt(rank) as CardValue;
+        case '10':
+        case 'J':
+        case 'Q':
+        case 'K':
+          return 0;
+        default:
+          return 0;
       }
     },
 
@@ -603,6 +740,25 @@ export const useBaccaratStore = defineStore('baccarat', {
       const suitCount = this.burnedCardAnalysis.burnedBySuit.get(card.suit) || 0;
       this.burnedCardAnalysis.burnedBySuit.set(card.suit, suitCount + 1);
 
+      // Track which hand this card was burned in (for internal tracking)
+      const cardWithHandNumber = {
+        ...card,
+        handNumber: this.history.currentHandNumber,
+        timestamp: Date.now(),
+      };
+
+      // Add to burned cards array if not already there
+      if (
+        !this.shoe.burnedCards.find(
+          bc =>
+            bc.rank === card.rank &&
+            bc.suit === card.suit &&
+            bc.handNumber === this.history.currentHandNumber
+        )
+      ) {
+        this.shoe.burnedCards.push(cardWithHandNumber);
+      }
+
       // Update confidence level
       this.burnedCardAnalysis.confidenceLevel = this.calculateBurnedCardConfidence();
     },
@@ -611,6 +767,19 @@ export const useBaccaratStore = defineStore('baccarat', {
       const totalBurned = this.burnedCardAnalysis.totalBurned;
       const totalCards = this.shoe.totalCards;
       return Math.min(totalBurned / (totalCards * 0.1), 1); // 10% burned cards = 100% confidence
+    },
+
+    calculateBurnedCardImpact(): number {
+      // Calculate the impact of burned cards on edge calculations
+      const totalBurned = this.burnedCardAnalysis.totalBurned;
+      const totalCards = this.shoe.totalCards;
+
+      if (totalBurned === 0) return 0;
+
+      // Impact increases with more cards burned (higher penetration)
+      const penetrationImpact = (totalBurned / totalCards) * 0.5; // Max 50% impact
+
+      return Math.min(penetrationImpact, 0.5);
     },
 
     recalculateEdges() {
@@ -761,6 +930,15 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       this.history.hands.push(handWithNumber);
       this.updatePatternAnalysis(result.winner);
+
+      // Update burned card analysis based on cards that were in the hand
+      const allHandCards = [...result.player, ...result.banker];
+      allHandCards.forEach(card => {
+        this.updateBurnedCardAnalysis(card);
+      });
+
+      // Update burned card analysis totals
+      this.burnedCardAnalysis.estimatedImpact = this.calculateBurnedCardImpact();
 
       // Clear current hand
       this.shoe.currentHand = { player: [], banker: [] };
@@ -1143,6 +1321,69 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       // Recalculate edges to show favorable pair betting
       this.recalculateEdges();
+    },
+
+    // Professional burn card analysis integration
+    runProfessionalBurnAnalysis() {
+      const burnEstimation = useProfessionalBurnEstimation();
+
+      // Run the analysis with current game state
+      const analysis = burnEstimation.analyzeBurnScenarios(
+        this.shoe.remainingCards,
+        this.history.hands,
+        this.shoe.burnedCards,
+        this.currentPenetration
+      );
+
+      // Update the current analysis
+      burnEstimation.currentAnalysis.value = analysis;
+
+      // Apply burn analysis to edge calculations
+      this.applyBurnAnalysisToEdges(analysis);
+
+      return analysis;
+    },
+
+    // Apply professional burn analysis to edge calculations
+    applyBurnAnalysisToEdges(analysis: {
+      weightedEdgeImpact?: number;
+      confidenceInterval?: [number, number];
+    }) {
+      if (!analysis) return;
+
+      // Adjust edges based on professional burn analysis
+      const basePlayerEdge = -0.0106;
+      const baseBankerEdge = -0.0106;
+
+      this.edgeCalculations.playerEdge = basePlayerEdge + (analysis.weightedEdgeImpact || 0);
+      this.edgeCalculations.bankerEdge = baseBankerEdge + (analysis.weightedEdgeImpact || 0);
+
+      // Update confidence based on burn analysis
+      if (
+        analysis.confidenceInterval &&
+        Array.isArray(analysis.confidenceInterval) &&
+        analysis.confidenceInterval.length >= 2
+      ) {
+        const interval = analysis.confidenceInterval as [number, number];
+        const burnConfidence = 1 - (interval[1] - interval[0]);
+        this.edgeCalculations.confidence = Math.max(
+          this.edgeCalculations.confidence,
+          burnConfidence
+        );
+      }
+
+      // Add burn impact to edge sorting advantage
+      if (this.edgeCalculations.edgeSortingAdvantage !== undefined) {
+        this.edgeCalculations.edgeSortingAdvantage += (analysis.weightedEdgeImpact || 0) * 0.5;
+      }
+    },
+
+    // Auto-run professional burn analysis when conditions change
+    triggerProfessionalBurnAnalysis() {
+      // Only run if we have enough data and penetration
+      if (this.history.hands.length >= 3 && this.currentPenetration > 0.1) {
+        this.runProfessionalBurnAnalysis();
+      }
     },
   },
 });

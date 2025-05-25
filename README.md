@@ -1,25 +1,34 @@
 # Advanced Baccarat Assistant
 
-A sophisticated Vue 3 application for advanced baccarat analysis, featuring edge calculations, pattern recognition, burned card tracking, and edge sorting capabilities.
+A sophisticated Vue 3 application for advanced baccarat analysis, featuring professional-grade edge calculations, pattern recognition, burned card tracking, and cutting-edge professional burn estimation algorithms.
 
 ## Features
 
 ### Core Functionality
 
 - **Real-time Edge Calculations**: Dynamic calculation of house edges for all bet types
-- **Burned Card Tracking**: Track and analyze the impact of burned cards on probabilities
+- **Professional Burn Card Analysis**: Advanced algorithms from Jacobson, Griffin, and Wong methods
 - **Cut Card Analysis**: Calculate the impact of cut card position on game dynamics
-- **Pattern Recognition**: Advanced streak and pattern analysis
+- **Pattern Recognition**: Advanced streak and pattern analysis with 5 professional tracking systems
 - **Edge Sorting Support**: Tools for edge sorting analysis and advantage calculation
+- **Interactive Card Interface**: Click-to-deal cards with real-time shoe composition tracking
+
+### Professional Burn Estimation Algorithms
+
+- **Jacobson Method**: Statistical analysis based on casino burn procedures and frequency data
+- **Griffin Method**: High vs low card bias analysis adapted from "The Theory of Blackjack"
+- **Wong Method**: Adaptive pattern recognition system from Stanford Wong's research
+- **Bayesian Updates**: Modern probabilistic approach that updates estimates with new evidence
+- **Weighted Scenario Analysis**: Combines all methods for optimal accuracy
 
 ### Advanced Mathematical Features
 
 - **Hypergeometric Distribution**: Accurate probability calculations based on remaining cards
-- **Confidence Levels**: Statistical confidence in edge calculations
+- **Professional Kelly Criterion**: Advanced bet sizing with burn card adjustments
 - **Penetration Analysis**: Track shoe penetration and its impact on accuracy
-- **Conditional Probabilities**: Calculate probabilities based on recent outcomes
-- **Monte Carlo Simulations**: Advanced risk analysis and outcome projections
-- **Kelly Criterion**: Optimal bet sizing calculations for bankroll management
+- **Monte Carlo Risk Assessment**: Advanced risk analysis with burn card uncertainty
+- **Confidence Intervals**: Statistical confidence ranges for all calculations
+- **Edge Sorting Advantage**: Real-time calculation of edge sorting opportunities
 
 ### User Interface
 
@@ -71,6 +80,12 @@ This application uses Supabase for data persistence. Follow the comprehensive se
 
 **📖 [Supabase Setup Guide](./SUPABASE_SETUP.md)**
 
+**🎓 [Professional Burn Card Algorithms](./PROFESSIONAL_ALGORITHMS.md)**
+
+**⚡ [Quick Setup Guide](./QUICK_SETUP.md)** - Fast database table creation
+
+**📊 [Schema Migrations](./schema-migrations.md)** - Database schema change tracking
+
 The database provides:
 
 - **Persistent Game Sessions**: Save and resume baccarat games
@@ -87,11 +102,14 @@ The database provides:
 2. Set the cut card position
 3. Enable desired tracking features
 
-### Tracking Burned Cards
+### Professional Burn Card Analysis
 
-1. Enable "Track Burned Cards" in settings
-2. Input burned cards as they occur
-3. Monitor the impact on edge calculations
+1. **Automatic Analysis**: Professional algorithms run automatically when sufficient data is available
+2. **Manual Analysis**: Click "🔄 Analyze" button to run professional burn estimation
+3. **Multiple Scenarios**: View results from Jacobson, Griffin, and Wong methods
+4. **Weighted Recommendations**: Get combined professional recommendations with confidence levels
+5. **Kelly Integration**: Burn analysis automatically adjusts Kelly Criterion calculations
+6. **Monte Carlo Integration**: Burn uncertainty factors into risk assessments
 
 ### Pattern Analysis
 
@@ -104,6 +122,17 @@ The database provides:
 1. Enable "Edge Sorting" in settings
 2. Mark cards as high/low based on orientation
 3. Monitor edge sorting advantage
+
+### Professional Burn Card Algorithms
+
+The application implements four professional-grade burn card estimation algorithms:
+
+1. **Jacobson Method**: Statistical analysis based on casino burn procedures
+2. **Griffin Method**: High vs low card bias analysis from dealer behavior
+3. **Wong Method**: Adaptive pattern recognition that learns from hand history
+4. **Bayesian Updates**: Modern probabilistic approach with evidence weighting
+
+These algorithms automatically combine to provide weighted recommendations with confidence intervals, Kelly Criterion adjustments, and Monte Carlo risk assessments. See the [Professional Algorithms Documentation](./PROFESSIONAL_ALGORITHMS.md) for detailed technical information.
 
 ## Monte Carlo Simulations & Advanced Analytics
 
@@ -550,13 +579,49 @@ This project includes comprehensive code quality tools:
 7. Add tests
 8. Ensure code passes linting and formatting checks
 
+## Documentation
+
+This project includes comprehensive documentation for all major features:
+
+### 📚 Core Documentation
+
+- **[README.md](./README.md)** - Main project documentation (this file)
+- **[Professional Burn Card Algorithms](./PROFESSIONAL_ALGORITHMS.md)** - Detailed technical documentation of Jacobson, Griffin, Wong, and Bayesian methods
+- **[Card Setup Guide](./CARD_SETUP.md)** - SVG card integration and customization options
+
+### 🗄️ Database Documentation
+
+- **[Supabase Setup Guide](./SUPABASE_SETUP.md)** - Complete database setup instructions
+- **[Quick Setup Guide](./QUICK_SETUP.md)** - Fast database table creation for experienced users
+- **[Schema Migrations](./schema-migrations.md)** - Database schema change tracking and version history
+
+### 📁 File Structure
+
+```
+docs/
+├── README.md                    # Main documentation
+├── PROFESSIONAL_ALGORITHMS.md   # Burn card estimation algorithms
+├── CARD_SETUP.md               # SVG card integration guide
+├── SUPABASE_SETUP.md           # Database setup guide
+├── QUICK_SETUP.md              # Quick database setup
+└── schema-migrations.md        # Schema change tracking
+```
+
+### 🔗 Quick Links
+
+- **Getting Started**: [Installation](#installation) → [Database Setup](#database-setup) → [Usage](#usage)
+- **Professional Features**: [Burn Card Analysis](#professional-burn-card-algorithms) → [Algorithm Documentation](./PROFESSIONAL_ALGORITHMS.md)
+- **Database Setup**: [Full Guide](./SUPABASE_SETUP.md) → [Quick Setup](./QUICK_SETUP.md)
+- **Advanced Features**: [Monte Carlo](#monte-carlo-simulations--advanced-analytics) → [Kelly Criterion](#kelly-criterion--optimal-betting)
+
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests if applicable
-5. Submit a pull request
+5. Update documentation if needed
+6. Submit a pull request
 
 ## License
 

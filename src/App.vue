@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, provide, ref } from 'vue';
 import { useBaccaratStore } from './stores/baccaratStore';
+import type { HandResult, Rank } from './types/cards';
 
 import { testSupabaseConnection } from './utils/testSupabase';
 import BaccaratScoreboard from './components/scoreboard/BaccaratScoreboard.vue';
@@ -10,6 +11,8 @@ import PlayingCard from './components/cards/PlayingCard.vue';
 import PayoutSettings from './components/settings/PayoutSettings.vue';
 import AdvancedAnalytics from './components/analytics/AdvancedAnalytics.vue';
 import SessionControl from './components/session/SessionControl.vue';
+import BurnCardEstimator from './components/cards/BurnCardEstimator.vue';
+import ProfessionalBurnAnalysis from './components/analytics/ProfessionalBurnAnalysis.vue';
 
 const store = useBaccaratStore();
 
@@ -26,6 +29,9 @@ const bettingInterface = reactive({
   selectedBet: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
   currentPreset: null as BettingPreset | null,
 });
+
+// Random burn functionality
+const randomBurnCount = ref(3);
 
 const tabs = [{ id: 'game', name: 'Game' }];
 
@@ -84,26 +90,68 @@ const clearCurrentHand = (): void => {
     return;
   }
 
-  // If there was a bet placed and cards were dealt, settle the bet first
-  if (
-    currentRoundBet.hasBet &&
-    (store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0)
-  ) {
-    // Create a mock hand result for settlement (in real app, this would come from actual hand completion)
-    const mockResult: {
-      winner: 'player' | 'banker' | 'tie';
-      playerPair: boolean;
-      bankerPair: boolean;
-    } = {
-      winner: 'player', // This should be determined by actual hand logic
-      playerPair: false,
-      bankerPair: false,
+  // If there are cards on the table, we need to complete the hand properly
+  if (store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0) {
+    // Calculate actual hand values and determine winner
+    const playerValue = store.currentHandValues.player;
+    const bankerValue = store.currentHandValues.banker;
+
+    let winner: 'player' | 'banker' | 'tie';
+    if (playerValue > bankerValue) {
+      winner = 'player';
+    } else if (bankerValue > playerValue) {
+      winner = 'banker';
+    } else {
+      winner = 'tie';
+    }
+
+    // Check for pairs
+    const playerPair =
+      store.shoe.currentHand.player.length >= 2 &&
+      store.shoe.currentHand.player[0].rank === store.shoe.currentHand.player[1].rank;
+    const bankerPair =
+      store.shoe.currentHand.banker.length >= 2 &&
+      store.shoe.currentHand.banker[0].rank === store.shoe.currentHand.banker[1].rank;
+
+    // Check for naturals
+    const natural =
+      (playerValue >= 8 || bankerValue >= 8) &&
+      store.shoe.currentHand.player.length === 2 &&
+      store.shoe.currentHand.banker.length === 2;
+
+    // Create proper HandResult object with betting information
+    const handResult: HandResult = {
+      player: [...store.shoe.currentHand.player],
+      banker: [...store.shoe.currentHand.banker],
+      winner,
+      playerPair,
+      bankerPair,
+      playerTotal: playerValue,
+      bankerTotal: bankerValue,
+      natural,
+      timestamp: Date.now(),
+      handNumber: store.history.currentHandNumber + 1,
     };
-    settleCurrentBet(mockResult);
+
+    // If there was a bet placed, settle it and add betting info
+    if (currentRoundBet.hasBet) {
+      const betResult = settleCurrentBet(handResult);
+
+      // Add betting information to hand result
+      handResult.betInfo = {
+        betType: currentRoundBet.betType!,
+        betAmount: currentRoundBet.betAmount,
+        won: betResult.won,
+        payout: betResult.payout,
+        netResult: betResult.netResult,
+      };
+    }
+
+    // Add the hand result to update pattern analysis and history
+    store.addHandResult(handResult);
   }
 
-  // Clear the hand and start new round
-  store.shoe.currentHand = { player: [], banker: [] };
+  // Start new round
   startNewRound();
 };
 
@@ -161,12 +209,12 @@ const placeBet = (): void => {
   bettingInterface.selectedBet = null;
 };
 
-const settleCurrentBet = (handResult: {
-  winner: 'player' | 'banker' | 'tie';
-  playerPair: boolean;
-  bankerPair: boolean;
-}): void => {
-  if (!currentRoundBet.hasBet || !currentRoundBet.betType) return;
+const settleCurrentBet = (
+  handResult: HandResult
+): { won: boolean; payout: number; netResult: number } => {
+  if (!currentRoundBet.hasBet || !currentRoundBet.betType) {
+    return { won: false, payout: 0, netResult: 0 };
+  }
 
   let payout = 0;
   let won = false;
@@ -207,9 +255,11 @@ const settleCurrentBet = (handResult: {
   // Record the bet in statistics
   store.recordBet(currentRoundBet.betType, currentRoundBet.betAmount, handResult);
 
+  // Calculate net result
+  const netResult = payout - currentRoundBet.betAmount;
+
   // Show result
   const result = won ? 'WON' : 'LOST';
-  const netResult = payout - currentRoundBet.betAmount;
   const resultText = netResult >= 0 ? `+$${netResult.toFixed(2)}` : `$${netResult.toFixed(2)}`;
   alert(`${result}! ${resultText} - New Balance: $${bettingInterface.balance.toFixed(2)}`);
 
@@ -217,6 +267,8 @@ const settleCurrentBet = (handResult: {
   currentRoundBet.hasBet = false;
   currentRoundBet.betType = null;
   currentRoundBet.betAmount = 0;
+
+  return { won, payout, netResult };
 };
 
 const startNewRound = (): void => {
@@ -227,12 +279,94 @@ const startNewRound = (): void => {
 };
 
 const canClearHand = (): boolean => {
-  // Can only clear hand if session is active and there's something to clear (hand or bet)
-  return store.canPerformActions && (store.hasHandToClear || currentRoundBet.hasBet);
+  // Can only clear hand if session is active and either:
+  // 1. There are at least 4 cards total on the table OR
+  // 2. There's a bet but no cards (to allow clearing just the bet)
+  const playerCards = store.shoe.currentHand.player.length;
+  const bankerCards = store.shoe.currentHand.banker.length;
+  const totalCards = playerCards + bankerCards;
+
+  // Need at least 4 cards to complete a round
+  const hasMinimumCards = totalCards >= 4;
+  const hasBetOnly = currentRoundBet.hasBet && !store.hasHandToClear;
+
+  return store.canPerformActions && (hasMinimumCards || hasBetOnly);
 };
 
+// Helper methods for burned cards analysis
+const getBurnedCardColor = (count: number): string => {
+  if (count === 0) return 'text-gray-400';
+  if (count <= 2) return 'text-green-600';
+  if (count <= 4) return 'text-yellow-600';
+  return 'text-red-600';
+};
+
+const getBurnedCardsByValue = (value: number): number => {
+  let count = 0;
+
+  if (value === 0) {
+    // Count 10, J, Q, K
+    count += store.burnedCardAnalysis.burnedByRank.get('10') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('J') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('Q') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('K') || 0;
+  } else if (value === 1) {
+    // Count Aces
+    count += store.burnedCardAnalysis.burnedByRank.get('A') || 0;
+  } else {
+    // Count number cards 2-9
+    count += store.burnedCardAnalysis.burnedByRank.get(value.toString() as Rank) || 0;
+  }
+
+  return count;
+};
+
+// Random burn functionality
+const performRandomBurn = (): void => {
+  if (!store.canPerformActions || !randomBurnCount.value) {
+    return;
+  }
+
+  if (randomBurnCount.value > store.totalCardsRemaining) {
+    alert(
+      `Cannot burn ${randomBurnCount.value} cards. Only ${store.totalCardsRemaining} cards remaining in shoe.`
+    );
+    return;
+  }
+
+  // Burn the specified number of random cards
+  const burnedCards = [];
+  for (let i = 0; i < randomBurnCount.value; i++) {
+    const card = store.drawRandomCard();
+    if (card) {
+      card.isBurned = true;
+      card.timestamp = Date.now();
+      card.handNumber = store.history.currentHandNumber;
+      burnedCards.push(card);
+      store.burnCard(card);
+    }
+  }
+
+  // Show what was burned
+  const burnedSummary = burnedCards
+    .map(card => `${card.rank}${card.suit.charAt(0).toUpperCase()}`)
+    .join(', ');
+  alert(
+    `🔥 Burned ${randomBurnCount.value} cards: ${burnedSummary}\n\nRemaining cards: ${store.totalCardsRemaining}`
+  );
+
+  // Reset burn count for next use
+  randomBurnCount.value = 3;
+};
+
+// Provide currentRoundBet to child components
+provide('currentRoundBet', currentRoundBet);
+
 onMounted(async () => {
+  // Initialize shoe on app start (always initialize regardless of session state)
+  console.log('App mounted, initializing shoe...');
   store.initializeShoe();
+  console.log('Shoe initialized, total cards:', store.totalCardsRemaining);
 
   // Test Supabase connection
   await testSupabaseConnection();
@@ -266,6 +400,32 @@ onMounted(async () => {
 
             <!-- Test Buttons -->
             <TestHandsButton :disabled="!store.canPerformActions" />
+
+            <!-- Random Burn Cards Section -->
+            <div class="flex items-center space-x-3">
+              <label class="text-sm text-white">Random Burn:</label>
+              <input
+                v-model.number="randomBurnCount"
+                type="number"
+                min="1"
+                max="10"
+                class="w-16 px-2 py-1 text-black rounded text-sm"
+                placeholder="3"
+              />
+              <button
+                @click="performRandomBurn()"
+                :disabled="!store.canPerformActions || !randomBurnCount"
+                :class="[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  store.canPerformActions && randomBurnCount
+                    ? 'bg-orange-600 text-white hover:bg-orange-700'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed',
+                ]"
+                :title="'Burn random cards from the shoe (simulates casino burn procedures)'"
+              >
+                🔥 Burn Cards
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -730,7 +890,15 @@ onMounted(async () => {
                 </button>
               </div>
               <div class="grid grid-cols-2 gap-4">
-                <div>
+                <!-- Player Side -->
+                <div
+                  :class="[
+                    'p-3 rounded-lg border-2 transition-all duration-300',
+                    currentRoundBet.hasBet && currentRoundBet.betType === 'player'
+                      ? 'bg-blue-50 border-blue-400 shadow-lg ring-2 ring-blue-300'
+                      : 'border-gray-200',
+                  ]"
+                >
                   <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
                       <h3 class="font-medium text-gray-700">Player</h3>
@@ -747,6 +915,13 @@ onMounted(async () => {
                           閑
                         </text>
                       </svg>
+                      <!-- Bet Amount Display -->
+                      <div
+                        v-if="currentRoundBet.hasBet && currentRoundBet.betType === 'player'"
+                        class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold"
+                      >
+                        ${{ currentRoundBet.betAmount }}
+                      </div>
                     </div>
                     <div class="flex items-center space-x-2">
                       <div
@@ -793,7 +968,16 @@ onMounted(async () => {
                     />
                   </div>
                 </div>
-                <div>
+
+                <!-- Banker Side -->
+                <div
+                  :class="[
+                    'p-3 rounded-lg border-2 transition-all duration-300',
+                    currentRoundBet.hasBet && currentRoundBet.betType === 'banker'
+                      ? 'bg-red-50 border-red-400 shadow-lg ring-2 ring-red-300'
+                      : 'border-gray-200',
+                  ]"
+                >
                   <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
                       <h3 class="font-medium text-gray-700">Banker</h3>
@@ -810,6 +994,13 @@ onMounted(async () => {
                           庄
                         </text>
                       </svg>
+                      <!-- Bet Amount Display -->
+                      <div
+                        v-if="currentRoundBet.hasBet && currentRoundBet.betType === 'banker'"
+                        class="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold"
+                      >
+                        ${{ currentRoundBet.betAmount }}
+                      </div>
                     </div>
                     <div class="flex items-center space-x-2">
                       <div
@@ -854,6 +1045,46 @@ onMounted(async () => {
                       is-card-back
                       size="medium"
                     />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Other Bet Types Display -->
+              <div
+                v-if="
+                  currentRoundBet.hasBet &&
+                  currentRoundBet.betType &&
+                  ['tie', 'playerPair', 'bankerPair'].includes(currentRoundBet.betType)
+                "
+                class="mt-4 p-3 rounded-lg border-2 transition-all duration-300"
+                :class="{
+                  'bg-green-50 border-green-400 shadow-lg ring-2 ring-green-300':
+                    currentRoundBet.betType === 'tie',
+                  'bg-purple-50 border-purple-400 shadow-lg ring-2 ring-purple-300':
+                    currentRoundBet.betType === 'playerPair',
+                  'bg-orange-50 border-orange-400 shadow-lg ring-2 ring-orange-300':
+                    currentRoundBet.betType === 'bankerPair',
+                }"
+              >
+                <div class="flex items-center justify-center space-x-2">
+                  <span class="font-medium text-gray-700">
+                    {{
+                      currentRoundBet.betType === 'tie'
+                        ? 'Tie Bet'
+                        : currentRoundBet.betType === 'playerPair'
+                          ? 'Player Pair Bet'
+                          : 'Banker Pair Bet'
+                    }}:
+                  </span>
+                  <div
+                    class="text-white px-3 py-1 rounded-full text-sm font-bold"
+                    :class="{
+                      'bg-green-600': currentRoundBet.betType === 'tie',
+                      'bg-purple-600': currentRoundBet.betType === 'playerPair',
+                      'bg-orange-600': currentRoundBet.betType === 'bankerPair',
+                    }"
+                  >
+                    ${{ currentRoundBet.betAmount }}
                   </div>
                 </div>
               </div>
@@ -1021,17 +1252,17 @@ onMounted(async () => {
                   <div class="flex justify-between items-center">
                     <span class="text-gray-700">Edge Sorting:</span>
                     <div class="flex items-center space-x-2">
-                      <span :class="getEdgeClass(store.edgeCalculations.edgeSortingAdvantage)">
-                        {{ (store.edgeCalculations.edgeSortingAdvantage * 100).toFixed(3) }}%
+                      <span :class="getEdgeClass(store.edgeCalculations.edgeSortingAdvantage || 0)">
+                        {{ ((store.edgeCalculations.edgeSortingAdvantage || 0) * 100).toFixed(3) }}%
                       </span>
                       <span
-                        v-if="store.edgeCalculations.edgeSortingAdvantage > 0.01"
+                        v-if="(store.edgeCalculations.edgeSortingAdvantage || 0) > 0.01"
                         class="text-xs bg-yellow-100 text-yellow-800 px-1 rounded"
                       >
                         HIGH ADVANTAGE!
                       </span>
                       <span
-                        v-else-if="store.edgeCalculations.edgeSortingAdvantage > 0"
+                        v-else-if="(store.edgeCalculations.edgeSortingAdvantage || 0) > 0"
                         class="text-xs bg-green-100 text-green-800 px-1 rounded"
                       >
                         ADVANTAGE
@@ -1273,22 +1504,121 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Professional Burn Card Estimation -->
+        <BurnCardEstimator />
+
+        <!-- Professional Burn Analysis -->
+        <ProfessionalBurnAnalysis />
+
         <!-- Burned Cards Analysis -->
         <div class="card">
-          <h2 class="text-xl font-semibold mb-4">Burned Cards Analysis</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 class="font-medium text-gray-700 mb-2">
-                Total Burned: {{ store.burnedCardAnalysis.totalBurned }}
-              </h3>
-              <div class="text-sm text-gray-600">
-                Confidence Level: {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">Burned Cards Analysis</h2>
+            <div class="text-sm text-gray-600">
+              <span class="font-medium">Strategic Value:</span>
+              <span
+                :class="
+                  store.totalCardsRemaining < 52 ? 'text-orange-600 font-bold' : 'text-gray-500'
+                "
+              >
+                {{ store.totalCardsRemaining < 52 ? 'HIGH (End of Shoe)' : 'Standard' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+              <div class="text-2xl font-bold text-gray-800">
+                {{ store.burnedCardAnalysis.totalBurned }}
+              </div>
+              <div class="text-sm text-gray-600">Total Burned</div>
+            </div>
+            <div class="text-center p-3 bg-blue-50 rounded-lg">
+              <div class="text-2xl font-bold text-blue-600">
+                {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
+              </div>
+              <div class="text-sm text-gray-600">Confidence Level</div>
+            </div>
+            <div class="text-center p-3 bg-purple-50 rounded-lg">
+              <div class="text-2xl font-bold text-purple-600">
+                {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
+              </div>
+              <div class="text-sm text-gray-600">Estimated Impact</div>
+            </div>
+          </div>
+
+          <!-- Burned Cards by Rank -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-700 mb-3">Cards Burned by Rank</h3>
+            <div class="grid grid-cols-4 md:grid-cols-7 lg:grid-cols-13 gap-2">
+              <div
+                v-for="rank in ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']"
+                :key="rank"
+                class="text-center p-2 bg-gray-50 rounded border"
+              >
+                <div
+                  class="font-bold text-lg"
+                  :class="
+                    getBurnedCardColor(store.burnedCardAnalysis.burnedByRank.get(rank as Rank) || 0)
+                  "
+                >
+                  {{ store.burnedCardAnalysis.burnedByRank.get(rank as Rank) || 0 }}
+                </div>
+                <div class="text-xs text-gray-600">{{ rank }}</div>
               </div>
             </div>
-            <div>
-              <h3 class="font-medium text-gray-700 mb-2">Impact</h3>
-              <div class="text-sm text-gray-600">
-                Estimated Impact: {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
+          </div>
+
+          <!-- Burned Cards by Baccarat Value -->
+          <div>
+            <h3 class="font-medium text-gray-700 mb-3">Cards Burned by Baccarat Value</h3>
+            <div class="grid grid-cols-5 md:grid-cols-10 gap-2">
+              <div
+                v-for="value in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
+                :key="value"
+                class="text-center p-2 bg-gray-50 rounded border"
+              >
+                <div
+                  class="font-bold text-lg"
+                  :class="getBurnedCardColor(getBurnedCardsByValue(value))"
+                >
+                  {{ getBurnedCardsByValue(value) }}
+                </div>
+                <div class="text-xs text-gray-600">{{ value }}</div>
+              </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500">
+              Value 0: 10, J, Q, K | Value 1: A | Values 2-9: Face value
+            </div>
+
+            <!-- Strategic Information -->
+            <div
+              v-if="store.totalCardsRemaining < 104"
+              class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg"
+            >
+              <h4 class="text-sm font-semibold text-orange-800 mb-2">
+                🎯 End-of-Shoe Strategy Notes
+              </h4>
+              <div class="text-xs text-orange-700 space-y-1">
+                <div>
+                  <strong>Burn Card Intelligence:</strong> Near shoe end, knowing burned cards
+                  becomes crucial for accurate edge calculations.
+                </div>
+                <div>
+                  <strong>Professional Advantage:</strong> Advanced players track burn patterns to
+                  gain significant edges in final hands.
+                </div>
+                <div>
+                  <strong>Kelly & Monte Carlo:</strong> Burn card knowledge improves betting size
+                  calculations and risk assessment.
+                </div>
+                <div class="pt-2 border-t border-orange-200">
+                  <strong>Cards Remaining:</strong> {{ store.totalCardsRemaining }} / 416
+                  <span v-if="store.totalCardsRemaining < 52" class="text-orange-600 font-bold"
+                    >(CRITICAL ZONE!)</span
+                  >
+                </div>
               </div>
             </div>
           </div>

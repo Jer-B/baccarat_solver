@@ -102,14 +102,32 @@
             :class="[
               'big-road-cell',
               cell.result ? `result-${cell.result}` : 'empty',
-              cell.pair ? 'has-pair' : '',
+              cell.playerPair || cell.bankerPair ? 'has-pair' : '',
+              cell.betInfo ? 'has-bet' : '',
             ]"
             :title="getCellTooltip(cell)"
           >
             <span v-if="cell.result" class="result-text">
               {{ getResultSymbol(cell.result) }}
             </span>
-            <div v-if="cell.pair" class="pair-indicators">
+
+            <!-- Betting Information -->
+            <div v-if="cell.betInfo" class="bet-info">
+              <div class="bet-amount">${{ cell.betInfo.betAmount }}</div>
+              <!-- Loss Cross -->
+              <div v-if="!cell.betInfo.won" class="loss-cross">
+                <svg width="16" height="16" viewBox="0 0 16 16" class="text-red-600">
+                  <path
+                    d="M12 4L4 12M4 4l8 8"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div v-if="cell.playerPair || cell.bankerPair" class="pair-indicators">
               <span v-if="cell.playerPair" class="pair-dot player-pair">•</span>
               <span v-if="cell.bankerPair" class="pair-dot banker-pair">•</span>
             </div>
@@ -130,14 +148,35 @@
           <div
             v-for="(cell, colIndex) in row"
             :key="colIndex"
-            :class="['bead-plate-cell', cell.result ? `bead-${cell.result}` : 'empty']"
+            :class="[
+              'bead-plate-cell',
+              cell.result ? `bead-${cell.result}` : 'empty',
+              cell.betInfo ? 'has-bet' : '',
+            ]"
             :title="getCellTooltip(cell)"
           >
             <div v-if="cell.result" class="bead-content">
               <div :class="['bead-circle', `bead-${cell.result}`]">
                 {{ getResultSymbol(cell.result) }}
               </div>
-              <div v-if="cell.pair" class="bead-pairs">
+
+              <!-- Betting Information for Bead Plate -->
+              <div v-if="cell.betInfo" class="bead-bet-info">
+                <div class="bead-bet-amount">${{ cell.betInfo.betAmount }}</div>
+                <!-- Loss Cross -->
+                <div v-if="!cell.betInfo.won" class="bead-loss-cross">
+                  <svg width="12" height="12" viewBox="0 0 12 12" class="text-red-600">
+                    <path
+                      d="M9 3L3 9M3 3l6 6"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div v-if="cell.playerPair || cell.bankerPair" class="bead-pairs">
                 <span v-if="cell.playerPair" class="bead-pair-dot">P</span>
                 <span v-if="cell.bankerPair" class="bead-pair-dot">B</span>
               </div>
@@ -236,13 +275,22 @@
 <script setup lang="ts">
 import { ref, computed, watch, type Ref } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
-import type { HandResult } from '@/types/cards';
+import type { HandResult, Card } from '@/types/cards';
 
 interface ScoreboardCell {
   result: 'player' | 'banker' | 'tie' | null;
   playerPair: boolean;
   bankerPair: boolean;
   handNumber: number;
+  playerCards?: Card[];
+  bankerCards?: Card[];
+  betInfo?: {
+    betType: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair';
+    betAmount: number;
+    won: boolean;
+    payout: number;
+    netResult: number;
+  };
 }
 
 const store = useBaccaratStore();
@@ -270,6 +318,9 @@ const bigRoadGrid = ref<ScoreboardCell[][]>(
           playerPair: false,
           bankerPair: false,
           handNumber: 0,
+          playerCards: undefined,
+          bankerCards: undefined,
+          betInfo: undefined,
         }))
     )
 );
@@ -285,6 +336,9 @@ const beadPlateGrid = ref<ScoreboardCell[][]>(
           playerPair: false,
           bankerPair: false,
           handNumber: 0,
+          playerCards: undefined,
+          bankerCards: undefined,
+          betInfo: undefined,
         }))
     )
 );
@@ -393,6 +447,9 @@ function updateBigRoad(hands: HandResult[]) {
           playerPair: false,
           bankerPair: false,
           handNumber: 0,
+          playerCards: undefined,
+          bankerCards: undefined,
+          betInfo: undefined,
         }))
     );
 
@@ -423,6 +480,9 @@ function updateBigRoad(hands: HandResult[]) {
         playerPair: hand.playerPair,
         bankerPair: hand.bankerPair,
         handNumber: index + 1,
+        playerCards: hand.player,
+        bankerCards: hand.banker,
+        betInfo: hand.betInfo,
       };
     }
 
@@ -457,6 +517,9 @@ function updateBeadPlate(hands: HandResult[]) {
           playerPair: false,
           bankerPair: false,
           handNumber: 0,
+          playerCards: undefined,
+          bankerCards: undefined,
+          betInfo: undefined,
         }))
     );
 
@@ -470,6 +533,9 @@ function updateBeadPlate(hands: HandResult[]) {
         playerPair: hand.playerPair,
         bankerPair: hand.bankerPair,
         handNumber: index + 1,
+        playerCards: hand.player,
+        bankerCards: hand.banker,
+        betInfo: hand.betInfo,
       };
     }
   });
@@ -676,8 +742,34 @@ function getCellTooltip(cell: ScoreboardCell): string {
   if (!cell.result) return '';
 
   let tooltip = `Hand #${cell.handNumber}: ${cell.result.toUpperCase()}`;
-  if (cell.playerPair) tooltip += ' + Player Pair';
-  if (cell.bankerPair) tooltip += ' + Banker Pair';
+
+  // Add card information
+  if (cell.playerCards && cell.bankerCards) {
+    const playerCardsStr = cell.playerCards
+      .map(card => `${card.rank}${card.suit.charAt(0).toUpperCase()}`)
+      .join(', ');
+    const bankerCardsStr = cell.bankerCards
+      .map(card => `${card.rank}${card.suit.charAt(0).toUpperCase()}`)
+      .join(', ');
+
+    const playerTotal = cell.playerCards.reduce((sum, card) => sum + card.value, 0) % 10;
+    const bankerTotal = cell.bankerCards.reduce((sum, card) => sum + card.value, 0) % 10;
+
+    tooltip += `\nPlayer: ${playerCardsStr} (Total: ${playerTotal})`;
+    tooltip += `\nBanker: ${bankerCardsStr} (Total: ${bankerTotal})`;
+  }
+
+  // Add pair information
+  if (cell.playerPair) tooltip += '\n+ Player Pair';
+  if (cell.bankerPair) tooltip += '\n+ Banker Pair';
+
+  // Add betting information
+  if (cell.betInfo) {
+    tooltip += `\n\nBet: $${cell.betInfo.betAmount} on ${cell.betInfo.betType.toUpperCase()}`;
+    tooltip += `\nResult: ${cell.betInfo.won ? 'WON' : 'LOST'}`;
+    tooltip += `\nPayout: $${cell.betInfo.payout.toFixed(2)}`;
+    tooltip += `\nNet: ${cell.betInfo.netResult >= 0 ? '+' : ''}$${cell.betInfo.netResult.toFixed(2)}`;
+  }
 
   return tooltip;
 }
@@ -744,6 +836,26 @@ updatePatternAnalysis(store.handHistory);
   @apply text-red-600;
 }
 
+/* Betting Information Styles */
+.bet-info {
+  @apply absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center pointer-events-none;
+}
+
+.bet-amount {
+  @apply text-xs font-bold text-white bg-black bg-opacity-70 px-1 rounded;
+  font-size: 8px;
+}
+
+.loss-cross {
+  @apply absolute top-0 right-0 bg-white rounded-full p-0.5;
+  width: 16px;
+  height: 16px;
+}
+
+.big-road-cell.has-bet {
+  @apply relative;
+}
+
 /* Bead Plate Styles */
 .bead-plate-grid {
   @apply grid gap-1;
@@ -786,6 +898,26 @@ updatePatternAnalysis(store.handHistory);
 .bead-pair-dot {
   @apply text-white bg-black rounded-full w-3 h-3 flex items-center justify-center text-xs leading-none;
   font-size: 8px;
+}
+
+/* Bead Plate Betting Information */
+.bead-bet-info {
+  @apply absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center pointer-events-none;
+}
+
+.bead-bet-amount {
+  @apply text-xs font-bold text-white bg-black bg-opacity-80 px-1 rounded;
+  font-size: 7px;
+}
+
+.bead-loss-cross {
+  @apply absolute top-0 right-0 bg-white rounded-full p-0.5;
+  width: 12px;
+  height: 12px;
+}
+
+.bead-plate-cell.has-bet {
+  @apply relative;
 }
 
 /* Pattern Grid Styles */

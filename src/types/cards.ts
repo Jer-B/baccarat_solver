@@ -10,6 +10,7 @@ export interface Card {
   isBurned?: boolean;
   position?: number;
   timestamp?: number;
+  handNumber?: number; // Track which hand this card was burned in
 }
 
 export interface ShoeState {
@@ -71,6 +72,14 @@ export interface HandResult {
   natural: boolean;
   timestamp: number;
   handNumber: number;
+  // Betting information
+  betInfo?: {
+    betType: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair';
+    betAmount: number;
+    won: boolean;
+    payout: number;
+    netResult: number; // payout - betAmount
+  };
 }
 
 export interface BurnedCardAnalysis {

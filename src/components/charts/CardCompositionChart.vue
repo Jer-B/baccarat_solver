@@ -87,6 +87,7 @@
             <button
               @click="store.initializeShoe()"
               class="w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+              title="Initialize a new shoe with fresh cards. Can be done at any time."
             >
               New Shoe
             </button>
@@ -132,7 +133,8 @@
     <!-- Debug info -->
     <div class="text-xs text-gray-500 mb-2">
       Total cards: {{ cardCounts.reduce((sum, count) => sum + count, 0) }} | Chart data:
-      {{ cardCounts.join(', ') }}
+      {{ cardCounts.join(', ') }} | Store total: {{ store.totalCardsRemaining }} | Shoe size:
+      {{ store.shoe.remainingCards.size }}
     </div>
 
     <!-- Chart Overview -->
@@ -168,7 +170,11 @@
                   suit="spades"
                   size="small"
                   clickable
-                  :disabled="getTotalZeroValueCount() === 0"
+                  :disabled="
+                    getTotalZeroValueCount() === 0 ||
+                    !store.canAddMoreCards ||
+                    !currentRoundBet.hasBet
+                  "
                   :style="{
                     position: 'absolute',
                     left: `${index * 8}px`,
@@ -209,7 +215,9 @@
                 clickable
                 show-count
                 :count="getCardCount('A')"
-                :disabled="getCardCount('A') === 0"
+                :disabled="
+                  getCardCount('A') === 0 || !store.canAddMoreCards || !currentRoundBet.hasBet
+                "
                 @click="addCardToHand"
               />
               <input
@@ -239,7 +247,9 @@
                 clickable
                 show-count
                 :count="getCardCount(rank)"
-                :disabled="getCardCount(rank) === 0"
+                :disabled="
+                  getCardCount(rank) === 0 || !store.canAddMoreCards || !currentRoundBet.hasBet
+                "
                 @click="addCardToHand"
               />
               <input
@@ -271,7 +281,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { Bar } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -290,6 +300,9 @@ import PlayingCard from '@/components/cards/PlayingCard.vue';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const store = useBaccaratStore();
+
+// Inject the current round bet to check if bet is placed
+const currentRoundBet = inject('currentRoundBet') as { value: string } | undefined;
 
 // Card rank arrays
 const zeroValueRanks = ['10', 'J', 'Q', 'K'];
@@ -462,6 +475,18 @@ function updateZeroValueCount(event: Event) {
 
 // Add card to current hand
 function addCardToHand(cardData: { rank: string; suit: string }) {
+  // Check if there's a bet placed (prevent exploit)
+  if (!currentRoundBet.hasBet) {
+    alert('Please place a bet before dealing cards!');
+    return;
+  }
+
+  // Check if we can add more cards (max 6 total in baccarat)
+  if (!store.canAddMoreCards) {
+    alert('Maximum 6 cards allowed in a baccarat hand (3 per side)!');
+    return;
+  }
+
   const rank = cardData.rank;
   // Find the first available suit for this rank
   const availableSuit = suits.find(suit => {
@@ -501,6 +526,18 @@ function addCardToHand(cardData: { rank: string; suit: string }) {
 
 // Add zero-value card to current hand (picks first available)
 function addZeroValueCardToHand() {
+  // Check if there's a bet placed (prevent exploit)
+  if (!currentRoundBet.hasBet) {
+    alert('Please place a bet before dealing cards!');
+    return;
+  }
+
+  // Check if we can add more cards (max 6 total in baccarat)
+  if (!store.canAddMoreCards) {
+    alert('Maximum 6 cards allowed in a baccarat hand (3 per side)!');
+    return;
+  }
+
   // Find the first available zero-value card
   for (const rank of zeroValueRanks) {
     const availableSuit = suits.find(suit => {
