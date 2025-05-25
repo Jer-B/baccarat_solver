@@ -3,6 +3,8 @@ import { onMounted } from 'vue';
 import { useBaccaratStore } from './stores/baccaratStore';
 import type { Suit } from './types/cards';
 import { testSupabaseConnection } from './utils/testSupabase';
+import BaccaratScoreboard from './components/scoreboard/BaccaratScoreboard.vue';
+import TestHandsButton from './components/testing/TestHandsButton.vue';
 
 const store = useBaccaratStore();
 
@@ -119,6 +121,9 @@ onMounted(async () => {
               </div>
             </div>
 
+            <!-- Test Buttons -->
+            <TestHandsButton />
+
             <!-- Action Button -->
             <button @click="store.initializeShoe()" class="btn-secondary text-sm">New Shoe</button>
           </div>
@@ -151,6 +156,9 @@ onMounted(async () => {
     <main class="container mx-auto px-4 py-6">
       <!-- Game Tab -->
       <div v-if="store.ui.selectedTab === 'game'" class="space-y-6">
+        <!-- Scoreboard -->
+        <BaccaratScoreboard />
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Current Hand -->
           <div class="lg:col-span-2">

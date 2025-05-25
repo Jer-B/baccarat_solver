@@ -46,7 +46,7 @@ export interface Database {
           outcome: 'player' | 'banker' | 'tie';
           player_pair: boolean;
           banker_pair: boolean;
-          natural: boolean;
+          is_natural: boolean;
           cards_remaining: number;
           penetration: number;
         };
@@ -62,7 +62,7 @@ export interface Database {
           outcome: 'player' | 'banker' | 'tie';
           player_pair: boolean;
           banker_pair: boolean;
-          natural: boolean;
+          is_natural: boolean;
           cards_remaining: number;
           penetration: number;
         };
@@ -78,7 +78,7 @@ export interface Database {
           outcome?: 'player' | 'banker' | 'tie';
           player_pair?: boolean;
           banker_pair?: boolean;
-          natural?: boolean;
+          is_natural?: boolean;
           cards_remaining?: number;
           penetration?: number;
         };

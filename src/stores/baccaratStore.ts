@@ -149,6 +149,8 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       return bets.reduce((best, current) => (current.edge > best.edge ? current : best));
     },
+
+    handHistory: state => state.history.hands,
   },
 
   actions: {
@@ -330,6 +332,12 @@ export const useBaccaratStore = defineStore('baccarat', {
       if (newSettings.numberOfDecks && newSettings.numberOfDecks !== this.settings.numberOfDecks) {
         this.initializeShoe();
       }
+    },
+
+    clearHistory() {
+      this.history.hands = [];
+      this.history.currentHandNumber = 0;
+      this.resetAnalysis();
     },
   },
 });

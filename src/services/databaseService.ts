@@ -78,7 +78,7 @@ export class DatabaseService {
       outcome: result.winner,
       player_pair: result.playerPair,
       banker_pair: result.bankerPair,
-      natural: result.natural,
+      is_natural: result.natural,
       cards_remaining: cardsRemaining,
       penetration,
     };
@@ -171,7 +171,7 @@ export class DatabaseService {
   }> {
     const { data, error } = await supabase
       .from('hands')
-      .select('outcome, player_pair, banker_pair, natural')
+      .select('outcome, player_pair, banker_pair, is_natural')
       .eq('game_id', gameId);
 
     if (error) {
@@ -185,7 +185,7 @@ export class DatabaseService {
       ties: data.filter(h => h.outcome === 'tie').length,
       playerPairs: data.filter(h => h.player_pair).length,
       bankerPairs: data.filter(h => h.banker_pair).length,
-      naturals: data.filter(h => h.natural).length,
+      naturals: data.filter(h => h.is_natural).length,
     };
 
     return stats;

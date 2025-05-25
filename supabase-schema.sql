@@ -32,7 +32,7 @@ CREATE TABLE api.hands (
     outcome TEXT NOT NULL CHECK (outcome IN ('player', 'banker', 'tie')),
     player_pair BOOLEAN NOT NULL DEFAULT FALSE,
     banker_pair BOOLEAN NOT NULL DEFAULT FALSE,
-    natural BOOLEAN NOT NULL DEFAULT FALSE,
+    is_natural BOOLEAN NOT NULL DEFAULT FALSE,
     cards_remaining INTEGER NOT NULL,
     penetration DECIMAL(5,4) NOT NULL CHECK (penetration BETWEEN 0 AND 1),
     UNIQUE(game_id, hand_number)
