@@ -1350,13 +1350,14 @@ const runMonteCarloSimulation = async () => {
       if (ruined) break;
 
       const isWin = Math.random() < winRate;
+      const betSize = Math.min(avgBetSize, currentBankroll * 0.05); // Max 5% of bankroll
 
       if (isWin) {
-        const winAmount = avgWin;
+        const winAmount = Math.min(avgWin, betSize * 2); // Cap winnings
         totalReturn += winAmount;
         currentBankroll += winAmount;
       } else {
-        const lossAmount = avgLoss;
+        const lossAmount = Math.min(avgLoss, betSize); // Loss is limited to bet size
         totalReturn -= lossAmount;
         currentBankroll -= lossAmount;
 

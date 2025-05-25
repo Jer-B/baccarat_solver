@@ -708,7 +708,7 @@ export const useBaccaratStore = defineStore('baccarat', {
       const lowValueRanks = ['A', '2', '3', '4', '5'];
 
       let highValueCards = 0;
-      let _lowValueCards = 0;
+      let lowValueCards = 0;
 
       // Count remaining high and low value cards
       for (const rank of highValueRanks) {
@@ -719,18 +719,18 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       for (const rank of lowValueRanks) {
         for (const suit of suits) {
-          _lowValueCards += remainingCards.get(`${rank}-${suit}`) || 0;
+          lowValueCards += remainingCards.get(`${rank}-${suit}`) || 0;
         }
       }
 
       // Calculate the imbalance
       const highValueRatio = highValueCards / totalCardsRemaining;
-      const expectedRatio = 0.5; // In a balanced shoe, should be roughly 50/50
+      const lowValueRatio = lowValueCards / totalCardsRemaining;
 
       // Edge sorting advantage is proportional to the imbalance
       // Positive advantage when more high cards remain (favors banker)
       // Negative advantage when more low cards remain (favors player)
-      const imbalance = highValueRatio - expectedRatio;
+      const imbalance = highValueRatio - lowValueRatio;
 
       // Scale the advantage (professional edge sorting can provide 0.5-6% advantage)
       const maxAdvantage = 0.06; // 6% maximum advantage
