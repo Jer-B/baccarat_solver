@@ -1,0 +1,26 @@
+# Cursor Rules for Baccarat Assistant
+
+## CSS and Styling
+- Use Tailwind CSS for all styling
+- @apply directive is valid and should not be flagged as an error
+- @tailwind, @layer, @screen, @variants, @responsive are all valid Tailwind directives
+- Prefer utility classes over custom CSS when possible
+- Use @apply sparingly, only for component-level abstractions
+
+## Vue 3 + TypeScript
+- Use Composition API with <script setup>
+- Prefer TypeScript interfaces over types
+- Use Pinia for state management
+- Follow Vue 3 best practices
+
+## Code Quality
+- ESLint and Prettier are configured
+- Follow conventional commit messages
+- Use meaningful variable and function names
+- Add JSDoc comments for complex functions
+
+## Tailwind CSS Configuration
+- Project uses Tailwind CSS v3.4.17
+- PostCSS is configured with tailwindcss and autoprefixer
+- Custom CSS should use @layer directive when needed
+- Unknown at-rules should be ignored in CSS validation 

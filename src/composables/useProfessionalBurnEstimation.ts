@@ -89,27 +89,32 @@ export function useProfessionalBurnEstimation() {
     // Wong's Adaptive Estimation (from Stanford Wong's work)
     wongMethod: (
       shoeComposition: Map<string, number>,
-      handHistory: HandResult[],
-      _observedBurns: Card[]
+      handHistory: any[],
+      observedBurns: Card[]
     ) => {
       const scenarios: BurnScenario[] = [];
 
-      // Wong's method adapts based on observed patterns
+      // Wong's method adapts based on observed patterns and burns
       const patternAnalysis = analyzeHistoricalPatterns(handHistory);
+
+      // Analyze observed burns for additional insights
+      const observedBurnAnalysis = analyzeObservedBurns(observedBurns);
 
       // Create scenarios based on pattern recognition
       ['conservative', 'moderate', 'aggressive'].forEach((style, index) => {
-        const scenario = createPatternBasedScenario(
+        const scenario = createWongAdaptiveScenario(
           `wong_${style}`,
           `Wong Method (${style} estimation)`,
           shoeComposition,
           patternAnalysis,
+          observedBurnAnalysis,
           style as 'conservative' | 'moderate' | 'aggressive'
         );
 
-        // Weight based on pattern strength
-        const weights = [0.3, 0.5, 0.2];
-        scenario.totalProbability = weights[index];
+        // Weight based on pattern strength and observed burn confidence
+        const baseWeights = [0.3, 0.5, 0.2];
+        const observedBurnConfidence = observedBurns.length > 0 ? 0.1 : 0;
+        scenario.totalProbability = baseWeights[index] + observedBurnConfidence;
 
         scenarios.push(scenario);
       });
@@ -118,10 +123,10 @@ export function useProfessionalBurnEstimation() {
     },
 
     // Bayesian Update Method (modern professional approach)
-    bayesianMethod: (priorEstimates: BurnEstimate[], _newEvidence: unknown[]) => {
+    bayesianMethod: (priorEstimates: BurnEstimate[], newEvidence: Evidence[]) => {
       return priorEstimates.map(estimate => {
         // Update probability using Bayes' theorem
-        const likelihood = calculateLikelihood(estimate, _newEvidence);
+        const likelihood = calculateLikelihood(estimate, newEvidence);
         const prior = estimate.probability;
 
         // Simplified Bayesian update
@@ -145,23 +150,38 @@ export function useProfessionalBurnEstimation() {
     name: string,
     shoeComposition: Map<string, number>,
     burnCount: number,
-    _observedBurns: Card[]
+    observedBurns: Card[]
   ): BurnScenario {
     const estimates: BurnEstimate[] = [];
     const totalCards = Array.from(shoeComposition.values()).reduce((sum, count) => sum + count, 0);
 
+    // Account for observed burns in probability calculations
+    const observedBurnCounts = new Map<string, number>();
+    observedBurns.forEach(card => {
+      const key = `${card.rank}-${card.suit}`;
+      observedBurnCounts.set(key, (observedBurnCounts.get(key) || 0) + 1);
+    });
+
     // Calculate probability for each card type
     for (const [cardKey, count] of shoeComposition.entries()) {
       const [rank, suit] = cardKey.split('-') as [Rank, Suit];
-      const probability = (count / totalCards) * (burnCount / totalCards);
+      const observedCount = observedBurnCounts.get(cardKey) || 0;
+
+      // Adjust probability based on observed burns
+      const adjustedCount = Math.max(0, count - observedCount);
+      const probability = (adjustedCount / totalCards) * (burnCount / totalCards);
 
       estimates.push({
         rank,
         suit,
         probability,
-        confidence: 0.6, // Statistical confidence
+        confidence: observedCount > 0 ? 0.8 : 0.6, // Higher confidence if we've observed burns
         method: 'statistical',
-        evidence: ['shoe_composition', 'burn_count_estimate'],
+        evidence: [
+          'shoe_composition',
+          'burn_count_estimate',
+          ...(observedCount > 0 ? ['observed_burn'] : []),
+        ],
       });
     }
 
@@ -185,15 +205,34 @@ export function useProfessionalBurnEstimation() {
   ): BurnScenario {
     const estimates: BurnEstimate[] = [];
     const highCardRanks = ['10', 'J', 'Q', 'K', 'A'];
+    const lowCardRanks = ['2', '3', '4', '5', '6', '7', '8', '9'];
+
+    // Calculate total high and low card counts for bias analysis
+    let totalHighCards = 0;
+    let totalLowCards = 0;
+
+    for (const [cardKey, count] of shoeComposition.entries()) {
+      const [rank] = cardKey.split('-') as [Rank, Suit];
+      if (highCardRanks.includes(rank)) {
+        totalHighCards += count;
+      } else if (lowCardRanks.includes(rank)) {
+        totalLowCards += count;
+      }
+    }
 
     for (const [cardKey, count] of shoeComposition.entries()) {
       const [rank, suit] = cardKey.split('-') as [Rank, Suit];
 
       let probability: number;
       if (highCardRanks.includes(rank)) {
-        probability = highCardBias * (count / 100) * penetration;
+        // High card probability adjusted by bias and penetration
+        probability = highCardBias * (count / totalHighCards) * penetration * 0.1;
+      } else if (lowCardRanks.includes(rank)) {
+        // Low card probability inversely adjusted by bias
+        probability = (1 - highCardBias) * (count / totalLowCards) * penetration * 0.1;
       } else {
-        probability = (1 - highCardBias) * (count / 100) * penetration;
+        // Mid cards (6, 7, 8, 9) get neutral probability
+        probability = 0.5 * (count / 100) * penetration * 0.1;
       }
 
       estimates.push({
@@ -202,51 +241,7 @@ export function useProfessionalBurnEstimation() {
         probability: Math.min(probability, 0.8), // Cap at 80%
         confidence: 0.5 + Math.abs(highCardBias - 0.5) * 0.4, // Higher confidence for extreme bias
         method: 'statistical',
-        evidence: ['dealer_bias_pattern', 'penetration_analysis'],
-      });
-    }
-
-    return {
-      id,
-      name,
-      estimates,
-      totalProbability: 0,
-      edgeImpact: calculateEdgeImpact(estimates),
-      kellyAdjustment: calculateKellyAdjustment(estimates),
-    };
-  }
-
-  // Create pattern-based scenario
-  function createPatternBasedScenario(
-    id: string,
-    name: string,
-    shoeComposition: Map<string, number>,
-    patternAnalysis: { rankProbabilities: Record<string, number>; totalHands: number },
-    style: 'conservative' | 'moderate' | 'aggressive'
-  ): BurnScenario {
-    const estimates: BurnEstimate[] = [];
-    const multipliers = {
-      conservative: 0.7,
-      moderate: 1.0,
-      aggressive: 1.3,
-    };
-
-    const multiplier = multipliers[style];
-
-    for (const [cardKey, _count] of shoeComposition.entries()) {
-      const [rank, suit] = cardKey.split('-') as [Rank, Suit];
-
-      // Base probability from pattern analysis
-      const baseProbability = patternAnalysis.rankProbabilities?.[rank] || 0.1;
-      const adjustedProbability = Math.min(baseProbability * multiplier, 0.9);
-
-      estimates.push({
-        rank,
-        suit,
-        probability: adjustedProbability,
-        confidence: style === 'conservative' ? 0.8 : style === 'moderate' ? 0.6 : 0.4,
-        method: 'pattern',
-        evidence: ['historical_pattern', `${style}_estimation`],
+        evidence: ['dealer_bias_pattern', 'penetration_analysis', 'card_category_analysis'],
       });
     }
 
@@ -281,23 +276,131 @@ export function useProfessionalBurnEstimation() {
     return { rankProbabilities, totalHands };
   }
 
+  // Analyze observed burns for Wong adaptive method
+  function analyzeObservedBurns(observedBurns: Card[]) {
+    const burnRankCounts = new Map<Rank, number>();
+    const burnSuitCounts = new Map<Suit, number>();
+
+    observedBurns.forEach(card => {
+      burnRankCounts.set(card.rank, (burnRankCounts.get(card.rank) || 0) + 1);
+      burnSuitCounts.set(card.suit, (burnSuitCounts.get(card.suit) || 0) + 1);
+    });
+
+    // Calculate burn patterns
+    const highCardBurns = ['10', 'J', 'Q', 'K', 'A'].reduce(
+      (sum, rank) => sum + (burnRankCounts.get(rank as Rank) || 0),
+      0
+    );
+    const lowCardBurns = ['2', '3', '4', '5', '6', '7', '8', '9'].reduce(
+      (sum, rank) => sum + (burnRankCounts.get(rank as Rank) || 0),
+      0
+    );
+
+    const totalBurns = observedBurns.length;
+    // Calculate bias based on high vs low card distribution
+    const totalCategorizedBurns = highCardBurns + lowCardBurns;
+    const highCardBias = totalCategorizedBurns > 0 ? highCardBurns / totalCategorizedBurns : 0.5;
+
+    return {
+      burnRankCounts,
+      burnSuitCounts,
+      totalBurns,
+      highCardBias,
+      confidence: Math.min(totalBurns / 10, 1.0), // Confidence increases with more observations
+    };
+  }
+
+  // Create Wong adaptive scenario
+  function createWongAdaptiveScenario(
+    id: string,
+    name: string,
+    shoeComposition: Map<string, number>,
+    patternAnalysis: { rankProbabilities: Record<string, number>; totalHands: number },
+    observedBurnAnalysis: {
+      burnRankCounts: Map<Rank, number>;
+      totalBurns: number;
+      highCardBias: number;
+      confidence: number;
+    },
+    style: 'conservative' | 'moderate' | 'aggressive'
+  ): BurnScenario {
+    const estimates: BurnEstimate[] = [];
+    const multipliers = {
+      conservative: 0.7,
+      moderate: 1.0,
+      aggressive: 1.3,
+    };
+
+    const multiplier = multipliers[style];
+    const totalCards = Array.from(shoeComposition.values()).reduce((sum, count) => sum + count, 0);
+
+    for (const [cardKey, count] of shoeComposition.entries()) {
+      const [rank, suit] = cardKey.split('-') as [Rank, Suit];
+
+      // Base probability from pattern analysis
+      const baseProbability = patternAnalysis.rankProbabilities?.[rank] || 0.1;
+
+      // Adjust based on observed burn patterns
+      const observedBurnCount = observedBurnAnalysis.burnRankCounts.get(rank) || 0;
+      const burnAdjustment = observedBurnCount > 0 ? 0.2 : 0;
+
+      // Weight by card availability in shoe
+      const availabilityWeight = count / totalCards;
+      const adjustedProbability = Math.min(
+        (baseProbability + burnAdjustment) * multiplier * availabilityWeight * 10,
+        0.9
+      );
+
+      estimates.push({
+        rank,
+        suit,
+        probability: adjustedProbability,
+        confidence: Math.min(
+          (style === 'conservative' ? 0.8 : style === 'moderate' ? 0.6 : 0.4) +
+            observedBurnAnalysis.confidence * 0.2,
+          0.95
+        ),
+        method: 'pattern',
+        evidence: [
+          'historical_pattern',
+          `${style}_estimation`,
+          'card_availability',
+          ...(observedBurnCount > 0 ? ['observed_burn_pattern'] : []),
+        ],
+      });
+    }
+
+    return {
+      id,
+      name,
+      estimates,
+      totalProbability: 0,
+      edgeImpact: calculateEdgeImpact(estimates),
+      kellyAdjustment: calculateKellyAdjustment(estimates),
+    };
+  }
+
+  // Define evidence type interface
+  interface Evidence {
+    type: 'dealer_tell' | 'partial_glimpse' | 'timing_pattern' | 'statistical' | 'observed';
+    rank?: Rank;
+    confidence?: number;
+    timestamp?: number;
+  }
+
   // Calculate likelihood for Bayesian updates
-  function calculateLikelihood(estimate: BurnEstimate, evidence: unknown[]): number {
+  function calculateLikelihood(estimate: BurnEstimate, evidence: Evidence[]): number {
     let likelihood = 0.5; // Base likelihood
 
     evidence.forEach(ev => {
-      // Type guard for evidence objects
-      if (typeof ev === 'object' && ev !== null && 'type' in ev) {
-        const evidenceItem = ev as { type: string; rank?: string };
-        if (evidenceItem.type === 'dealer_tell' && evidenceItem.rank === estimate.rank) {
-          likelihood += 0.3;
-        }
-        if (evidenceItem.type === 'partial_glimpse' && evidenceItem.rank === estimate.rank) {
-          likelihood += 0.4;
-        }
-        if (evidenceItem.type === 'timing_pattern') {
-          likelihood += 0.1;
-        }
+      if (ev.type === 'dealer_tell' && ev.rank === estimate.rank) {
+        likelihood += 0.3;
+      }
+      if (ev.type === 'partial_glimpse' && ev.rank === estimate.rank) {
+        likelihood += 0.4;
+      }
+      if (ev.type === 'timing_pattern') {
+        likelihood += 0.1;
       }
     });
 

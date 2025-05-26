@@ -247,9 +247,20 @@ const pairImpact = computed(() => {
   });
 
   let impact = 0;
-  rankCounts.forEach(count => {
+  rankCounts.forEach((count, rank) => {
     // Each burned card of a rank reduces pair probability for that rank
-    impact -= count * 0.005; // Approximate impact
+    let rankSpecificImpact = count * 0.005; // Base impact
+
+    // Rank-specific impact calculations
+    if (rank === 'A') {
+      rankSpecificImpact = count * 0.007; // Aces have higher pair impact
+    } else if (['10', 'J', 'Q', 'K'].includes(rank)) {
+      rankSpecificImpact = count * 0.006; // Face cards have moderate impact
+    } else if (['2', '3', '4', '5'].includes(rank)) {
+      rankSpecificImpact = count * 0.004; // Low cards have lower impact
+    }
+
+    impact -= rankSpecificImpact;
   });
 
   return impact;

@@ -1327,7 +1327,10 @@ const runMonteCarloSimulation = async () => {
   isSimulating.value = true;
 
   // Update edge snapshot when running manually to prevent false triggers
-  lastEdgeSnapshot.value = { ...store.edgeCalculations };
+  lastEdgeSnapshot.value = {
+    ...store.edgeCalculations,
+    edgeSortingAdvantage: store.edgeCalculations.edgeSortingAdvantage || 0,
+  };
 
   // Simulate in chunks to avoid blocking UI
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -1470,7 +1473,15 @@ const getKellyChangeClass = (): string => {
 
 // Risk scenario detection functions
 const detectRiskScenarios = () => {
-  const scenarios = [];
+  const scenarios: Array<{
+    type: string;
+    severity: string;
+    title: string;
+    description: string;
+    value: number;
+    icon: string;
+    color: string;
+  }> = [];
   const results = monteCarloResults.value;
 
   if (results.simulations === 0) return scenarios;
@@ -1620,7 +1631,7 @@ const checkSignificantEdgeChange = () => {
     playerPairEdge: Math.abs(currentEdges.playerPairEdge - lastEdgeSnapshot.value.playerPairEdge),
     bankerPairEdge: Math.abs(currentEdges.bankerPairEdge - lastEdgeSnapshot.value.bankerPairEdge),
     edgeSortingAdvantage: Math.abs(
-      currentEdges.edgeSortingAdvantage - lastEdgeSnapshot.value.edgeSortingAdvantage
+      (currentEdges.edgeSortingAdvantage || 0) - (lastEdgeSnapshot.value.edgeSortingAdvantage || 0)
     ),
   };
 
@@ -1636,7 +1647,10 @@ const checkSignificantEdgeChange = () => {
 
   if (hasSignificantChange) {
     // Update snapshots
-    lastEdgeSnapshot.value = { ...currentEdges };
+    lastEdgeSnapshot.value = {
+      ...currentEdges,
+      edgeSortingAdvantage: currentEdges.edgeSortingAdvantage || 0,
+    };
     lastEdgeRunHand.value = currentHands;
 
     // Run Monte Carlo due to significant edge change
@@ -1712,7 +1726,10 @@ const onIntervalChange = () => {
 // Trigger settings event handlers
 const onTriggerSettingsChange = () => {
   // Update edge snapshots when thresholds change
-  lastEdgeSnapshot.value = { ...store.edgeCalculations };
+  lastEdgeSnapshot.value = {
+    ...store.edgeCalculations,
+    edgeSortingAdvantage: store.edgeCalculations.edgeSortingAdvantage || 0,
+  };
 
   // Sync banker edge threshold with player edge threshold
   store.settings.calculationTriggers.edgeChangeThresholds.bankerEdge =
@@ -1889,7 +1906,10 @@ onMounted(() => {
   // Initialize last run hand and edge snapshot
   lastAutoRunHand.value = store.bettingStats.totalHands;
   lastEdgeRunHand.value = store.bettingStats.totalHands;
-  lastEdgeSnapshot.value = { ...store.edgeCalculations };
+  lastEdgeSnapshot.value = {
+    ...store.edgeCalculations,
+    edgeSortingAdvantage: store.edgeCalculations.edgeSortingAdvantage || 0,
+  };
 
   // Check if we should auto-run on mount
   if (store.settings.monteCarlo.autoRun) {
