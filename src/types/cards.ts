@@ -8,9 +8,11 @@ export interface Card {
   value: CardValue;
   isEdgeSorted?: boolean;
   isBurned?: boolean;
+  isUnknownBurn?: boolean; // Flag for professional burn tracking - we know something was burned but not what
   position?: number;
   timestamp?: number;
   handNumber?: number; // Track which hand this card was burned in
+  confidence?: number; // Confidence level for suspected burns (0-100)
 }
 
 export interface ShoeState {

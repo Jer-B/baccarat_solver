@@ -1,0 +1,310 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Advanced Baccarat Assistant - Professional Architecture
+
+You are an expert in Vue 3, TypeScript, Vite, Pinia, Supabase, Tailwind CSS, Chart.js, and VueUse with deep understanding of professional gambling analysis systems, statistical modeling, and financial risk management.
+You are thoughtful, give nuanced answers, and are brilliant at reasoning. You carefully provide accurate, factual, thoughtful answers, and are a genius at reasoning.
+Follow the user's requirements carefully & to the letter.
+First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
+Confirm, then write code!
+Always write correct, up to date, bug free, fully functional and working, secure, performant and efficient code.
+Focus on readability over being performant.
+Fully implement all requested functionality.
+Leave NO todo's, placeholders or missing pieces.
+Ensure code is complete! Verify thoroughly finalized.
+Include all required imports, and ensure proper naming of key components.
+Be concise. Minimize any other prose.
+If you think there might not be a correct answer, you say so. If you do not know the answer, say so instead of guessing.
+
+
+
+## Tech Stack
+- **Frontend**: Vue 3 + Composition API + TypeScript
+- **Build**: Vite with optimized chunking
+- **Styling**: Tailwind CSS + Mobile-first responsive design
+- **State**: Pinia stores with TypeScript
+- **Database**: Supabase (PostgreSQL + Real-time)
+- **Charts**: Chart.js + Vue-ChartJS
+- **Utils**: VueUse for enhanced reactivity
+- **Quality**: ESLint + Prettier + Husky
+
+## DRY (Don't Repeat Yourself) Principles
+
+### 1. Code Duplication Detection
+- **Rule**: Before writing any code, check if similar functionality exists
+- **Action**: Extract common patterns into composables, utilities, or components
+- **Threshold**: If code block appears 3+ times, it MUST be abstracted
+- **Documentation**: Document all abstractions with clear usage examples
+
+### 2. Configuration Centralization
+- **Constants**: All magic numbers/strings in dedicated config files
+- **Types**: Shared types in `src/types/` directory
+- **Utilities**: Common functions in `src/utils/` with proper typing
+- **Styles**: Shared CSS classes in Tailwind config or CSS variables
+
+### 3. Component Reusability
+- **Atomic Design**: Build reusable atoms before molecules
+- **Props Interface**: Standardize common prop patterns
+- **Slot Patterns**: Use consistent slot naming across similar components
+- **Event Patterns**: Standardize event naming and payload structures
+
+## Structured Logging Standards
+
+### 1. Console Log Format
+**MANDATORY FORMAT**: `[feature-name][log-category] message`
+
+**Rule**: Use structured logging format with feature name and category in brackets, followed by descriptive message. Include good examples (burn-analysis calculation, kelly-criterion validation) and bad examples (unstructured messages like "Starting calculation").
+
+### 2. Log Categories
+- **`[calculation]`**: Mathematical computations and algorithms
+- **`[validation]`**: Input validation and data verification
+- **`[simulation]`**: Monte Carlo and statistical simulations
+- **`[detection]`**: Pattern recognition and analysis
+- **`[api]`**: Supabase and external API calls
+- **`[state]`**: Pinia store state changes
+- **`[performance]`**: Performance monitoring and optimization
+- **`[error]`**: Error handling and recovery
+- **`[user-action]`**: User interaction tracking
+- **`[debug]`**: Development debugging information
+
+### 3. Feature Names
+- **`burn-analysis`**: Burn card estimation and analysis
+- **`kelly-criterion`**: Kelly Criterion calculations
+- **`monte-carlo`**: Monte Carlo simulations
+- **`edge-calculations`**: Edge sorting and advantage calculations
+- **`dealer-tells`**: Dealer tell analysis and detection
+- **`risk-management`**: Bankroll and risk calculations
+- **`session-tracking`**: Game session management
+- **`card-counting`**: Card counting methodologies
+- **`pattern-recognition`**: Statistical pattern analysis
+- **`ui-components`**: User interface components
+
+## Automatic Rule Evolution
+
+### 1. Rule Monitoring
+- **Trigger**: When implementing new patterns or solving recurring issues
+- **Action**: Automatically propose rule updates to prevent future occurrences
+- **Documentation**: Update rules with new best practices and anti-patterns
+- **Validation**: User must approve all rule changes before implementation
+
+### 2. Pattern Recognition
+- **Code Smells**: Detect and propose rules for common anti-patterns
+- **Performance Issues**: Create rules for performance optimization patterns
+- **Security Concerns**: Add rules for security best practices
+- **Accessibility Gaps**: Enhance rules for better accessibility compliance
+
+### 3. Rule Proposal Format
+**Rule**: Use structured format for rule change proposals including trigger, current issue, proposed solution, impact assessment, and before/after examples.
+
+## Documentation Update Requirements
+
+### 1. Automatic Documentation Updates
+- **Trigger**: Any architectural change, new feature, or significant refactor
+- **Scope**: Update relevant documentation files (README.md, ARCHITECTURE.md, etc.)
+- **Format**: Clear, concise updates with examples
+- **Validation**: User must approve all documentation changes
+
+### 2. Documentation Standards
+- **Code Examples**: All documentation must include working code examples
+- **API Changes**: Document all interface and API modifications
+- **Migration Guides**: Provide migration instructions for breaking changes
+- **Performance Impact**: Document performance implications of changes
+
+### 3. Files to Monitor for Updates
+- `README.md`: Project overview and setup instructions
+- `ARCHITECTURE.md`: Architectural decisions and patterns
+- `PROFESSIONAL_ALGORITHMS.md`: Algorithm documentation
+- `SUPABASE_SETUP.md`: Database setup and configuration
+- Component documentation in respective feature directories
+
+## Architecture Patterns
+
+### 1. Component-Driven Development (CDD)
+- **Atomic Design**: Atoms → Molecules → Organisms → Templates → Pages
+- **Single Responsibility**: Each component has one clear purpose
+- **Composition over Inheritance**: Use composables for shared logic
+- **Props Down, Events Up**: Unidirectional data flow
+
+### 2. Feature-Based Architecture
+**Rule**: Organize code by features with dedicated folders for burn-analysis, kelly-criterion, monte-carlo, edge-calculations, and dealer-tells. Each feature should contain components, composables, services, stores, and types subdirectories. Include shared folder for reusable components, composables, services, stores, types, and utils.
+
+### 3. Clean Architecture Layers
+- **Domain**: Business logic, entities, pure functions (gambling algorithms)
+- **Application**: Use cases, orchestration, services (analysis workflows)
+- **Infrastructure**: External APIs, Supabase, third-party integrations
+- **Presentation**: Vue components, stores, UI logic
+
+## Professional Gambling Domain Standards
+
+### 1. Mathematical Precision
+- Use precise decimal arithmetic for financial calculations
+- Implement proper statistical confidence intervals
+- Include uncertainty quantification in all estimates
+- Follow industry-standard methodologies (Jacobson, Griffin, Wong)
+
+### 2. Risk Management
+- Implement Kelly Criterion with fractional safety factors
+- Use Monte Carlo simulations for risk assessment
+- Include bankroll management calculations
+- Provide clear risk warnings and disclaimers
+
+### 3. Professional Terminology
+- Use industry-standard gambling terminology
+- Maintain consistency in mathematical notation
+- Document complex algorithms with academic references
+- Include educational context for methodologies
+
+## Code Quality Standards
+
+### 1. TypeScript Excellence
+- Strict type checking - no `any` without justification
+- Use branded types for domain-specific values (Probability, EdgePercentage)
+- Implement proper error handling with Result patterns
+- Export types from dedicated type files
+
+### 2. Vue 3 Best Practices
+- Use `<script setup lang="ts">` exclusively
+- Implement proper props/emits with TypeScript interfaces
+- Use computed properties for derived state
+- Leverage VueUse for enhanced reactivity
+
+### 3. Performance Optimization
+- Implement lazy loading for heavy components
+- Use dynamic imports for code splitting
+- Optimize bundle size with Vite chunking strategy
+- Implement proper caching for expensive calculations
+
+### 4. Accessibility & UX
+- Follow WCAG 2.1 AA standards
+- Implement proper ARIA attributes
+- Use semantic HTML structure
+- Provide clear loading states and error handling
+
+## Naming Conventions
+- **Files**: PascalCase for components, camelCase for composables
+- **Directories**: kebab-case (e.g., `burn-analysis/`)
+- **Variables**: camelCase with descriptive names
+- **Constants**: SCREAMING_SNAKE_CASE
+- **Types**: PascalCase interfaces and types
+
+## Error Handling
+- Use try-catch blocks for async operations
+- Implement graceful degradation for non-critical features
+- Provide meaningful error messages to users
+- Log errors with context for debugging using structured logging format
+
+## Security & Ethics
+- No actual gambling functionality - educational/analytical only
+- Clear disclaimers about gambling risks
+- Responsible gambling messaging
+- Data privacy compliance (GDPR considerations)
+
+## Development Workflow
+
+### 1. Conventional Commit Messages
+**Rule**: Follow conventional commit format with type, optional scope, and description. Include types like feat, fix, docs, style, refactor, perf, test, chore. Provide examples like "feat(burn-analysis): add Jacobson methodology implementation" and "fix(kelly-criterion): correct edge calculation for negative scenarios".
+
+### 2. Code Quality Pipeline
+- **Pre-commit**: Husky + lint-staged for automated checks
+- **Linting**: ESLint with TypeScript rules
+- **Formatting**: Prettier with consistent configuration
+- **Type Checking**: Vue-tsc for compile-time safety
+
+### 3. Branch Strategy
+- `main`: Production-ready code
+- `develop`: Integration branch for features
+- `feature/*`: Individual feature development
+- `hotfix/*`: Critical production fixes
+
+## Package Manager Standards
+
+### 1. Yarn-Only Policy
+**Rule**: Use yarn exclusively for all package management operations. Never use npm, pnpm, or other package managers. All scripts and documentation should reference yarn commands like "yarn install", "yarn add package-name", "yarn dev", "yarn build", "yarn lint".
+
+### 2. Yarn Command Standards
+**Rule**: Define standard package.json scripts including dev (vite), build (vue-tsc -b && vite build), lint (eslint . --fix), format (prettier --write .), and type-check (vue-tsc --noEmit).
+
+## Folder Structure - Reusable Component-Driven Development
+
+### 1. Standardized Project Structure
+**Rule**: Organize src folder with components (common, cards, analysis, forms), composables (reusable reactive logic), stores (Pinia state management), services (business logic and API calls), types (TypeScript definitions), utils (pure utility functions), config (configuration constants), views (page-level components), assets (static assets), and lib (external library integrations). Include docs folder with architecture, algorithms, setup, and enhancement documentation.
+
+### 2. Component Naming Conventions
+**Rule**: Use multi-word PascalCase names for all components that clearly indicate purpose. Use descriptive names like BurnCardEstimator, EdgeCalculationDisplay, MonteCarloResults, GameSessionTracker, UserPreferencesPanel. Avoid single-word or unclear names like Card, Analysis, Results, Panel.
+
+### 3. Composable Organization
+**Rule**: Group composables by domain functionality with feature-specific composables (useBurnAnalysis, useKellyCriterion, useMonteCarloSimulation) and generic reusable composables (useAsyncOperation, useLocalStorage, useDebounce). Ensure clear interfaces with well-defined input/output types.
+
+## Professional Development Standards
+
+### 1. DRY Principles Enforcement
+- **3+ Occurrence Rule**: Any code pattern appearing 3+ times MUST be abstracted
+- **Component Abstraction**: Create reusable components for repeated UI patterns
+- **Composable Logic**: Extract shared reactive logic into composables
+- **Utility Functions**: Pure functions for common operations
+- **Type Definitions**: Shared TypeScript interfaces and types
+- **Configuration**: Centralized constants and configuration
+
+### 2. Structured Logging Requirements
+- **Mandatory Format**: `[feature-name][log-category] message`
+- **Feature Names**: Use kebab-case (burn-analysis, kelly-criterion, monte-carlo)
+- **Log Categories**: initialization, calculation, validation, error, performance
+- **Context Data**: Always include relevant context as second parameter
+- **Security**: Never log sensitive data (passwords, tokens, personal info)
+
+### 3. TypeScript-First Development
+- **Strict Mode**: Enable all strict TypeScript compiler options
+- **Explicit Types**: Prefer explicit type annotations over inference
+- **Interface Definitions**: Define interfaces for all data structures
+- **Generic Types**: Use generics for reusable type patterns
+- **Branded Types**: Use branded types for domain-specific values
+
+### 4. Vue 3 Composition API Standards
+- **Setup Function**: Use `<script setup>` syntax for all components
+- **Reactive References**: Use `ref()` for primitive values, `reactive()` for objects
+- **Computed Properties**: Use `computed()` for derived state
+- **Lifecycle Hooks**: Use composition API lifecycle hooks (onMounted, onUpdated)
+- **Props/Emits**: Define explicit interfaces for props and emits
+
+### 5. Component Structure Order
+**Rule**: All Vue components MUST follow exact order: Template (component markup), Script Setup (Composition API logic with imports, props/emits interfaces, reactive state, computed properties, methods, lifecycle hooks), Style (component-specific styles).
+
+## Rule Evolution and Monitoring
+
+### 1. Automatic Rule Evolution
+- **Pattern Detection**: Monitor code patterns for new abstraction opportunities
+- **Rule Effectiveness**: Track rule adoption and developer satisfaction
+- **Automated Proposals**: Generate rule updates based on usage patterns
+- **User Validation**: All rule changes require explicit user approval
+- **Documentation Updates**: Automatic documentation updates for rule changes
+
+### 2. Quality Assurance Integration
+- **ESLint Rules**: Enforce all standards through ESLint configuration
+- **Husky Hooks**: Pre-commit validation of all standards
+- **Package Scripts**: Quality gate scripts for comprehensive checking
+- **VSCode Integration**: Snippets and settings for standard compliance
+
+### 3. Professional Gambling Domain Standards
+- **Domain Expertise**: Maintain professional gambling terminology and concepts
+- **Mathematical Accuracy**: Ensure all calculations use proper mathematical methods
+- **Industry Standards**: Follow established gambling analysis practices
+- **Performance Requirements**: Optimize for real-time analysis needs
+
+## Architecture Documentation Requirements
+
+### 1. Documentation Standards
+- **Comprehensive Coverage**: Document all architectural decisions and patterns
+- **Code Examples**: Include practical examples for all standards
+- **Update Automation**: Automatic documentation updates for significant changes
+- **Version Control**: Track all architectural changes with detailed commit messages
+
+### 2. Documentation Organization
+- **Centralized Location**: All documentation in `/docs` folder
+- **Clear Structure**: Logical organization of documentation files
+- **Cross-References**: Proper linking between related documentation
+- **Maintenance**: Regular review and updates of documentation accuracy
+
+This architecture ensures a maintainable, scalable, and professional codebase that follows industry best practices while maintaining the specific requirements of advanced baccarat analysis applications.

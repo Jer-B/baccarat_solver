@@ -145,16 +145,18 @@
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">💰 Payout Examples (for $10 bet)</h4>
         <button
-          @click="
-            store.ui.visibility.payoutSettings.payoutExamples =
-              !store.ui.visibility.payoutSettings.payoutExamples
-          "
-          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors"
+          @click="store.toggleSectionVisibility('payoutSettings', 'payoutExamples')"
+          :disabled="!store.isToggleEnabled()"
+          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :title="
-            store.ui.visibility.payoutSettings.payoutExamples ? 'Hide examples' : 'Show examples'
+            store.ui.globalToggleMode
+              ? store.isVisible('payoutSettings', 'payoutExamples')
+                ? 'Hide examples'
+                : 'Show examples'
+              : 'Enable info panels to toggle individual sections'
           "
         >
-          {{ store.ui.visibility.payoutSettings.payoutExamples ? '👁️ Hide' : '👁️‍🗨️ Show' }}
+          {{ store.getToggleButtonText('payoutSettings', 'payoutExamples') }}
         </button>
       </div>
       <div
@@ -194,16 +196,18 @@
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-blue-800">📋 Preset Information</h4>
         <button
-          @click="
-            store.ui.visibility.payoutSettings.presetInfo =
-              !store.ui.visibility.payoutSettings.presetInfo
-          "
-          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors"
+          @click="store.toggleSectionVisibility('payoutSettings', 'presetInfo')"
+          :disabled="!store.isToggleEnabled()"
+          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :title="
-            store.ui.visibility.payoutSettings.presetInfo ? 'Hide preset info' : 'Show preset info'
+            store.ui.globalToggleMode
+              ? store.isVisible('payoutSettings', 'presetInfo')
+                ? 'Hide preset info'
+                : 'Show preset info'
+              : 'Enable info panels to toggle individual sections'
           "
         >
-          {{ store.ui.visibility.payoutSettings.presetInfo ? '👁️ Hide' : '👁️‍🗨️ Show' }}
+          {{ store.getToggleButtonText('payoutSettings', 'presetInfo') }}
         </button>
       </div>
       <div

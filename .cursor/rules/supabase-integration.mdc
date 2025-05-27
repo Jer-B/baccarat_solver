@@ -1,0 +1,124 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Supabase Integration Architecture
+
+## Database Schema Design
+
+### 1. Professional Tables Structure
+**Rule**: Design comprehensive database schema for professional gambling analysis with proper relationships and constraints.
+
+**Game Sessions Table**: Store session metadata with UUID primary keys, user references, bankroll tracking, risk levels (conservative/moderate/aggressive), and analysis methods (jacobson/griffin/wong)
+**Hand History Table**: Track individual hands with JSONB card arrays, game results, betting information, edge estimates, and confidence levels with proper foreign key relationships
+**Burn Analysis Table**: Store analysis results with method validation, burn counts, estimated cards in JSONB format, edge calculations with 4 decimal precision, and reasoning text
+**User Settings Table**: Manage user preferences with default values for bankroll (10000), risk level (conservative), analysis method (jacobson), and notification preferences in JSONB
+**Data Types**: Use UUID for primary keys, TIMESTAMPTZ for timestamps, DECIMAL for financial precision, JSONB for flexible data storage, and CHECK constraints for enum validation
+
+### 2. Row Level Security (RLS)
+**Rule**: Implement comprehensive Row Level Security to ensure users can only access their own data.
+
+**RLS Enablement**: Enable RLS on all tables (game_sessions, hand_history, burn_analysis, user_settings) for security enforcement
+**User Isolation Policies**: Create policies that restrict SELECT, INSERT, and UPDATE operations to records where auth.uid() matches user_id
+**Cascading Security**: Ensure child tables (hand_history, burn_analysis) inherit security through session_id relationships
+**Policy Naming**: Use descriptive policy names that clearly indicate the access pattern and table scope
+**Complete Coverage**: Apply similar security policies to all user-data tables with appropriate user_id or session_id filtering
+
+## Service Layer Architecture
+
+### 1. Base Supabase Service
+**Rule**: Create singleton Supabase service with proper configuration, error handling, and health checking.
+
+**Singleton Pattern**: Use singleton pattern to ensure single Supabase client instance across the application
+**Environment Configuration**: Load VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from environment variables with validation
+**Client Configuration**: Configure auth settings (autoRefreshToken, persistSession, detectSessionInUrl) and realtime parameters (10 events per second)
+**TypeScript Integration**: Use typed Database interface for full type safety across all database operations
+**Health Check Method**: Implement health check that performs simple query to validate database connectivity
+**Error Handling**: Throw descriptive errors for missing environment variables and handle connection failures gracefully
+
+### 2. Session Management Service
+**Rule**: Implement comprehensive session management service with CRUD operations and proper error handling.
+
+**Create Operations**: Insert new sessions with session name, bankroll start, risk level, and analysis method with automatic timestamp generation
+**Update Operations**: Update session data with automatic updated_at timestamp and return updated record using select().single()
+**Read Operations**: Fetch user sessions with ordering by created_at descending, configurable limit (default 50), and proper null handling
+**Delete Operations**: Remove sessions by ID with cascade deletion of related hand history and analysis data
+**Error Handling**: Wrap all database operations in try-catch with descriptive error messages including operation context
+**Type Safety**: Use typed interfaces (CreateSessionData, UpdateSessionData, GameSession) for all method parameters and return values
+
+### 3. Hand History Service
+**Rule**: Implement comprehensive hand history management with analytics calculation and proper data persistence.
+
+**Hand Persistence**: Save complete hand data including session_id, hand_number, card arrays (player/banker/burn), results, betting information, and analysis data
+**Data Retrieval**: Fetch session hands ordered by hand_number ascending with proper session filtering and error handling
+**Analytics Calculation**: Compute session analytics including total hands, winnings, average edge, win rate, and profit per hand from hand history data
+**Type Safety**: Use typed interfaces (HandRecord, CreateHandData, HandAnalytics) for all method parameters and return values
+**Error Handling**: Wrap all database operations with descriptive error messages and proper null handling for optional fields
+**Performance**: Use selective field queries for analytics to minimize data transfer and improve calculation performance
+
+## Real-time Features
+
+### 1. Real-time Session Updates
+**Rule**: Implement real-time session monitoring using Supabase channels with proper connection management and error handling.
+
+**Channel Setup**: Create session-specific channels using session ID for isolated real-time updates
+**Postgres Changes**: Listen for UPDATE events on game_sessions table with session ID filtering for targeted updates
+**Presence Tracking**: Monitor connection status using presence events (sync/leave) to track real-time connectivity
+**Connection Management**: Handle subscription status changes (SUBSCRIBED/CHANNEL_ERROR) with appropriate state updates
+**Cleanup**: Automatically unsubscribe from channels on component unmount to prevent memory leaks
+**State Management**: Use reactive refs for session data, connection status, and error states with readonly exposure
+
+### 2. Multi-User Session Sharing
+**Rule**: Implement multi-user session sharing with presence tracking and real-time communication capabilities.
+
+**Presence Management**: Track session participants using Supabase presence with join/leave event handling
+**Real-time Communication**: Use broadcast events for hand updates and other session-wide communications
+**User Tracking**: Monitor current user presence with role-based permissions (host, player, observer)
+**State Synchronization**: Maintain participant list and connection status across all connected users
+**Event Broadcasting**: Provide methods to broadcast hand updates and other session events to all participants
+**Computed Properties**: Calculate participant count and user role status for UI reactivity
+
+## Error Handling & Retry Logic
+
+### 1. Robust Error Handling
+**Rule**: Implement comprehensive error handling with custom error types and retry mechanisms for database operations.
+
+**Custom Error Classes**: Create SupabaseError class with message, code, and details properties for structured error handling
+**Error Type Detection**: Check error objects for Supabase-specific properties and transform them into custom error types
+**Retry Logic**: Implement withRetry function with exponential backoff for transient database connection issues
+**Error Context**: Include operation context, error codes, and relevant details for debugging and monitoring
+**Graceful Degradation**: Handle unknown errors gracefully with fallback error messages and proper error propagation
+**Type Safety**: Use TypeScript generics for retry operations to maintain type safety through error handling
+
+### 2. Connection Management
+**Rule**: Implement robust connection monitoring and automatic reconnection for Supabase database connectivity.
+
+**Connection Health Checks**: Perform periodic database queries to validate connection status and detect failures
+**Automatic Reconnection**: Implement timer-based reconnection attempts with configurable intervals (5-second default)
+**State Management**: Track connection status, reconnection attempts, and error states with reactive Vue refs
+**Lifecycle Integration**: Use Vue lifecycle hooks to start connection monitoring on mount and cleanup on unmount
+**Error Handling**: Capture and expose connection errors for user feedback and debugging purposes
+**Resource Cleanup**: Properly clear timers and intervals to prevent memory leaks when components unmount
+
+## Data Validation & Types
+
+### 1. Database Types
+**Rule**: Define comprehensive TypeScript interfaces for all database tables with proper type safety and operation support.
+
+**Table Interfaces**: Create Database interface with public schema containing all table definitions (game_sessions, hand_history, burn_analysis, user_settings)
+**Operation Types**: Define Row, Insert, and Update types for each table to support different database operations with appropriate field requirements
+**Type Safety**: Use strict typing with union types for enums (risk_level, analysis_method) and proper nullable field handling
+**Field Validation**: Include proper TypeScript types for UUIDs, timestamps, decimals, and JSONB fields with appropriate constraints
+**Extensibility**: Structure types to support easy addition of new tables and fields while maintaining backward compatibility
+**Supabase Integration**: Ensure types match Supabase generated types for seamless integration with database operations
+
+### 2. Validation Schemas
+**Rule**: Create comprehensive Zod validation schemas for all database operations with proper business rule enforcement.
+
+**Session Validation**: Define CreateSessionSchema with string length limits (1-100 chars), positive bankroll limits (max 1M), and enum validation for risk levels and analysis methods
+**Hand Data Validation**: Create HandDataSchema with positive hand numbers, card array validation, result enums, and optional betting fields with appropriate ranges
+**Business Rules**: Enforce domain-specific constraints like edge estimates (-1 to 1), confidence levels (0 to 1), and non-negative bet amounts
+**Type Inference**: Use Zod's infer utility to automatically generate TypeScript types from validation schemas for consistency
+**Error Handling**: Provide clear validation error messages that can be displayed to users for form validation feedback
+**Extensibility**: Structure schemas to allow easy addition of new validation rules and fields as requirements evolve

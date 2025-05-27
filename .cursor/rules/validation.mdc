@@ -1,0 +1,146 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Data Validation Standards
+
+## Zod Schema Patterns
+
+### 1. Core Domain Types
+**Rule**: Define comprehensive Zod schemas for all core domain types with proper validation rules and error messages.
+
+**Card Validation**: Use enum validation for ranks and suits with all valid playing card values
+**Probability Validation**: Enforce 0-1 range with finite number validation and clear error messages
+**Currency Validation**: Ensure positive, finite numbers for all monetary values
+**Analysis Method Validation**: Restrict to supported professional analysis methods (jacobson, griffin, wong)
+**Analysis Result Schema**: Validate complete analysis results with method, confidence, edge, variance, and metadata
+**Type Safety**: Use TypeScript integration with Zod for compile-time and runtime type safety
+
+### 2. Form Validation
+**Rule**: Create comprehensive form validation schemas with business rule enforcement and cross-field validation.
+
+**Analysis Configuration**: Validate analysis method, confidence levels, iteration counts, and bankroll amounts with appropriate ranges
+**Kelly Criterion Validation**: Enforce edge percentage limits (-100% to 100%), positive variance, and fractional Kelly constraints
+**Session Configuration**: Validate session names, descriptions, settings, and participant email addresses
+**Cross-field Validation**: Use Zod refine methods to enforce business rules like maxBet <= bankroll
+**Default Values**: Provide sensible defaults for optional fields (confidence: 0.85, iterations: 10000)
+**String Validation**: Use trim, min/max length, and format validation for text inputs
+
+### 3. API Response Validation
+**Rule**: Validate all API responses with comprehensive schemas to ensure data integrity and type safety.
+
+**Database Schema Validation**: Validate Supabase responses with UUID validation, datetime strings, and nullable fields
+**Game History Validation**: Ensure game results have valid card arrays, result enums, and optional bet amounts
+**API Response Structure**: Use consistent response format with success boolean, optional data/error, and metadata
+**Error Object Validation**: Validate error responses with code, message, and optional details
+**Metadata Validation**: Include processing time, version, and timestamp for API response tracking
+**UUID Validation**: Use Zod UUID validation for all database identifiers
+
+### 4. Runtime Validation Utilities
+**Rule**: Create utility functions for safe validation, error handling, and UI integration.
+
+**Result Type Pattern**: Use discriminated union types for validation results with success/error states
+**Safe Validation**: Provide wrapper functions that never throw and return structured results
+**Async Validation**: Support async validation for complex forms with proper error handling
+**Error Formatting**: Transform Zod errors into UI-friendly format with field paths and messages
+**Type Safety**: Use TypeScript generics to maintain type safety through validation pipeline
+**Error Recovery**: Handle both Zod errors and unexpected errors gracefully
+
+## Vue Composable Integration
+
+### 1. Form Validation Composable
+**Rule**: Create Vue composables that integrate Zod validation with reactive form state and error handling.
+
+**Reactive Form State**: Use ref for form data and errors with computed properties for validation status
+**Real-time Validation**: Implement field-level validation on blur/change with debouncing for performance
+**Submit Handling**: Provide submit handler that validates entire form and calls success/error callbacks
+**Error Management**: Track touched fields and show errors only after user interaction
+**Type Safety**: Use TypeScript generics to maintain type safety between schema and form data
+**Reset Functionality**: Provide methods to reset form state and clear validation errors
+
+### 2. API Validation Composable
+**Rule**: Create composables for API response validation with proper error handling and transformation.
+
+**Response Validation**: Validate API responses against schemas with contextual error messages
+**Transform and Validate**: Support input validation, transformation, and output validation in pipeline
+**Error Context**: Provide meaningful error context for debugging API validation failures
+**Type Safety**: Use TypeScript generics for type-safe validation and transformation
+**Logging**: Log validation failures for debugging while throwing user-friendly errors
+**Reusable Patterns**: Create reusable validation patterns for common API operations
+
+## Professional Domain Validation
+
+### 1. Gambling-Specific Validation
+**Rule**: Define domain-specific validation schemas for professional gambling operations with business rule enforcement.
+
+**Bankroll Management**: Validate bankroll amounts with business rules (session ≤ total, stop loss < session)
+**Professional Analysis**: Enforce professional-grade constraints (confidence 80-99%, appropriate sample sizes)
+**Risk Assessment**: Validate risk tolerance levels, drawdown limits, and experience levels
+**Cross-field Validation**: Use Zod refine methods to enforce complex business rules
+**Professional Standards**: Set appropriate ranges for professional gambling analysis
+**Safety Constraints**: Enforce maximum bet percentages and drawdown limits for risk management
+
+### 2. Real-time Validation
+**Rule**: Validate real-time game data streams with proper error handling and logging.
+
+**Live Game Data**: Validate game IDs, timestamps, card arrays, and deck positions for real-time streams
+**Card Count Validation**: Ensure proper card counts (2-3 cards per hand) and deck position tracking
+**Stream Data Validation**: Use safe parsing for real-time data with warning logs for invalid data
+**Error Recovery**: Handle invalid stream data gracefully without crashing the application
+**Performance Considerations**: Use efficient validation for high-frequency real-time updates
+**Data Integrity**: Ensure all real-time data meets expected format and business rules
+
+## Error Handling Patterns
+
+### 1. Validation Error Types
+**Rule**: Create custom error classes for different types of validation failures with rich context information.
+
+**Custom Error Classes**: Define ValidationError and BusinessRuleError classes with specific properties
+**Error Context**: Include field names, error codes, and values in error objects for debugging
+**Error Factory**: Create factory functions to transform Zod errors into custom error types
+**Error Hierarchy**: Use proper error inheritance and naming for different error categories
+**Contextual Messages**: Add context information to error messages for better debugging
+**Type Safety**: Ensure error objects have proper TypeScript typing for better development experience
+
+### 2. Validation Middleware
+**Rule**: Create middleware functions that wrap operations with input and output validation.
+
+**API Middleware**: Wrap API handlers with input validation, execution, and output validation
+**Composable Wrappers**: Create validation wrappers for Vue composables to ensure type safety
+**Pipeline Validation**: Validate data at entry and exit points of operations
+**Error Propagation**: Allow validation errors to propagate properly through the middleware chain
+**Type Safety**: Maintain TypeScript type safety through the validation middleware
+**Reusable Patterns**: Create reusable validation middleware for common operation patterns
+
+## Testing Validation
+
+### 1. Validation Test Patterns
+**Rule**: Test validation schemas comprehensively with valid inputs, invalid inputs, and business rule enforcement.
+
+**Valid Input Testing**: Test that valid data passes validation without throwing errors
+**Invalid Input Testing**: Test that invalid data is properly rejected with appropriate error messages
+**Business Rule Testing**: Test cross-field validation and complex business rules
+**Default Value Testing**: Verify that default values are applied correctly for optional fields
+**Error Message Testing**: Ensure error messages are clear and helpful for debugging
+**Edge Case Testing**: Test boundary conditions and edge cases for all validation rules
+
+## Best Practices
+
+### 1. Schema Design
+- Use branded types for domain-specific values
+- Implement custom refinements for business rules
+- Provide clear error messages
+- Use transforms for data normalization
+
+### 2. Performance
+- Cache compiled schemas
+- Use lazy validation for large objects
+- Implement streaming validation for real-time data
+- Validate at boundaries (API, forms, storage)
+
+### 3. Error Handling
+- Provide user-friendly error messages
+- Log validation failures for debugging
+- Implement graceful degradation
+- Use error boundaries for critical failures

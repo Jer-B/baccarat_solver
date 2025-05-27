@@ -101,14 +101,18 @@
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-blue-800">🃏 Cut Card System</h4>
         <button
-          @click="
-            store.ui.visibility.shoeComposition.cutCardInfo =
-              !store.ui.visibility.shoeComposition.cutCardInfo
+          @click="store.toggleSectionVisibility('shoeComposition', 'cutCardInfo')"
+          :disabled="!store.isToggleEnabled()"
+          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="
+            store.ui.globalToggleMode
+              ? store.isVisible('shoeComposition', 'cutCardInfo')
+                ? 'Hide details'
+                : 'Show details'
+              : 'Enable info panels to toggle individual sections'
           "
-          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors"
-          :title="store.ui.visibility.shoeComposition.cutCardInfo ? 'Hide details' : 'Show details'"
         >
-          {{ store.ui.visibility.shoeComposition.cutCardInfo ? '👁️ Hide' : '👁️‍🗨️ Show' }}
+          {{ store.getToggleButtonText('shoeComposition', 'cutCardInfo') }}
         </button>
       </div>
       <div
@@ -556,8 +560,12 @@ function addZeroValueCardToHand() {
 
 // Get card value for baccarat
 function getCardValue(rank: string): CardValue {
-  if (['10', 'J', 'Q', 'K'].includes(rank)) return 0;
-  if (rank === 'A') return 1;
+  if (['10', 'J', 'Q', 'K'].includes(rank)) {
+    return 0;
+  }
+  if (rank === 'A') {
+    return 1;
+  }
   return parseInt(rank) as CardValue;
 }
 </script>

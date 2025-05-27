@@ -1,378 +1,3 @@
-<script setup lang="ts">
-import { onMounted, reactive, provide, ref } from 'vue';
-import { useBaccaratStore } from './stores/baccaratStore';
-import type { HandResult, Rank } from './types/cards';
-
-import { testSupabaseConnection } from './utils/testSupabase';
-import BaccaratScoreboard from './components/scoreboard/BaccaratScoreboard.vue';
-import TestHandsButton from './components/testing/TestHandsButton.vue';
-import CardCompositionChart from './components/charts/CardCompositionChart.vue';
-import PlayingCard from './components/cards/PlayingCard.vue';
-import PayoutSettings from './components/settings/PayoutSettings.vue';
-import AdvancedAnalytics from './components/analytics/AdvancedAnalytics.vue';
-import SessionControl from './components/session/SessionControl.vue';
-import BurnCardEstimator from './components/cards/BurnCardEstimator.vue';
-import ProfessionalBurnAnalysis from './components/analytics/ProfessionalBurnAnalysis.vue';
-
-const store = useBaccaratStore();
-
-// Betting Interface State
-interface BettingPreset {
-  balance: number;
-  betAmount: number;
-  selectedBet: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair';
-}
-
-const bettingInterface = reactive({
-  balance: 1000,
-  betAmount: 10,
-  selectedBet: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
-  currentPreset: null as BettingPreset | null,
-});
-
-// Random burn functionality
-const randomBurnCount = ref(3);
-
-const tabs = [{ id: 'game', name: 'Game' }];
-
-const getEdgeClass = (edge: number): string => {
-  if (edge > 0) return 'edge-positive';
-  if (edge < 0) return 'edge-negative';
-  return 'edge-neutral';
-};
-
-// Hand summary methods
-const getCurrentWinner = (): string => {
-  const playerValue = store.currentHandValues.player;
-  const bankerValue = store.currentHandValues.banker;
-
-  if (playerValue > bankerValue) return 'Player';
-  if (bankerValue > playerValue) return 'Banker';
-  return 'Tie';
-};
-
-const getCurrentWinnerClass = (): string => {
-  const winner = getCurrentWinner();
-  if (winner === 'Player') return 'text-blue-600';
-  if (winner === 'Banker') return 'text-red-600';
-  return 'text-green-600';
-};
-
-const getHandStatus = (): string => {
-  const playerCards = store.shoe.currentHand.player.length;
-  const bankerCards = store.shoe.currentHand.banker.length;
-  const playerValue = store.currentHandValues.player;
-  const bankerValue = store.currentHandValues.banker;
-
-  // Check for naturals
-  if ((playerValue >= 8 || bankerValue >= 8) && playerCards === 2 && bankerCards === 2) {
-    return 'Natural';
-  }
-
-  // Check if hand is complete (both have 2 or 3 cards)
-  if (playerCards >= 2 && bankerCards >= 2) {
-    if (playerCards === 2 && bankerCards === 2) {
-      // Check if more cards needed based on baccarat rules
-      if (playerValue <= 5 || bankerValue <= 5) {
-        return 'In Progress';
-      }
-      return 'Complete';
-    }
-    return 'Complete';
-  }
-
-  return 'In Progress';
-};
-
-const clearCurrentHand = (): void => {
-  // Only allow clearing if session is active and there's actually a hand to clear
-  if (!store.canPerformActions || !store.hasHandToClear) {
-    return;
-  }
-
-  // If there are cards on the table, we need to complete the hand properly
-  if (store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0) {
-    // Calculate actual hand values and determine winner
-    const playerValue = store.currentHandValues.player;
-    const bankerValue = store.currentHandValues.banker;
-
-    let winner: 'player' | 'banker' | 'tie';
-    if (playerValue > bankerValue) {
-      winner = 'player';
-    } else if (bankerValue > playerValue) {
-      winner = 'banker';
-    } else {
-      winner = 'tie';
-    }
-
-    // Check for pairs
-    const playerPair =
-      store.shoe.currentHand.player.length >= 2 &&
-      store.shoe.currentHand.player[0].rank === store.shoe.currentHand.player[1].rank;
-    const bankerPair =
-      store.shoe.currentHand.banker.length >= 2 &&
-      store.shoe.currentHand.banker[0].rank === store.shoe.currentHand.banker[1].rank;
-
-    // Check for naturals
-    const natural =
-      (playerValue >= 8 || bankerValue >= 8) &&
-      store.shoe.currentHand.player.length === 2 &&
-      store.shoe.currentHand.banker.length === 2;
-
-    // Create proper HandResult object with betting information
-    const handResult: HandResult = {
-      player: [...store.shoe.currentHand.player],
-      banker: [...store.shoe.currentHand.banker],
-      winner,
-      playerPair,
-      bankerPair,
-      playerTotal: playerValue,
-      bankerTotal: bankerValue,
-      natural,
-      timestamp: Date.now(),
-      handNumber: store.history.currentHandNumber + 1,
-    };
-
-    // If there was a bet placed, settle it and add betting info
-    if (currentRoundBet.hasBet) {
-      const betResult = settleCurrentBet(handResult);
-
-      // Add betting information to hand result
-      handResult.betInfo = {
-        betType: currentRoundBet.betType!,
-        betAmount: currentRoundBet.betAmount,
-        won: betResult.won,
-        payout: betResult.payout,
-        netResult: betResult.netResult,
-      };
-    }
-
-    // Add the hand result to update pattern analysis and history
-    store.addHandResult(handResult);
-  }
-
-  // Start new round
-  startNewRound();
-};
-
-// Betting Interface Methods
-// Betting state for current round
-const currentRoundBet = reactive({
-  hasBet: false,
-  betType: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
-  betAmount: 0,
-});
-
-const isBettingAllowed = (): boolean => {
-  // Betting is only allowed when session is active and no cards are on the table (new round)
-  return (
-    store.canPerformActions &&
-    store.shoe.currentHand.player.length === 0 &&
-    store.shoe.currentHand.banker.length === 0
-  );
-};
-
-const placeBet = (): void => {
-  if (!bettingInterface.selectedBet || !bettingInterface.betAmount) {
-    alert('Please select a bet type and enter a bet amount');
-    return;
-  }
-
-  if (!isBettingAllowed()) {
-    alert('Betting is closed! Cards are already on the table. Wait for the next round.');
-    return;
-  }
-
-  if (currentRoundBet.hasBet) {
-    alert('You have already placed a bet for this round. Wait for the hand to complete.');
-    return;
-  }
-
-  if (bettingInterface.betAmount > bettingInterface.balance) {
-    alert('Insufficient balance for this bet amount.');
-    return;
-  }
-
-  // Place the bet for this round
-  currentRoundBet.hasBet = true;
-  currentRoundBet.betType = bettingInterface.selectedBet;
-  currentRoundBet.betAmount = bettingInterface.betAmount;
-
-  // Deduct bet amount from balance immediately
-  bettingInterface.balance -= bettingInterface.betAmount;
-
-  alert(
-    `Bet placed: $${bettingInterface.betAmount} on ${bettingInterface.selectedBet}. Waiting for hand to complete...`
-  );
-
-  // Clear selection for next round
-  bettingInterface.selectedBet = null;
-};
-
-const settleCurrentBet = (
-  handResult: HandResult
-): { won: boolean; payout: number; netResult: number } => {
-  if (!currentRoundBet.hasBet || !currentRoundBet.betType) {
-    return { won: false, payout: 0, netResult: 0 };
-  }
-
-  let payout = 0;
-  let won = false;
-  const payouts = store.settings.payouts;
-
-  switch (currentRoundBet.betType) {
-    case 'player':
-      won = handResult.winner === 'player';
-      payout = won ? currentRoundBet.betAmount * (payouts.player + 1) : 0; // Return original bet + winnings
-      break;
-    case 'banker':
-      won = handResult.winner === 'banker';
-      if (won) {
-        const winnings = currentRoundBet.betAmount * payouts.banker;
-        const commission = winnings * payouts.bankerCommission;
-        payout = currentRoundBet.betAmount + winnings - commission; // Original bet + winnings - commission
-      } else {
-        payout = 0;
-      }
-      break;
-    case 'tie':
-      won = handResult.winner === 'tie';
-      payout = won ? currentRoundBet.betAmount * (payouts.tie + 1) : 0; // Return original bet + winnings
-      break;
-    case 'playerPair':
-      won = handResult.playerPair;
-      payout = won ? currentRoundBet.betAmount * (payouts.playerPair + 1) : 0; // Return original bet + winnings
-      break;
-    case 'bankerPair':
-      won = handResult.bankerPair;
-      payout = won ? currentRoundBet.betAmount * (payouts.bankerPair + 1) : 0; // Return original bet + winnings
-      break;
-  }
-
-  // Add payout to balance
-  bettingInterface.balance += payout;
-
-  // Record the bet in statistics
-  store.recordBet(currentRoundBet.betType, currentRoundBet.betAmount, handResult);
-
-  // Calculate net result
-  const netResult = payout - currentRoundBet.betAmount;
-
-  // Show result
-  const result = won ? 'WON' : 'LOST';
-  const resultText = netResult >= 0 ? `+$${netResult.toFixed(2)}` : `$${netResult.toFixed(2)}`;
-  alert(`${result}! ${resultText} - New Balance: $${bettingInterface.balance.toFixed(2)}`);
-
-  // Reset bet for next round
-  currentRoundBet.hasBet = false;
-  currentRoundBet.betType = null;
-  currentRoundBet.betAmount = 0;
-
-  return { won, payout, netResult };
-};
-
-const startNewRound = (): void => {
-  // This should be called when starting a new round (clearing current hand)
-  currentRoundBet.hasBet = false;
-  currentRoundBet.betType = null;
-  currentRoundBet.betAmount = 0;
-};
-
-const canClearHand = (): boolean => {
-  // Can only clear hand if session is active and either:
-  // 1. There are at least 4 cards total on the table OR
-  // 2. There's a bet but no cards (to allow clearing just the bet)
-  const playerCards = store.shoe.currentHand.player.length;
-  const bankerCards = store.shoe.currentHand.banker.length;
-  const totalCards = playerCards + bankerCards;
-
-  // Need at least 4 cards to complete a round
-  const hasMinimumCards = totalCards >= 4;
-  const hasBetOnly = currentRoundBet.hasBet && !store.hasHandToClear;
-
-  return store.canPerformActions && (hasMinimumCards || hasBetOnly);
-};
-
-// Helper methods for burned cards analysis
-const getBurnedCardColor = (count: number): string => {
-  if (count === 0) return 'text-gray-400';
-  if (count <= 2) return 'text-green-600';
-  if (count <= 4) return 'text-yellow-600';
-  return 'text-red-600';
-};
-
-const getBurnedCardsByValue = (value: number): number => {
-  let count = 0;
-
-  if (value === 0) {
-    // Count 10, J, Q, K
-    count += store.burnedCardAnalysis.burnedByRank.get('10') || 0;
-    count += store.burnedCardAnalysis.burnedByRank.get('J') || 0;
-    count += store.burnedCardAnalysis.burnedByRank.get('Q') || 0;
-    count += store.burnedCardAnalysis.burnedByRank.get('K') || 0;
-  } else if (value === 1) {
-    // Count Aces
-    count += store.burnedCardAnalysis.burnedByRank.get('A') || 0;
-  } else {
-    // Count number cards 2-9
-    count += store.burnedCardAnalysis.burnedByRank.get(value.toString() as Rank) || 0;
-  }
-
-  return count;
-};
-
-// Random burn functionality
-const performRandomBurn = (): void => {
-  if (!store.canPerformActions || !randomBurnCount.value) {
-    return;
-  }
-
-  if (randomBurnCount.value > store.totalCardsRemaining) {
-    alert(
-      `Cannot burn ${randomBurnCount.value} cards. Only ${store.totalCardsRemaining} cards remaining in shoe.`
-    );
-    return;
-  }
-
-  // Burn the specified number of random cards
-  const burnedCards = [];
-  for (let i = 0; i < randomBurnCount.value; i++) {
-    const card = store.drawRandomCard();
-    if (card) {
-      card.isBurned = true;
-      card.timestamp = Date.now();
-      card.handNumber = store.history.currentHandNumber;
-      burnedCards.push(card);
-      store.burnCard(card);
-    }
-  }
-
-  // Show what was burned
-  const burnedSummary = burnedCards
-    .map(card => `${card.rank}${card.suit.charAt(0).toUpperCase()}`)
-    .join(', ');
-  alert(
-    `🔥 Burned ${randomBurnCount.value} cards: ${burnedSummary}\n\nRemaining cards: ${store.totalCardsRemaining}`
-  );
-
-  // Reset burn count for next use
-  randomBurnCount.value = 3;
-};
-
-// Provide currentRoundBet to child components
-provide('currentRoundBet', currentRoundBet);
-
-onMounted(async () => {
-  // Initialize shoe on app start (always initialize regardless of session state)
-  console.log('App mounted, initializing shoe...');
-  store.initializeShoe();
-  console.log('Shoe initialized, total cards:', store.totalCardsRemaining);
-
-  // Test Supabase connection
-  await testSupabaseConnection();
-});
-</script>
-
 <template>
   <div id="app" class="min-h-screen bg-gray-100">
     <!-- Header -->
@@ -452,8 +77,21 @@ onMounted(async () => {
       </div>
     </nav>
 
+    <!-- Connection Status Banner -->
+    <ConnectionStatusBanner />
+
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-6">
+      <!-- Toast Demo Tab -->
+      <div v-if="store.ui.selectedTab === 'toast-demo'" class="space-y-6">
+        <ToastDemo />
+      </div>
+
+      <!-- History Tab -->
+      <div v-if="store.ui.selectedTab === 'history'" class="space-y-6">
+        <SessionHistory />
+      </div>
+
       <!-- Game Tab -->
       <div v-if="store.ui.selectedTab === 'game'" class="space-y-6">
         <!-- Session Control -->
@@ -537,18 +175,18 @@ onMounted(async () => {
             <div class="flex items-center justify-between mb-2">
               <div class="text-sm font-medium text-gray-700">Legend & Information:</div>
               <button
-                @click="
-                  store.ui.visibility.pairAnalysis.legendInfo =
-                    !store.ui.visibility.pairAnalysis.legendInfo
-                "
-                class="text-xs px-2 py-1 bg-purple-200 hover:bg-purple-300 text-purple-800 rounded transition-colors"
+                @click="store.toggleSectionVisibility('pairAnalysis', 'legendInfo')"
+                :disabled="!store.isToggleEnabled()"
+                class="text-xs px-2 py-1 bg-purple-200 hover:bg-purple-300 text-purple-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :title="
-                  store.ui.visibility.pairAnalysis.legendInfo
-                    ? 'Hide legend details'
-                    : 'Show legend details'
+                  store.ui.globalToggleMode
+                    ? store.isVisible('pairAnalysis', 'legendInfo')
+                      ? 'Hide legend details'
+                      : 'Show legend details'
+                    : 'Enable info panels to toggle individual sections'
                 "
               >
-                {{ store.ui.visibility.pairAnalysis.legendInfo ? '👁️ Hide' : '👁️‍🗨️ Show' }}
+                {{ store.getToggleButtonText('pairAnalysis', 'legendInfo') }}
               </button>
             </div>
             <div
@@ -805,18 +443,18 @@ onMounted(async () => {
                 <div class="flex items-center justify-between mb-2">
                   <h4 class="text-sm font-semibold text-gray-800">💰 Payout Information</h4>
                   <button
-                    @click="
-                      store.ui.visibility.bettingInterface.payoutInfo =
-                        !store.ui.visibility.bettingInterface.payoutInfo
-                    "
-                    class="text-xs px-2 py-1 bg-green-200 hover:bg-green-300 text-green-800 rounded transition-colors"
+                    @click="store.toggleSectionVisibility('bettingInterface', 'payoutInfo')"
+                    :disabled="!store.isToggleEnabled()"
+                    class="text-xs px-2 py-1 bg-green-200 hover:bg-green-300 text-green-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     :title="
-                      store.ui.visibility.bettingInterface.payoutInfo
-                        ? 'Hide payout details'
-                        : 'Show payout details'
+                      store.ui.globalToggleMode
+                        ? store.isVisible('bettingInterface', 'payoutInfo')
+                          ? 'Hide payout details'
+                          : 'Show payout details'
+                        : 'Enable info panels to toggle individual sections'
                     "
                   >
-                    {{ store.ui.visibility.bettingInterface.payoutInfo ? '👁️ Hide' : '👁️‍🗨️ Show' }}
+                    {{ store.getToggleButtonText('bettingInterface', 'payoutInfo') }}
                   </button>
                 </div>
                 <div
@@ -1276,6 +914,9 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Professional Recommendations -->
+        <ProfessionalRecommendations />
+
         <!-- Advanced Analytics -->
         <AdvancedAnalytics />
 
@@ -1510,10 +1151,13 @@ onMounted(async () => {
         <!-- Professional Burn Analysis -->
         <ProfessionalBurnAnalysis />
 
-        <!-- Burned Cards Analysis -->
+        <!-- Advanced Dealer Tell Analysis -->
+        <DealerTellAnalysis />
+
+        <!-- Professional Burn Card Analysis -->
         <div class="card">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold">Burned Cards Analysis</h2>
+            <h2 class="text-xl font-semibold">🎓 Professional Burn Card Analysis</h2>
             <div class="text-sm text-gray-600">
               <span class="font-medium">Strategic Value:</span>
               <span
@@ -1526,25 +1170,215 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Summary Stats -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="text-center p-3 bg-gray-50 rounded-lg">
-              <div class="text-2xl font-bold text-gray-800">
-                {{ store.burnedCardAnalysis.totalBurned }}
+          <!-- Professional Burn Status -->
+          <div class="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <h3 class="font-medium text-orange-800 mb-3">🔥 Unknown Burned Cards</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-orange-600">
+                  {{ store.shoe.burnedCards.filter(card => card.isUnknownBurn).length }}
+                </div>
+                <div class="text-sm text-orange-700">Cards Burned</div>
+                <div class="text-xs text-orange-600">(Unknown composition)</div>
               </div>
-              <div class="text-sm text-gray-600">Total Burned</div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600">
+                  {{
+                    store.burnAnalysisMetadata?.uncertaintyLevel
+                      ? (store.burnAnalysisMetadata.uncertaintyLevel * 100).toFixed(1)
+                      : '0.0'
+                  }}%
+                </div>
+                <div class="text-sm text-blue-700">Uncertainty Level</div>
+                <div class="text-xs text-blue-600">(Lower is better)</div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-2xl font-bold"
+                  :class="
+                    (store.burnAnalysisMetadata?.kellyMultiplier ?? 1) >= 1
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  "
+                >
+                  {{
+                    store.burnAnalysisMetadata?.kellyMultiplier
+                      ? (store.burnAnalysisMetadata.kellyMultiplier * 100).toFixed(1)
+                      : '100.0'
+                  }}%
+                </div>
+                <div class="text-sm text-gray-700">Kelly Multiplier</div>
+                <div class="text-xs text-gray-600">(Bet size adjustment)</div>
+              </div>
             </div>
-            <div class="text-center p-3 bg-blue-50 rounded-lg">
-              <div class="text-2xl font-bold text-blue-600">
-                {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
+          </div>
+
+          <!-- Professional Algorithms Status -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-700 mb-3">🧠 Algorithm Analysis</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="font-medium text-blue-800">Jacobson Method</div>
+                <div class="text-sm text-blue-600">Statistical burn patterns</div>
+                <div class="text-xs text-blue-500 mt-1">
+                  {{
+                    store.shoe.burnedCards.filter(card => card.isUnknownBurn).length > 0
+                      ? 'Active'
+                      : 'Standby'
+                  }}
+                </div>
               </div>
-              <div class="text-sm text-gray-600">Confidence Level</div>
+              <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div class="font-medium text-green-800">Griffin Method</div>
+                <div class="text-sm text-green-600">High/low card bias</div>
+                <div class="text-xs text-green-500 mt-1">
+                  {{ store.history.hands.length > 2 ? 'Active' : 'Learning' }}
+                </div>
+              </div>
+              <div class="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div class="font-medium text-orange-800">Wong Method</div>
+                <div class="text-sm text-orange-600">Adaptive patterns</div>
+                <div class="text-xs text-orange-500 mt-1">
+                  {{ store.history.hands.length > 5 ? 'Active' : 'Calibrating' }}
+                </div>
+              </div>
             </div>
-            <div class="text-center p-3 bg-purple-50 rounded-lg">
-              <div class="text-2xl font-bold text-purple-600">
-                {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
+          </div>
+
+          <!-- Edge Impact Analysis -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-700 mb-3">📊 Edge Impact Analysis</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div class="text-sm text-gray-600">Weighted Edge Impact:</div>
+                  <div
+                    class="text-lg font-bold"
+                    :class="
+                      (store.burnAnalysisMetadata?.weightedEdgeImpact ?? 0) >= 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    "
+                  >
+                    {{
+                      store.burnAnalysisMetadata?.weightedEdgeImpact
+                        ? (store.burnAnalysisMetadata.weightedEdgeImpact >= 0 ? '+' : '') +
+                          (store.burnAnalysisMetadata.weightedEdgeImpact * 100).toFixed(3) +
+                          '%'
+                        : 'N/A'
+                    }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-sm text-gray-600">Monte Carlo Adjustment:</div>
+                  <div
+                    class="text-lg font-bold"
+                    :class="
+                      (store.burnAnalysisMetadata?.monteCarloAdjustment ?? 1) >= 1
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    "
+                  >
+                    {{
+                      store.burnAnalysisMetadata?.monteCarloAdjustment
+                        ? (store.burnAnalysisMetadata.monteCarloAdjustment * 100).toFixed(1) + '%'
+                        : 'N/A'
+                    }}
+                  </div>
+                </div>
               </div>
-              <div class="text-sm text-gray-600">Estimated Impact</div>
+            </div>
+          </div>
+
+          <!-- Known Burned Cards (if any) -->
+          <div
+            v-if="store.shoe.burnedCards.filter(card => !card.isUnknownBurn).length > 0"
+            class="mb-6"
+          >
+            <h3 class="font-medium text-gray-700 mb-3">👁️ Known Burned Cards</h3>
+            <div class="text-sm text-gray-600 mb-3">
+              Cards that were observed or suspected during play:
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <div
+                v-for="card in store.shoe.burnedCards.filter(card => !card.isUnknownBurn)"
+                :key="`${card.rank}-${card.suit}-${card.timestamp}`"
+                class="px-3 py-2 bg-blue-100 border border-blue-300 rounded-lg"
+              >
+                <span class="font-medium"
+                  >{{ card.rank }}{{ card.suit.charAt(0).toUpperCase() }}</span
+                >
+                <span v-if="card.confidence" class="text-xs text-blue-600 ml-1">
+                  ({{ card.confidence }}% sure)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Professional Notes -->
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-sm font-semibold text-yellow-800">💡 Professional Notes</h4>
+              <button
+                @click="store.toggleSectionVisibility('burnAnalysis', 'professionalNotes')"
+                :disabled="!store.isToggleEnabled()"
+                class="text-xs px-2 py-1 bg-yellow-200 text-yellow-800 rounded hover:bg-yellow-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                :title="
+                  store.ui.globalToggleMode
+                    ? store.isVisible('burnAnalysis', 'professionalNotes')
+                      ? 'Hide professional notes'
+                      : 'Show professional notes'
+                    : 'Enable info panels to toggle individual sections'
+                "
+              >
+                {{ store.getToggleButtonText('burnAnalysis', 'professionalNotes') }}
+              </button>
+            </div>
+            <div
+              v-if="store.ui.visibility.burnAnalysis.professionalNotes"
+              class="text-xs text-yellow-700 space-y-1"
+            >
+              <div>
+                <strong>Unknown Burns:</strong> Cards removed from play without revealing their
+                identity (realistic casino simulation)
+              </div>
+              <div>
+                <strong>Algorithm Integration:</strong> Multiple professional methods estimate burn
+                impact on edge calculations
+              </div>
+              <div>
+                <strong>Kelly Integration:</strong> Burn uncertainty automatically adjusts optimal
+                bet sizing
+              </div>
+              <div>
+                <strong>Monte Carlo Integration:</strong> Risk projections account for burn card
+                uncertainty
+              </div>
+            </div>
+          </div>
+
+          <!-- Legacy Analysis (for reference) -->
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="font-medium text-gray-700 mb-3">📈 Statistical Reference</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">
+                  {{ store.burnedCardAnalysis.totalBurned }}
+                </div>
+                <div class="text-sm text-gray-600">Total Burned</div>
+              </div>
+              <div class="text-center p-3 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">
+                  {{ (store.burnedCardAnalysis.confidenceLevel * 100).toFixed(1) }}%
+                </div>
+                <div class="text-sm text-gray-600">Legacy Confidence</div>
+              </div>
+              <div class="text-center p-3 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">
+                  {{ store.burnedCardAnalysis.estimatedImpact.toFixed(3) }}
+                </div>
+                <div class="text-sm text-gray-600">Legacy Impact</div>
+              </div>
             </div>
           </div>
 
@@ -1624,9 +1458,407 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+
+      <!-- History Tab -->
+      <div v-if="store.ui.selectedTab === 'history'" class="space-y-6">
+        <HistoryView @switch-to-game="store.ui.selectedTab = 'game'" />
+      </div>
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted, reactive, provide, ref } from 'vue';
+import { useBaccaratStore } from './stores/baccaratStore';
+import type { HandResult, Rank } from './types/cards';
+
+import { testSupabaseConnection } from './utils/testSupabase';
+import BaccaratScoreboard from './components/scoreboard/BaccaratScoreboard.vue';
+import TestHandsButton from './components/testing/TestHandsButton.vue';
+import CardCompositionChart from './components/charts/CardCompositionChart.vue';
+import PlayingCard from './components/cards/PlayingCard.vue';
+import PayoutSettings from './components/settings/PayoutSettings.vue';
+import AdvancedAnalytics from './components/analytics/AdvancedAnalytics.vue';
+import SessionControl from './components/session/SessionControl.vue';
+import BurnCardEstimator from './components/cards/BurnCardEstimator.vue';
+import ProfessionalBurnAnalysis from './components/analytics/ProfessionalBurnAnalysis.vue';
+import ProfessionalRecommendations from './components/analytics/ProfessionalRecommendations.vue';
+import DealerTellAnalysis from './components/analytics/DealerTellAnalysis.vue';
+import HistoryView from './views/HistoryView.vue';
+import ToastDemo from './components/ToastDemo.vue';
+import SessionHistory from './components/history/SessionHistory.vue';
+import ConnectionStatusBanner from './components/ConnectionStatusBanner.vue';
+
+const store = useBaccaratStore();
+
+// Betting Interface State
+interface BettingPreset {
+  balance: number;
+  betAmount: number;
+  selectedBet: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair';
+}
+
+const bettingInterface = reactive({
+  balance: 1000,
+  betAmount: 10,
+  selectedBet: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
+  currentPreset: null as BettingPreset | null,
+});
+
+// Random burn functionality
+const randomBurnCount = ref(3);
+
+const tabs = [
+  { id: 'game', name: 'Game' },
+  { id: 'history', name: 'History' },
+  { id: 'toast-demo', name: 'Toast Demo' },
+];
+
+const getEdgeClass = (edge: number): string => {
+  if (edge > 0) {
+    return 'edge-positive';
+  }
+  if (edge < 0) {
+    return 'edge-negative';
+  }
+  return 'edge-neutral';
+};
+
+// Hand summary methods
+const getCurrentWinner = (): string => {
+  const playerValue = store.currentHandValues.player;
+  const bankerValue = store.currentHandValues.banker;
+
+  if (playerValue > bankerValue) {
+    return 'Player';
+  }
+  if (bankerValue > playerValue) {
+    return 'Banker';
+  }
+  return 'Tie';
+};
+
+const getCurrentWinnerClass = (): string => {
+  const winner = getCurrentWinner();
+  if (winner === 'Player') {
+    return 'text-blue-600';
+  }
+  if (winner === 'Banker') {
+    return 'text-red-600';
+  }
+  return 'text-green-600';
+};
+
+const getHandStatus = (): string => {
+  const playerCards = store.shoe.currentHand.player.length;
+  const bankerCards = store.shoe.currentHand.banker.length;
+  const playerValue = store.currentHandValues.player;
+  const bankerValue = store.currentHandValues.banker;
+
+  // Check for naturals
+  if ((playerValue >= 8 || bankerValue >= 8) && playerCards === 2 && bankerCards === 2) {
+    return 'Natural';
+  }
+
+  // Check if hand is complete (both have 2 or 3 cards)
+  if (playerCards >= 2 && bankerCards >= 2) {
+    if (playerCards === 2 && bankerCards === 2) {
+      // Check if more cards needed based on baccarat rules
+      if (playerValue <= 5 || bankerValue <= 5) {
+        return 'In Progress';
+      }
+      return 'Complete';
+    }
+    return 'Complete';
+  }
+
+  return 'In Progress';
+};
+
+const clearCurrentHand = (): void => {
+  // Only allow clearing if session is active and there's actually a hand to clear
+  if (!store.canPerformActions || !store.hasHandToClear) {
+    return;
+  }
+
+  // If there are cards on the table, we need to complete the hand properly
+  if (store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0) {
+    // Calculate actual hand values and determine winner
+    const playerValue = store.currentHandValues.player;
+    const bankerValue = store.currentHandValues.banker;
+
+    let winner: 'player' | 'banker' | 'tie';
+    if (playerValue > bankerValue) {
+      winner = 'player';
+    } else if (bankerValue > playerValue) {
+      winner = 'banker';
+    } else {
+      winner = 'tie';
+    }
+
+    // Check for pairs
+    const playerPair =
+      store.shoe.currentHand.player.length >= 2 &&
+      store.shoe.currentHand.player[0].rank === store.shoe.currentHand.player[1].rank;
+    const bankerPair =
+      store.shoe.currentHand.banker.length >= 2 &&
+      store.shoe.currentHand.banker[0].rank === store.shoe.currentHand.banker[1].rank;
+
+    // Check for naturals
+    const natural =
+      (playerValue >= 8 || bankerValue >= 8) &&
+      store.shoe.currentHand.player.length === 2 &&
+      store.shoe.currentHand.banker.length === 2;
+
+    // Create proper HandResult object with betting information
+    const handResult: HandResult = {
+      player: [...store.shoe.currentHand.player],
+      banker: [...store.shoe.currentHand.banker],
+      winner,
+      playerPair,
+      bankerPair,
+      playerTotal: playerValue,
+      bankerTotal: bankerValue,
+      natural,
+      timestamp: Date.now(),
+      handNumber: store.history.currentHandNumber + 1,
+    };
+
+    // If there was a bet placed, settle it and add betting info
+    if (currentRoundBet.hasBet) {
+      const betResult = settleCurrentBet(handResult);
+
+      // Add betting information to hand result
+      handResult.betInfo = {
+        betType: currentRoundBet.betType!,
+        betAmount: currentRoundBet.betAmount,
+        won: betResult.won,
+        payout: betResult.payout,
+        netResult: betResult.netResult,
+      };
+    }
+
+    // Add the hand result to update pattern analysis and history
+    store.addHandResult(handResult);
+  }
+
+  // Start new round
+  startNewRound();
+};
+
+// Betting Interface Methods
+// Betting state for current round
+const currentRoundBet = reactive({
+  hasBet: false,
+  betType: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
+  betAmount: 0,
+});
+
+const isBettingAllowed = (): boolean => {
+  // Betting is only allowed when session is active and no cards are on the table (new round)
+  return (
+    store.canPerformActions &&
+    store.shoe.currentHand.player.length === 0 &&
+    store.shoe.currentHand.banker.length === 0
+  );
+};
+
+const placeBet = (): void => {
+  if (!bettingInterface.selectedBet || !bettingInterface.betAmount) {
+    alert('Please select a bet type and enter a bet amount');
+    return;
+  }
+
+  if (!isBettingAllowed()) {
+    alert('Betting is closed! Cards are already on the table. Wait for the next round.');
+    return;
+  }
+
+  if (currentRoundBet.hasBet) {
+    alert('You have already placed a bet for this round. Wait for the hand to complete.');
+    return;
+  }
+
+  if (bettingInterface.betAmount > bettingInterface.balance) {
+    alert('Insufficient balance for this bet amount.');
+    return;
+  }
+
+  // Place the bet for this round
+  currentRoundBet.hasBet = true;
+  currentRoundBet.betType = bettingInterface.selectedBet;
+  currentRoundBet.betAmount = bettingInterface.betAmount;
+
+  // Deduct bet amount from balance immediately
+  bettingInterface.balance -= bettingInterface.betAmount;
+
+  alert(
+    `Bet placed: $${bettingInterface.betAmount} on ${bettingInterface.selectedBet}. Waiting for hand to complete...`
+  );
+
+  // Clear selection for next round
+  bettingInterface.selectedBet = null;
+};
+
+const settleCurrentBet = (
+  handResult: HandResult
+): { won: boolean; payout: number; netResult: number } => {
+  if (!currentRoundBet.hasBet || !currentRoundBet.betType) {
+    return { won: false, payout: 0, netResult: 0 };
+  }
+
+  let payout = 0;
+  let won = false;
+  const payouts = store.settings.payouts;
+
+  switch (currentRoundBet.betType) {
+    case 'player':
+      won = handResult.winner === 'player';
+      payout = won ? currentRoundBet.betAmount * (payouts.player + 1) : 0; // Return original bet + winnings
+      break;
+    case 'banker':
+      won = handResult.winner === 'banker';
+      if (won) {
+        const winnings = currentRoundBet.betAmount * payouts.banker;
+        const commission = winnings * payouts.bankerCommission;
+        payout = currentRoundBet.betAmount + winnings - commission; // Original bet + winnings - commission
+      } else {
+        payout = 0;
+      }
+      break;
+    case 'tie':
+      won = handResult.winner === 'tie';
+      payout = won ? currentRoundBet.betAmount * (payouts.tie + 1) : 0; // Return original bet + winnings
+      break;
+    case 'playerPair':
+      won = handResult.playerPair;
+      payout = won ? currentRoundBet.betAmount * (payouts.playerPair + 1) : 0; // Return original bet + winnings
+      break;
+    case 'bankerPair':
+      won = handResult.bankerPair;
+      payout = won ? currentRoundBet.betAmount * (payouts.bankerPair + 1) : 0; // Return original bet + winnings
+      break;
+  }
+
+  // Add payout to balance
+  bettingInterface.balance += payout;
+
+  // Record the bet in statistics
+  store.recordBet(currentRoundBet.betType, currentRoundBet.betAmount, handResult);
+
+  // Calculate net result
+  const netResult = payout - currentRoundBet.betAmount;
+
+  // Show result
+  const result = won ? 'WON' : 'LOST';
+  const resultText = netResult >= 0 ? `+$${netResult.toFixed(2)}` : `$${netResult.toFixed(2)}`;
+  alert(`${result}! ${resultText} - New Balance: $${bettingInterface.balance.toFixed(2)}`);
+
+  // Reset bet for next round
+  currentRoundBet.hasBet = false;
+  currentRoundBet.betType = null;
+  currentRoundBet.betAmount = 0;
+
+  return { won, payout, netResult };
+};
+
+const startNewRound = (): void => {
+  // This should be called when starting a new round (clearing current hand)
+  currentRoundBet.hasBet = false;
+  currentRoundBet.betType = null;
+  currentRoundBet.betAmount = 0;
+};
+
+const canClearHand = (): boolean => {
+  // Can only clear hand if session is active and either:
+  // 1. There are at least 4 cards total on the table OR
+  // 2. There's a bet but no cards (to allow clearing just the bet)
+  const playerCards = store.shoe.currentHand.player.length;
+  const bankerCards = store.shoe.currentHand.banker.length;
+  const totalCards = playerCards + bankerCards;
+
+  // Need at least 4 cards to complete a round
+  const hasMinimumCards = totalCards >= 4;
+  const hasBetOnly = currentRoundBet.hasBet && !store.hasHandToClear;
+
+  return store.canPerformActions && (hasMinimumCards || hasBetOnly);
+};
+
+// Helper methods for burned cards analysis
+const getBurnedCardColor = (count: number): string => {
+  if (count === 0) {
+    return 'text-gray-400';
+  }
+  if (count <= 2) {
+    return 'text-green-600';
+  }
+  if (count <= 4) {
+    return 'text-yellow-600';
+  }
+  return 'text-red-600';
+};
+
+const getBurnedCardsByValue = (value: number): number => {
+  let count = 0;
+
+  if (value === 0) {
+    // Count 10, J, Q, K
+    count += store.burnedCardAnalysis.burnedByRank.get('10') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('J') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('Q') || 0;
+    count += store.burnedCardAnalysis.burnedByRank.get('K') || 0;
+  } else if (value === 1) {
+    // Count Aces
+    count += store.burnedCardAnalysis.burnedByRank.get('A') || 0;
+  } else {
+    // Count number cards 2-9
+    count += store.burnedCardAnalysis.burnedByRank.get(value.toString() as Rank) || 0;
+  }
+
+  return count;
+};
+
+// Professional random burn functionality - doesn't show what was burned
+const performRandomBurn = (): void => {
+  if (!store.canPerformActions || !randomBurnCount.value) {
+    return;
+  }
+
+  if (randomBurnCount.value > store.totalCardsRemaining) {
+    alert(
+      `Cannot burn ${randomBurnCount.value} cards. Only ${store.totalCardsRemaining} cards remaining in shoe.`
+    );
+    return;
+  }
+
+  // Professional approach: Track that cards were burned without revealing what they were
+  store.burnUnknownCards(randomBurnCount.value);
+
+  // Use toast notification instead of alert for better UX
+  import('./composables/useNotifications').then(({ useNotifications }) => {
+    const { info } = useNotifications();
+    info(
+      `🔥 Burned ${randomBurnCount.value} unknown cards • ${store.totalCardsRemaining} remaining`
+    );
+  });
+
+  // Reset burn count for next use
+  randomBurnCount.value = 3;
+};
+
+// Provide currentRoundBet to child components
+provide('currentRoundBet', currentRoundBet);
+
+onMounted(async () => {
+  // Initialize shoe on app start (always initialize regardless of session state)
+  console.log('App mounted, initializing shoe...');
+  store.initializeShoe();
+  console.log('Shoe initialized, total cards:', store.totalCardsRemaining);
+
+  // Test Supabase connection
+  await testSupabaseConnection();
+});
+</script>
 
 <style scoped>
 .logo {

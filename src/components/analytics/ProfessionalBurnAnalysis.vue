@@ -202,8 +202,27 @@
 
     <!-- Professional Notes -->
     <div class="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <h4 class="text-sm font-semibold text-gray-800 mb-2">📚 Professional Notes</h4>
-      <div class="text-xs text-gray-600 space-y-1">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-sm font-semibold text-gray-800">📚 Professional Notes</h4>
+        <button
+          @click="store.toggleSectionVisibility('professionalBurnAnalysis', 'professionalNotes')"
+          :disabled="!store.isToggleEnabled()"
+          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="
+            store.ui.globalToggleMode
+              ? store.isVisible('professionalBurnAnalysis', 'professionalNotes')
+                ? 'Hide professional notes'
+                : 'Show professional notes'
+              : 'Enable info panels to toggle individual sections'
+          "
+        >
+          {{ store.getToggleButtonText('professionalBurnAnalysis', 'professionalNotes') }}
+        </button>
+      </div>
+      <div
+        v-if="store.isVisible('professionalBurnAnalysis', 'professionalNotes')"
+        class="text-xs text-gray-600 space-y-1"
+      >
         <div>
           <strong>Jacobson Method:</strong> Based on "Advanced Advantage Play" - uses statistical
           analysis of casino burn procedures
@@ -241,38 +260,62 @@ const currentAnalysis = computed(() => burnEstimation.currentAnalysis.value);
 const professionalRec = computed(() => burnEstimation.professionalRecommendation.value);
 
 const currentConfidence = computed(() => {
-  if (!currentAnalysis.value) return 0;
+  if (!currentAnalysis.value) {
+    return 0;
+  }
   const interval = currentAnalysis.value.confidenceInterval;
-  if (!interval || interval.length < 2) return 0;
+  if (!interval || interval.length < 2) {
+    return 0;
+  }
   return 1 - (interval[1] - interval[0]);
 });
 
 const edgeImpactClass = computed(() => {
-  if (!currentAnalysis.value) return 'text-gray-600';
+  if (!currentAnalysis.value) {
+    return 'text-gray-600';
+  }
   const impact = currentAnalysis.value.weightedEdgeImpact;
-  if (impact > 0.003) return 'text-green-600';
-  if (impact < -0.003) return 'text-red-600';
+  if (impact > 0.003) {
+    return 'text-green-600';
+  }
+  if (impact < -0.003) {
+    return 'text-red-600';
+  }
   return 'text-gray-600';
 });
 
 const kellyMultiplierClass = computed(() => {
-  if (!currentAnalysis.value) return 'text-gray-600';
+  if (!currentAnalysis.value) {
+    return 'text-gray-600';
+  }
   const multiplier = currentAnalysis.value.kellyMultiplier;
-  if (multiplier > 1.1) return 'text-green-600';
-  if (multiplier < 0.9) return 'text-red-600';
+  if (multiplier > 1.1) {
+    return 'text-green-600';
+  }
+  if (multiplier < 0.9) {
+    return 'text-red-600';
+  }
   return 'text-gray-600';
 });
 
 const actionClass = computed(() => {
-  if (!currentAnalysis.value) return 'text-gray-600';
+  if (!currentAnalysis.value) {
+    return 'text-gray-600';
+  }
   const action = currentAnalysis.value.recommendedAction;
-  if (action === 'aggressive') return 'text-green-600';
-  if (action === 'conservative') return 'text-red-600';
+  if (action === 'aggressive') {
+    return 'text-green-600';
+  }
+  if (action === 'conservative') {
+    return 'text-red-600';
+  }
   return 'text-blue-600';
 });
 
 const runAnalysis = () => {
-  if (!store.canPerformActions) return;
+  if (!store.canPerformActions) {
+    return;
+  }
 
   // Run the professional burn analysis
   const analysis = burnEstimation.analyzeBurnScenarios(

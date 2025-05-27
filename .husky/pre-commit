@@ -1,1 +1,52 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged for file-specific checks
 yarn lint-staged
+
+# Check for structured logging compliance
+echo "📝 Checking structured logging format..."
+if git diff --cached --name-only | grep -E '\.(ts|vue|js)$' | xargs grep -l 'console\.' | xargs grep -L '\[.*\]\[.*\]' > /dev/null 2>&1; then
+  echo "❌ Found console logs without structured format [feature][category]"
+  echo "Please use format: console.log('[feature-name][log-category] message')"
+  echo "Examples:"
+  echo "  console.log('[burn-analysis][calculation] Starting analysis')"
+  echo "  console.error('[kelly-criterion][error] Invalid parameters')"
+  exit 1
+fi
+
+# Check for DRY violations (basic check)
+echo "🔄 Checking for potential DRY violations..."
+if git diff --cached --name-only | grep -E '\.(ts|vue|js)$' | xargs grep -l 'TODO.*DRY\|FIXME.*duplicate\|DUPLICATE\|REPEATED' > /dev/null 2>&1; then
+  echo "⚠️  Found potential DRY violations marked with TODO/FIXME"
+  echo "Please address code duplication before committing"
+fi
+
+# Type checking
+echo "🔧 Running TypeScript type check..."
+yarn type-check
+
+# Check for missing documentation
+echo "📚 Checking for missing JSDoc documentation..."
+if git diff --cached --name-only | grep -E 'composables/.*\.ts$' | xargs grep -L '@param\|@returns' > /dev/null 2>&1; then
+  echo "⚠️  Found composables without JSDoc documentation"
+  echo "Please add @param and @returns documentation"
+fi
+
+# Check for magic numbers outside config files
+echo "🔢 Checking for magic numbers..."
+if git diff --cached --name-only | grep -E '\.(ts|vue)$' | grep -v config | xargs grep -E '\b[0-9]{2,}\b' | grep -v test > /dev/null 2>&1; then
+  echo "⚠️  Found potential magic numbers outside config files"
+  echo "Consider moving constants to src/config/ directory"
+fi
+
+# Check for proper error handling in async functions
+echo "⚡ Checking async error handling..."
+if git diff --cached --name-only | grep -E '\.(ts|vue)$' | xargs grep -l 'async.*function\|async.*=>' | xargs grep -L 'try.*catch\|\.catch(' > /dev/null 2>&1; then
+  echo "⚠️  Found async functions without proper error handling"
+  echo "Please add try-catch blocks or .catch() handlers"
+fi
+
+echo "✅ Pre-commit checks passed!"

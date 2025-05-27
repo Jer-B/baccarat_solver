@@ -106,7 +106,7 @@ import { useBaccaratStore } from '../../stores/baccaratStore';
 
 const store = useBaccaratStore();
 const sessionDuration = ref('00:00:00');
-let durationInterval: number | null = null;
+let durationInterval: NodeJS.Timeout | null = null;
 
 const startSession = () => {
   store.startSession();
@@ -114,18 +114,14 @@ const startSession = () => {
 };
 
 const endSession = () => {
-  if (
-    confirm(
-      'Are you sure you want to end the session? This will clear your current hand and reset betting statistics.'
-    )
-  ) {
-    store.endSession();
-    stopDurationTimer();
-  }
+  store.endSession();
+  stopDurationTimer();
 };
 
 const formatSessionDuration = (): string => {
-  if (!store.ui.sessionStartTime) return '00:00:00';
+  if (!store.ui.sessionStartTime) {
+    return '00:00:00';
+  }
 
   const now = Date.now();
   const elapsed = now - store.ui.sessionStartTime;
@@ -138,7 +134,9 @@ const formatSessionDuration = (): string => {
 };
 
 const startDurationTimer = () => {
-  if (durationInterval) clearInterval(durationInterval);
+  if (durationInterval) {
+    clearInterval(durationInterval);
+  }
 
   // Update immediately
   sessionDuration.value = formatSessionDuration();

@@ -78,13 +78,15 @@ yarn format
 
 This application uses Supabase for data persistence. Follow the comprehensive setup guide:
 
-**📖 [Supabase Setup Guide](./SUPABASE_SETUP.md)**
+**📖 [Supabase Setup Guide](./docs/SUPABASE_SETUP.md)** - Database configuration and setup
 
-**🎓 [Professional Burn Card Algorithms](./PROFESSIONAL_ALGORITHMS.md)**
+**🎓 [Professional Burn Card System](./docs/PROFESSIONAL_ALGORITHMS.md)** - Complete burn card analysis documentation
 
-**⚡ [Quick Setup Guide](./QUICK_SETUP.md)** - Fast database table creation
+**⚡ [Quick Setup Guide](./docs/QUICK_SETUP.md)** - Fast database table creation
 
-**📊 [Schema Migrations](./schema-migrations.md)** - Database schema change tracking
+**🎴 [Card Assets Setup](./docs/CARD_SETUP.md)** - Playing card image configuration
+
+**📊 [Schema Migrations](./docs/schema-migrations.md)** - Database schema change tracking
 
 The database provides:
 
@@ -132,7 +134,7 @@ The application implements four professional-grade burn card estimation algorith
 3. **Wong Method**: Adaptive pattern recognition that learns from hand history
 4. **Bayesian Updates**: Modern probabilistic approach with evidence weighting
 
-These algorithms automatically combine to provide weighted recommendations with confidence intervals, Kelly Criterion adjustments, and Monte Carlo risk assessments. See the [Professional Algorithms Documentation](./PROFESSIONAL_ALGORITHMS.md) for detailed technical information.
+These algorithms automatically combine to provide weighted recommendations with confidence intervals, Kelly Criterion adjustments, and Monte Carlo risk assessments. See the [Professional Algorithms Documentation](./docs/PROFESSIONAL_ALGORITHMS.md) for detailed technical information.
 
 ## Monte Carlo Simulations & Advanced Analytics
 
@@ -586,32 +588,34 @@ This project includes comprehensive documentation for all major features:
 ### 📚 Core Documentation
 
 - **[README.md](./README.md)** - Main project documentation (this file)
-- **[Professional Burn Card Algorithms](./PROFESSIONAL_ALGORITHMS.md)** - Detailed technical documentation of Jacobson, Griffin, Wong, and Bayesian methods
-- **[Card Setup Guide](./CARD_SETUP.md)** - SVG card integration and customization options
+- **[Professional Burn Card Algorithms](./docs/PROFESSIONAL_ALGORITHMS.md)** - Detailed technical documentation of Jacobson, Griffin, Wong, and Bayesian methods
+- **[Card Setup Guide](./docs/CARD_SETUP.md)** - SVG card integration and customization options
 
 ### 🗄️ Database Documentation
 
-- **[Supabase Setup Guide](./SUPABASE_SETUP.md)** - Complete database setup instructions
-- **[Quick Setup Guide](./QUICK_SETUP.md)** - Fast database table creation for experienced users
-- **[Schema Migrations](./schema-migrations.md)** - Database schema change tracking and version history
+- **[Supabase Setup Guide](./docs/SUPABASE_SETUP.md)** - Complete database setup instructions
+- **[Quick Setup Guide](./docs/QUICK_SETUP.md)** - Fast database table creation for experienced users
+- **[Schema Migrations](./docs/schema-migrations.md)** - Database schema change tracking and version history
 
 ### 📁 File Structure
 
 ```
 docs/
-├── README.md                    # Main documentation
+├── ARCHITECTURE.md              # Architecture and development standards
 ├── PROFESSIONAL_ALGORITHMS.md   # Burn card estimation algorithms
 ├── CARD_SETUP.md               # SVG card integration guide
 ├── SUPABASE_SETUP.md           # Database setup guide
 ├── QUICK_SETUP.md              # Quick database setup
+├── ENHANCEMENT_SUMMARY.md      # Feature enhancement documentation
+├── IMPLEMENTATION_SUMMARY.md   # Implementation details
 └── schema-migrations.md        # Schema change tracking
 ```
 
 ### 🔗 Quick Links
 
 - **Getting Started**: [Installation](#installation) → [Database Setup](#database-setup) → [Usage](#usage)
-- **Professional Features**: [Burn Card Analysis](#professional-burn-card-algorithms) → [Algorithm Documentation](./PROFESSIONAL_ALGORITHMS.md)
-- **Database Setup**: [Full Guide](./SUPABASE_SETUP.md) → [Quick Setup](./QUICK_SETUP.md)
+- **Professional Features**: [Burn Card Analysis](#professional-burn-card-algorithms) → [Algorithm Documentation](./docs/PROFESSIONAL_ALGORITHMS.md)
+- **Database Setup**: [Full Guide](./docs/SUPABASE_SETUP.md) → [Quick Setup](./docs/QUICK_SETUP.md)
 - **Advanced Features**: [Monte Carlo](#monte-carlo-simulations--advanced-analytics) → [Kelly Criterion](#kelly-criterion--optimal-betting)
 
 ## Contributing

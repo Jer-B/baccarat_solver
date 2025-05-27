@@ -1,0 +1,206 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Testing Standards & Best Practices
+
+## Testing Philosophy
+
+### 1. Testing Pyramid
+```
+E2E Tests (10%)
+├── Critical user journeys
+├── Integration between major features
+└── Cross-browser compatibility
+
+Integration Tests (20%)
+├── Component integration
+├── Store integration
+├── API integration
+└── Composable integration
+
+Unit Tests (70%)
+├── Pure functions
+├── Composables
+├── Store actions/getters
+├── Utility functions
+└── Component logic
+```
+
+### 2. Test-Driven Development (TDD)
+- Write tests before implementation
+- Red → Green → Refactor cycle
+- Focus on behavior, not implementation
+- Test edge cases and error conditions
+
+## Testing Framework Configuration
+
+### 1. Vitest Configuration
+**Rule**: Configure Vitest with Vue support, JSDOM environment, and comprehensive coverage reporting.
+
+**Environment Setup**: Use JSDOM environment for DOM testing with Vue plugin support
+**Global Configuration**: Enable globals and configure test setup files for consistent test environment
+**Coverage Requirements**: Set minimum 80% coverage thresholds for branches, functions, lines, and statements
+**Coverage Reporting**: Use V8 provider with text, JSON, and HTML reporters for comprehensive coverage analysis
+**File Exclusions**: Exclude node_modules, test files, type definitions, and config files from coverage
+**Path Resolution**: Configure path aliases to match application structure for consistent imports
+
+### 2. Test Setup
+**Rule**: Configure global test setup with Vue Test Utils, Pinia testing, and browser API mocks.
+
+**Vue Test Utils**: Configure global plugins including testing Pinia with spy functions
+**Pinia Testing**: Use createTestingPinia with vi.fn for spies and stubActions disabled for real action testing
+**Browser API Mocks**: Mock IntersectionObserver and ResizeObserver APIs for components that use them
+**Global Configuration**: Set up consistent test environment that all test files can rely on
+**Mock Strategy**: Provide minimal viable mocks for browser APIs while keeping business logic real
+
+## Unit Testing Patterns
+
+### 1. Composable Testing
+**Rule**: Test composables using AAA pattern (Arrange, Act, Assert) with proper setup and teardown.
+
+**Test Structure**: Use describe blocks for composable and method grouping with beforeEach for setup
+**Async Testing**: Test async operations with proper await and promise handling
+**State Validation**: Verify reactive state changes during operations (loading, completed, error states)
+**Error Handling**: Test error scenarios with invalid inputs and expected error messages
+**Return Value Testing**: Validate return types, method properties, and confidence ranges
+**Reset Functionality**: Test state reset methods to ensure clean state between operations
+
+### 2. Store Testing
+**Rule**: Test Pinia stores with proper setup, action testing, and getter validation.
+
+**Store Setup**: Use setActivePinia and createPinia for each test to ensure clean state
+**Action Testing**: Test store actions with proper input/output validation and state changes
+**Getter Testing**: Verify computed getters return correct values based on store state
+**State Mutations**: Test that actions properly update store state with expected values
+**Error Handling**: Test store error states and recovery mechanisms
+**Async Actions**: Test async store actions with proper promise handling and loading states
+
+### 3. Component Testing
+**Rule**: Test Vue components with proper mounting, event handling, and state validation.
+
+**Component Mounting**: Use mount with proper props and global plugin configuration
+**Rendering Tests**: Verify component renders correctly with expected elements and content
+**Event Testing**: Test component events are emitted with correct payloads
+**State Testing**: Verify component reacts properly to prop changes and internal state updates
+**Error Handling**: Test component error states and recovery mechanisms
+**User Interaction**: Test user interactions like clicks, form submissions, and keyboard events
+
+## Integration Testing Patterns
+
+### 1. Component Integration
+**Rule**: Test component integration with stores and other components to ensure proper data flow.
+
+**Store Integration**: Test components with real store instances to verify state synchronization
+**Event Flow**: Test event propagation between parent and child components
+**Data Binding**: Verify two-way data binding works correctly with v-model and props
+**Lifecycle Integration**: Test component lifecycle interactions with external services
+**Real-time Updates**: Test components respond correctly to real-time data changes
+
+### 2. API Integration Testing
+**Rule**: Test API integrations with proper setup, cleanup, and real-time functionality validation.
+
+**Service Setup**: Create service instances with proper configuration for testing
+**Test Data Management**: Create and cleanup test data to avoid pollution between tests
+**CRUD Operations**: Test create, read, update, delete operations with proper validation
+**Real-time Testing**: Test real-time subscriptions and event handling
+**Error Scenarios**: Test API error handling and network failure scenarios
+**Cleanup Strategy**: Ensure all test data is properly cleaned up after each test
+
+## E2E Testing Patterns
+
+### 1. Playwright Configuration
+**Rule**: Configure Playwright for comprehensive E2E testing across multiple browsers with proper CI/CD integration.
+
+**Test Directory**: Organize E2E tests in dedicated directory with proper structure
+**Browser Coverage**: Test across Chromium, Firefox, and WebKit for cross-browser compatibility
+**CI Configuration**: Configure retries, workers, and reporting for CI/CD environments
+**Development Server**: Automatically start development server for testing
+**Trace and Screenshots**: Enable debugging tools for test failures
+**Base URL Configuration**: Set consistent base URL for all tests
+
+### 2. E2E Test Examples
+**Rule**: Test complete user workflows from start to finish with proper setup and error handling.
+
+**Workflow Testing**: Test complete user journeys including navigation, form submission, and result validation
+**Error Scenario Testing**: Test error handling with network failures and invalid inputs
+**Page Setup**: Use beforeEach hooks to ensure consistent starting state for each test
+**Element Interaction**: Use data-testid attributes for reliable element selection
+**Assertion Strategy**: Verify both successful outcomes and error states with appropriate expectations
+**Network Mocking**: Mock API calls to test error scenarios and edge cases
+
+## Test Utilities
+
+### 1. Test Factories
+**Rule**: Create factory functions for generating test data with sensible defaults and override capabilities.
+
+**Factory Pattern**: Use factory functions that accept partial overrides for flexible test data creation
+**Default Values**: Provide sensible defaults for all required fields to minimize test setup
+**Type Safety**: Use TypeScript generics and Partial types for type-safe overrides
+**Domain Objects**: Create factories for all major domain objects (Card, GameSession, AnalysisResult)
+**Realistic Data**: Use realistic values that match production data patterns
+**Unique Identifiers**: Generate unique IDs to avoid test data conflicts
+
+### 2. Custom Matchers
+**Rule**: Create domain-specific custom matchers for more expressive and reusable test assertions.
+
+**Domain Validation**: Create matchers for domain-specific validation (valid cards, probabilities, etc.)
+**Clear Error Messages**: Provide descriptive error messages that help debug test failures
+**Type Safety**: Use proper TypeScript typing for matcher parameters and return values
+**Reusable Logic**: Extract common validation logic into reusable matchers
+**Extend Framework**: Use expect.extend to add custom matchers to the testing framework
+**Consistent Naming**: Use consistent naming patterns for custom matchers (toBe*, toHave*, etc.)
+
+## Coverage Requirements
+
+### 1. Minimum Coverage Thresholds
+- **Statements**: 80%
+- **Branches**: 80%
+- **Functions**: 80%
+- **Lines**: 80%
+
+### 2. Critical Path Coverage
+- All gambling algorithms: 95%
+- Financial calculations: 95%
+- Security functions: 90%
+- Error handling: 85%
+
+### 3. Coverage Exclusions
+- Type definitions
+- Configuration files
+- Test utilities
+- Development tools
+- Third-party integrations (mocked)
+
+## Testing Best Practices
+
+### 1. Test Organization
+- Group related tests with `describe` blocks
+- Use descriptive test names that explain behavior
+- Follow AAA pattern (Arrange, Act, Assert)
+- Keep tests focused and independent
+
+### 2. Mocking Strategy
+- Mock external dependencies
+- Use real implementations for internal logic
+- Mock time-dependent functions
+- Avoid over-mocking
+
+### 3. Data Management
+- Use factories for test data creation
+- Clean up test data after each test
+- Use realistic test data
+- Avoid hardcoded values
+
+### 4. Async Testing
+- Always await async operations
+- Use proper timeout handling
+- Test both success and failure cases
+- Handle race conditions
+
+### 5. Performance Testing
+- Test with realistic data volumes
+- Monitor test execution time
+- Use performance budgets
+- Profile critical paths

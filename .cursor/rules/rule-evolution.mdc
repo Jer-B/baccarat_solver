@@ -1,0 +1,195 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Rule Evolution and Monitoring System
+
+## Automatic Rule Evolution Philosophy
+
+### 1. Core Principles
+- **Continuous Improvement**: Rules evolve based on real-world usage patterns
+- **Data-Driven Decisions**: Rule changes backed by metrics and evidence
+- **User Validation**: All rule changes require explicit user approval
+- **Documentation**: Every rule change is documented with rationale
+- **Rollback Capability**: Ability to revert rule changes if they prove ineffective
+
+### 2. Evolution Triggers
+- **Pattern Recognition**: Recurring code patterns that could be abstracted
+- **Performance Issues**: Code patterns that impact performance
+- **Security Concerns**: Patterns that introduce security vulnerabilities
+- **Accessibility Gaps**: Missing accessibility implementations
+- **DRY Violations**: Repeated code that should be abstracted
+- **Error Patterns**: Common error scenarios that could be prevented
+
+## Rule Monitoring Framework
+
+### 1. Automated Pattern Detection
+**Rule**: Implement automated monitoring system that tracks code patterns and identifies opportunities for rule improvements.
+
+**Components Required**:
+- RuleViolation interface with ruleId, file, line, severity, pattern, and frequency
+- RuleMetrics interface tracking violations, trends, effectiveness, and lastUpdated
+- RuleMonitor class with methods for analyzing codebase and proposing changes
+- Pattern detection algorithms for identifying recurring issues
+
+**Detection Criteria**:
+- Scan codebase for recurring patterns that violate existing rules
+- Identify trends in rule violations (increasing, decreasing, stable)
+- Calculate rule effectiveness on 0-1 scale based on adoption and impact
+- Generate metrics for each rule including violation frequency and trends
+
+### 2. Rule Proposal System
+**Rule**: Create structured system for proposing, evaluating, and implementing rule changes.
+
+**Required Structure**:
+- RuleProposal interface with id, title, description, trigger, impact analysis
+- RuleImpact assessment including affected files, fix time, breaking changes
+- CodeExample structure with before/after comparisons and explanations
+- ProposalMetrics tracking violation counts, trends, and developer feedback
+
+**Proposal Process**:
+- Automatically generate proposals when patterns exceed violation thresholds
+- Include impact analysis with estimated fix time and maintenance reduction
+- Provide clear examples showing current issues and proposed solutions
+- Track proposal status through pending, approved, rejected, implemented states
+
+## Specific Rule Evolution Patterns
+
+### 1. Structured Logging Evolution
+**Rule**: Monitor logging patterns and propose improvements when unstructured logging exceeds threshold.
+
+**Detection Patterns**:
+- Unstructured logs: console statements without [feature][category] format
+- Missing categories: logs with feature but no category specification
+- Inconsistent formats: logs that don't follow established patterns
+
+**Auto-Proposal Triggers**:
+- More than 10 unstructured console logs detected
+- Increasing trend in logging violations over time
+- Developer feedback indicating difficulty filtering logs
+
+**Proposed Solutions**:
+- Add ESLint rules to enforce structured logging format
+- Create logging utility functions with built-in formatting
+- Update documentation with clear logging examples
+
+### 2. DRY Violation Detection
+**Rule**: Automatically detect code duplication and propose abstraction when threshold exceeded.
+
+**Detection Criteria**:
+- Code blocks appearing 3+ times across codebase
+- Similar function signatures with minor variations
+- Repeated UI patterns without component abstraction
+- Duplicated validation logic or business rules
+
+**Abstraction Recommendations**:
+- Extract common functions into utility modules
+- Create reusable Vue components for UI patterns
+- Develop composables for shared reactive logic
+- Centralize configuration and constants
+
+### 3. Performance Pattern Monitoring
+**Rule**: Track performance anti-patterns and suggest optimizations.
+
+**Monitored Patterns**:
+- Unnecessary re-renders in Vue components
+- Missing lazy loading for heavy components
+- Inefficient data structures or algorithms
+- Blocking operations in main thread
+
+**Optimization Proposals**:
+- Implement computed properties for derived state
+- Add dynamic imports for code splitting
+- Suggest more efficient algorithms or data structures
+- Recommend async/await patterns for better performance
+
+### 4. Accessibility Compliance Tracking
+**Rule**: Monitor accessibility patterns and propose improvements for WCAG compliance.
+
+**Detection Areas**:
+- Missing ARIA attributes on interactive elements
+- Insufficient color contrast ratios
+- Missing semantic HTML structure
+- Keyboard navigation issues
+
+**Improvement Suggestions**:
+- Add required ARIA labels and descriptions
+- Update color schemes to meet contrast requirements
+- Replace div elements with semantic HTML
+- Implement proper focus management
+
+## Rule Implementation Process
+
+### 1. Proposal Evaluation
+**Criteria for Approval**:
+- Clear problem statement with supporting evidence
+- Measurable impact on code quality or maintainability
+- Reasonable implementation effort and timeline
+- No significant breaking changes without migration path
+
+### 2. Implementation Steps
+**Process**:
+1. User reviews and approves proposed rule changes
+2. Update relevant rule documentation files
+3. Implement ESLint rules or tooling changes if needed
+4. Create migration guide for existing code
+5. Update project documentation and examples
+
+### 3. Effectiveness Monitoring
+**Tracking Metrics**:
+- Rule violation frequency before and after implementation
+- Developer adoption rate and feedback
+- Impact on code quality metrics
+- Time saved in code reviews and debugging
+
+## Rule Categories for Evolution
+
+### 1. Code Quality Rules
+- TypeScript strict mode compliance
+- Proper error handling patterns
+- Consistent naming conventions
+- Documentation requirements
+
+### 2. Performance Rules
+- Bundle size optimization
+- Lazy loading implementation
+- Efficient state management
+- Caching strategies
+
+### 3. Security Rules
+- Input validation patterns
+- Secure API communication
+- Data sanitization requirements
+- Authentication best practices
+
+### 4. Accessibility Rules
+- WCAG 2.1 AA compliance
+- Keyboard navigation support
+- Screen reader compatibility
+- Color contrast requirements
+
+### 5. Maintainability Rules
+- DRY principle enforcement
+- Single responsibility principle
+- Clear separation of concerns
+- Consistent project structure
+
+## Continuous Improvement Cycle
+
+### 1. Weekly Pattern Analysis
+**Process**: Automated scan of codebase for new patterns and rule violations
+**Output**: Report of potential rule improvements and violation trends
+**Action**: Review findings and propose rule updates if warranted
+
+### 2. Monthly Rule Review
+**Process**: Comprehensive review of all rules for effectiveness and relevance
+**Output**: Updated rule documentation and deprecated obsolete rules
+**Action**: Implement approved changes and update tooling
+
+### 3. Quarterly Architecture Assessment
+**Process**: Holistic review of architectural patterns and rule alignment
+**Output**: Strategic recommendations for rule evolution and project direction
+**Action**: Plan major rule updates and architectural improvements
+
+This system ensures rules remain relevant, effective, and aligned with project goals while maintaining code quality and developer productivity.

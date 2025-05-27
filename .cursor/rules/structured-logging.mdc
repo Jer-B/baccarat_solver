@@ -1,0 +1,212 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Structured Logging Standards
+
+## Logging Format Requirements
+
+### 1. Mandatory Structure
+**Rule**: All console logs MUST follow the format: `[feature-name][log-category] message`
+
+**Format**: `[feature-name][log-category] descriptive message`
+**Examples**: `[burn-analysis][calculation]`, `[kelly-criterion][validation]`, `[monte-carlo][simulation]`
+**Forbidden**: Unstructured logs without brackets or category classification
+**Context**: Always include relevant data as second parameter when available
+
+### 2. Feature Names (First Bracket)
+Use kebab-case for feature names that correspond to major application areas:
+
+#### Core Features
+- `burn-analysis` - Burn card estimation and analysis
+- `kelly-criterion` - Kelly Criterion calculations
+- `monte-carlo` - Monte Carlo simulations
+- `edge-calculation` - Edge percentage calculations
+- `risk-management` - Risk assessment and management
+- `dealer-tells` - Dealer tell analysis and recording
+- `session-tracking` - Game session management
+- `bankroll-management` - Bankroll tracking and optimization
+
+#### Technical Features
+- `user-interface` - UI interactions and state changes
+- `data-persistence` - Database operations and caching
+- `api-integration` - External API calls and responses
+- `authentication` - User authentication and authorization
+- `performance` - Performance monitoring and optimization
+- `error-handling` - Error processing and recovery
+- `validation` - Input validation and data integrity
+- `configuration` - Application configuration and settings
+
+#### Development Features
+- `testing` - Test execution and results
+- `debugging` - Development debugging information
+- `build-process` - Build and deployment operations
+- `code-analysis` - Static analysis and linting
+
+### 3. Log Categories (Second Bracket)
+Use descriptive categories that indicate the type of operation:
+
+#### Operational Categories
+- `initialization` - Component or service startup
+- `calculation` - Mathematical computations
+- `validation` - Input/data validation
+- `transformation` - Data transformation operations
+- `persistence` - Save/load operations
+- `synchronization` - Data sync operations
+- `cleanup` - Resource cleanup and disposal
+
+#### State Categories
+- `state-change` - State transitions
+- `user-action` - User-initiated actions
+- `system-event` - System-generated events
+- `configuration` - Configuration changes
+- `cache-operation` - Cache hits/misses/updates
+
+#### Diagnostic Categories
+- `performance` - Performance metrics and timing
+- `debug` - Debugging information
+- `trace` - Detailed execution traces
+- `audit` - Audit trail information
+- `metrics` - Application metrics
+
+#### Error Categories
+- `error` - Error conditions and exceptions
+- `warning` - Warning conditions
+- `recovery` - Error recovery attempts
+- `fallback` - Fallback mechanism activation
+
+#### Network Categories
+- `request` - Outgoing requests
+- `response` - Incoming responses
+- `connection` - Connection management
+- `timeout` - Timeout events
+
+## Implementation Patterns
+
+### 1. Basic Logging Patterns
+**Rule**: Use appropriate log levels and include contextual data for all significant operations.
+
+**Component Lifecycle**: Log initialization, mounting, and cleanup with component names
+**User Actions**: Track user interactions with descriptive action names
+**Calculations**: Log start/completion of mathematical operations with input parameters
+**Validation**: Warn on validation failures with expected vs actual values
+**Errors**: Include error details, context, and recovery information
+**Performance**: Track timing and resource usage for expensive operations
+
+### 2. Contextual Information
+**Rule**: Always include relevant context as the second parameter for meaningful logs.
+
+**Required Context**: Include operation parameters, results, timing, and state information
+**Data Structure**: Use object format with descriptive property names
+**Sensitive Data**: Never log passwords, tokens, or personal information
+**Performance Data**: Include timing, memory usage, and resource consumption when relevant
+
+### 3. Error Logging Patterns
+**Rule**: Log errors with complete context including parameters, error details, and recovery actions.
+
+**Error Context**: Include operation parameters, error message, stack trace, and timestamp
+**Recovery Logging**: Log all recovery attempts and fallback mechanisms
+**Validation Errors**: Warn on validation failures with provided vs expected values
+**Error Levels**: Use appropriate levels (error for failures, warn for validation issues)
+
+### 4. Performance Logging
+**Rule**: Track timing and resource usage for expensive operations to identify performance bottlenecks.
+
+**Timing**: Log start time, completion time, and duration for all significant operations
+**Resource Usage**: Include memory usage, CPU time, and other relevant metrics
+**Error Timing**: Log duration even for failed operations to understand failure patterns
+**Performance Thresholds**: Warn when operations exceed expected duration limits
+
+### 5. State Change Logging
+**Rule**: Log all significant state transitions with previous state, new state, and transition context.
+
+**State Transitions**: Log previous state, new state, and reason for transition
+**Timing Information**: Include timestamps and duration of state changes
+**Context Data**: Include relevant data that influenced the state change
+**Store Changes**: Log all Pinia store state modifications with context
+
+## Advanced Logging Patterns
+
+### 1. Conditional Logging
+**Rule**: Implement environment-specific logging to control verbosity and sensitive data exposure.
+
+**Development Logging**: Enable detailed debug logs and verbose output for development
+**Production Logging**: Limit to essential logs and route to external logging services
+**Environment Detection**: Use import.meta.env to determine current environment
+**Log Levels**: Implement different log levels based on environment and severity
+
+### 2. Structured Logging Utilities
+**Rule**: Create utility classes and functions to ensure consistent logging format across the application.
+
+**StructuredLogger Class**: Centralized logging utility with formatMessage method and log level functions
+**Feature-Specific Loggers**: Pre-configured loggers for each major feature (burnAnalysis, kellyCriterion, performance)
+**Consistent Formatting**: Automatic message formatting with feature and category brackets
+**Type Safety**: Use TypeScript interfaces for context objects to ensure consistent data structure
+
+### 3. Async Operation Logging
+**Rule**: Wrap async operations with logging to track timing, success, and failure patterns.
+
+**Operation Wrapper**: Create withLogging function that wraps async operations with automatic logging
+**Timing Tracking**: Log start time, completion time, and total duration for all operations
+**Success/Failure Logging**: Log both successful completions and failures with appropriate context
+**Error Handling**: Include error details and duration even for failed operations
+
+## Logging Best Practices
+
+### 1. Message Content Guidelines
+**Rule**: Write clear, actionable log messages that provide specific context and next steps.
+
+**Good Messages**: Include specific actions, navigation details, validation context with values
+**Bad Messages**: Avoid vague terms like "something happened", "bad input", or "error occurred"
+**Context Requirements**: Include relevant IDs, values, endpoints, and planned actions
+**Actionability**: Messages should help developers understand what happened and what comes next
+
+### 2. Context Object Standards
+**Rule**: Use standardized LogContext interface for consistent context data across all logs.
+
+**Required Fields**: timestamp, userId, sessionId for production logs
+**Operation Context**: operationId, correlationId for request tracking
+**Performance Data**: duration, memoryUsage for performance monitoring
+**Error Context**: error message, stack trace, errorCode for debugging
+**Business Context**: feature, component, action for business logic tracking
+**Data Context**: inputParams and resultSummary (excluding sensitive data)
+
+### 3. Security Considerations
+**Rule**: Never log sensitive data such as passwords, API keys, tokens, or personal information.
+
+**Safe Data**: Log user IDs, timestamps, IP addresses, user agents, error types
+**Forbidden Data**: Never log passwords, API keys, session tokens, credit card numbers
+**Error Logging**: Log error types and messages, but not the sensitive data that caused the error
+**Credential Logging**: Log presence of credentials (hasUsername, hasPassword) but not actual values
+
+## ESLint Integration
+
+### 1. Custom ESLint Rule for Structured Logging
+**Rule**: Implement custom ESLint rule to enforce structured logging format across the codebase.
+
+**Pattern Detection**: Use regex pattern `/^\[[\w-]+\]\[[\w-]+\]/` to validate log format
+**Auto-fixing**: Provide automatic fixes by adding placeholder structure to unstructured logs
+**Integration**: Add rule to ESLint configuration with 'error' level for strict enforcement
+**Scope**: Apply to all console.log, console.warn, console.error, and console.info calls
+
+### 2. VSCode Snippets for Structured Logging
+**Rule**: Create VSCode snippets to accelerate structured logging implementation and ensure consistency.
+
+**Snippet Types**: slog (basic log), serr (error log), swarn (warning log), sperf (performance log)
+**Template Structure**: Pre-filled placeholders for feature name, category, message, and context
+**Developer Experience**: Tab-completion for faster development and reduced syntax errors
+**Consistency**: Ensures all team members use identical logging patterns
+
+## Monitoring and Analytics
+
+### 1. Log Analysis Patterns
+**Rule**: Implement LogAnalyzer class to aggregate and analyze structured logs for insights and monitoring.
+
+**Pattern Extraction**: Use regex matching to extract feature names and categories from log messages
+**Metrics Collection**: Track log frequency by feature, category distribution, error rates, and performance data
+**Performance Analysis**: Extract duration data from performance logs and calculate averages, min/max values
+**Reporting**: Generate structured reports with top features, categories, error rates, and performance metrics
+**Monitoring**: Use analysis results to identify problematic areas and optimization opportunities
+
+This comprehensive structured logging system ensures consistent, searchable, and analyzable logs across the entire application while maintaining security and performance considerations.

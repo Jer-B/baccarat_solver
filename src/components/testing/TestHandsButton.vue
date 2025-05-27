@@ -77,7 +77,9 @@ function createCard(rank: string, suit: string, value: number): Card {
 }
 
 function addSampleHands() {
-  if (props.disabled) return;
+  if (props.disabled) {
+    return;
+  }
   // Add a variety of sample hands to test the scoreboard
   const sampleHands: HandResult[] = [
     {
@@ -185,17 +187,23 @@ function addSampleHands() {
 }
 
 function setupEdgeSortingDemo() {
-  if (props.disabled) return;
+  if (props.disabled) {
+    return;
+  }
   store.setupEdgeSortingDemo();
 }
 
 function setupPairBettingDemo() {
-  if (props.disabled) return;
+  if (props.disabled) {
+    return;
+  }
   store.setupPairBettingDemo();
 }
 
 function addRandomHand() {
-  if (props.disabled) return;
+  if (props.disabled) {
+    return;
+  }
   const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
   const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];

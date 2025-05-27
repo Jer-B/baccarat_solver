@@ -1,0 +1,111 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Pinia Store Architecture
+
+## Store Structure Standards
+
+### 1. Store Organization
+**Rule**: Organize Pinia stores using composition API pattern with clear separation of state, getters, and actions.
+
+**Structure Requirements**: Define reactive state using ref/reactive, create computed getters for derived state, implement actions as functions, and return readonly state with public API
+**State Management**: Use ref for primitive values and reactive for objects, ensure all state is properly typed with TypeScript interfaces
+**Public API**: Return readonly state references, computed getters, and action functions in a structured object
+**Naming Convention**: Use descriptive names for state properties, prefix getters with computed logic, and use verb-based names for actions
+
+### 2. Store Composition Pattern
+**Rule**: Use modular composition pattern to break large stores into focused, reusable modules.
+
+**Module Creation**: Create focused modules for specific domain logic (gameLogic, burnAnalysis, kellyCalculations)
+**Composition Strategy**: Combine multiple modules in main store using spread operator and ensure no naming conflicts
+**State Isolation**: Keep module state independent while allowing controlled interaction through composed store
+**Reusability**: Design modules to be reusable across different store contexts with clear interfaces
+
+## State Management Patterns
+
+### 1. Immutable State Updates
+**Rule**: Always use immutable update patterns to maintain Vue reactivity and prevent state mutation bugs.
+
+**Update Strategy**: Create new objects/arrays instead of mutating existing ones, use spread operator for object updates, and array methods that return new arrays
+**Reactivity Preservation**: Ensure all state changes trigger Vue reactivity system properly
+**Error Prevention**: Avoid direct property assignment that can break reactivity tracking
+
+### 2. Async Action Patterns
+**Rule**: Implement proper async action patterns with loading states, error handling, and cleanup.
+
+**Loading Management**: Track loading state during async operations, prevent concurrent execution when appropriate
+**Error Handling**: Capture and store errors in state, provide meaningful error messages, and reset error state on new operations
+**State Cleanup**: Reset loading and error states in finally blocks, update timestamps for successful operations
+**Return Values**: Return meaningful data from async actions for component consumption
+
+### 3. Error Handling in Stores
+**Rule**: Implement comprehensive error handling with structured error objects and proper logging.
+
+**Error Structure**: Create typed error interfaces with code, message, timestamp, and optional context
+**Error Storage**: Store errors in state for UI consumption and debugging purposes
+**Error Logging**: Use structured logging format for all store errors with relevant context
+**Error Recovery**: Provide methods to clear errors and retry failed operations
+
+## Professional Domain Stores
+
+### 1. Kelly Criterion Store
+**Rule**: Implement Kelly Criterion calculations with proper risk management and state tracking.
+
+**State Management**: Track current Kelly fraction, optimal bet size, risk level, and bankroll amount
+**Calculation Methods**: Implement Kelly formula with edge and odds parameters, apply risk adjustment factors based on user preference
+**Risk Controls**: Cap Kelly fraction at reasonable maximum (25%), provide conservative/moderate/aggressive risk levels
+**Validation**: Ensure all inputs are validated and calculations handle edge cases properly
+
+### 2. Monte Carlo Store
+**Rule**: Implement Monte Carlo simulation store with progress tracking and result management.
+
+**Simulation State**: Track running status, progress percentage, results, and iteration count
+**Progress Tracking**: Provide real-time progress updates during long-running simulations
+**Result Storage**: Store complete simulation results with statistical analysis
+**Cleanup**: Properly reset state after simulation completion or cancellation
+
+## Store Integration Patterns
+
+### 1. Cross-Store Communication
+**Rule**: Implement cross-store communication patterns for complex workflows that span multiple domains.
+
+**Store Coordination**: Access multiple stores within integration store, coordinate data flow between different domains
+**Workflow Management**: Implement complex workflows that combine multiple store operations
+**Data Aggregation**: Combine data from multiple stores to create comprehensive analysis results
+**Error Propagation**: Handle errors from multiple stores and provide unified error reporting
+
+### 2. Store Persistence
+**Rule**: Implement selective state persistence using VueUse localStorage integration.
+
+**Persistence Strategy**: Use useLocalStorage for user preferences and settings, keep session data in memory only
+**Data Selection**: Persist only necessary data to avoid localStorage bloat
+**Auto-save Logic**: Implement conditional auto-save based on user preferences
+**Data Recovery**: Handle localStorage data corruption and provide fallback defaults
+
+## Testing Store Logic
+
+### 1. Store Testing Patterns
+**Rule**: Test Pinia stores with proper setup, isolation, and comprehensive coverage.
+
+**Test Setup**: Use setActivePinia and createPinia for clean test environment
+**State Testing**: Verify initial state, state mutations, and getter calculations
+**Action Testing**: Test async actions, error scenarios, and side effects
+**Integration Testing**: Test store interactions and cross-store communication
+
+## Performance Optimization
+
+### 1. Computed Memoization
+**Rule**: Use computed properties for expensive calculations and optimize reactivity for large datasets.
+
+**Memoization Strategy**: Wrap expensive calculations in computed properties, use early returns for null/undefined checks
+**Reactivity Optimization**: Use shallowRef for large objects that don't need deep reactivity
+**Dependency Management**: Ensure computed properties only depend on necessary reactive data
+
+### 2. Selective Reactivity
+**Rule**: Optimize reactivity by using appropriate reactive patterns based on data usage.
+
+**Readonly Usage**: Use readonly for data that shouldn't be mutated externally
+**Static Data**: Use markRaw for configuration objects that should never be reactive
+**Performance Considerations**: Choose appropriate reactivity level based on data size and update frequency

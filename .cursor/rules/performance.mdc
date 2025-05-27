@@ -1,0 +1,200 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Performance Optimization Standards
+
+## Core Performance Principles
+
+### 1. Performance Budget
+**Rule**: Establish and enforce strict performance budgets for Core Web Vitals and application-specific metrics.
+
+**Core Web Vitals Targets**: LCP ≤ 2.5s, FID ≤ 100ms, CLS ≤ 0.1
+**Load Performance**: TTI ≤ 3.5s, FCP ≤ 1.8s for optimal user experience
+**Bundle Size Limits**: Main bundle ≤ 250KB, vendor bundle ≤ 500KB, route chunks ≤ 100KB (gzipped)
+**Runtime Performance**: Analysis operations ≤ 2s, render time ≤ 16ms per frame, memory usage ≤ 50MB
+**Monitoring**: Track all metrics continuously and fail builds that exceed budget thresholds
+
+### 2. Performance Monitoring
+**Rule**: Implement comprehensive performance tracking utilities for measuring and reporting performance metrics.
+
+**Function Timing**: Create measureAsync utility to track execution time of async operations with automatic threshold reporting
+**Component Rendering**: Use performance.mark and performance.measure APIs to track component render times
+**Threshold Monitoring**: Automatically report performance issues when operations exceed defined budget limits
+**Error Tracking**: Include timing information in error logs to identify performance-related failures
+**Analytics Integration**: Send performance data to monitoring services for trend analysis and alerting
+
+## Vue.js Performance Optimization
+
+### 1. Component Optimization
+**Rule**: Optimize Vue components using appropriate reactivity patterns and lazy loading techniques.
+
+**Shallow Reactivity**: Use shallowRef for large objects that don't need deep reactivity tracking
+**Non-Reactive Objects**: Use markRaw for static configuration objects that should never be reactive
+**Computed Memoization**: Use computed properties to memoize expensive calculations and only recalculate when dependencies change
+**Lazy Loading**: Use defineAsyncComponent for heavy components with proper loading and error states
+**Template Optimization**: Use v-memo for expensive list renders, v-show for frequently toggled elements, v-if for conditional expensive components
+**Suspense**: Wrap async components in Suspense with meaningful fallback content
+
+### 2. Reactivity Optimization
+**Rule**: Optimize Vue reactivity system usage to minimize unnecessary re-computations and watchers.
+
+**Shallow References**: Use shallowRef for large arrays and objects that don't need deep reactivity
+**Immutable Data**: Use readonly for configuration objects that should never be mutated
+**Debounced Operations**: Wrap expensive operations in debounced computed properties to limit execution frequency
+**Watcher Optimization**: Use shallow watchers for large objects and flush: 'post' to run after DOM updates
+**Computed Dependencies**: Structure computed properties to depend only on specific properties, not entire objects
+**Selective Reactivity**: Choose appropriate reactivity level based on data usage patterns
+
+### 3. Virtual Scrolling Implementation
+**Rule**: Implement virtual scrolling for large lists to maintain performance with thousands of items.
+
+**Core Concept**: Only render visible items plus overscan buffer to minimize DOM nodes
+**Scroll Tracking**: Use passive scroll listeners to track scroll position without blocking
+**Range Calculation**: Compute visible range based on scroll position, item height, and container height
+**Item Positioning**: Use absolute positioning to place visible items at correct scroll positions
+**Overscan Buffer**: Render additional items above/below viewport to smooth scrolling experience
+**Memory Management**: Properly clean up event listeners in component lifecycle hooks
+
+## Algorithm Performance Optimization
+
+### 1. Memoization Patterns
+**Rule**: Implement intelligent caching for expensive calculations using LRU cache with appropriate TTL values.
+
+**Cache Strategy**: Use LRUCache for burn analysis with max 1000 entries and 5-minute TTL
+**Key Generation**: Create deterministic cache keys from function parameters using JSON.stringify
+**Cache Validation**: Check cache before expensive operations and store results after computation
+**Memory Management**: Use LRU eviction policy to prevent memory leaks with large datasets
+**Performance Tracking**: Wrap cached operations with performance measurement for monitoring
+**Multiple Cache Types**: Implement separate caches for different calculation types (burn analysis, Kelly criterion)
+
+### 2. Web Workers for Heavy Computations
+**Rule**: Offload CPU-intensive calculations to Web Workers to prevent main thread blocking.
+
+**Worker Implementation**: Create dedicated worker files for heavy analysis operations
+**Message Protocol**: Use structured message format with requestId for tracking async operations
+**Error Handling**: Implement proper error handling and communication between worker and main thread
+**Result Processing**: Return structured results with success/error status and relevant data
+**Thread Management**: Use worker pools for multiple concurrent operations when needed
+**Fallback Strategy**: Provide main thread fallback for environments without worker support
+
+### 3. Batch Processing
+**Rule**: Implement batch processing for multiple operations to improve performance and reduce overhead.
+
+**Queue Management**: Maintain queue of pending operations with resolve/reject handlers
+**Processing Control**: Use processing flag to prevent concurrent batch execution
+**Configurable Parameters**: Allow customization of batch size and delay timing
+**Error Handling**: Properly handle batch failures and reject individual items
+**Automatic Scheduling**: Schedule next batch processing when queue has items
+**Usage Pattern**: Create specialized batchers for different operation types (burn analysis, Kelly calculations)
+
+## Bundle Optimization
+
+### 1. Code Splitting Strategies
+**Rule**: Implement strategic code splitting for routes, features, and components to optimize bundle loading.
+
+**Route-Based Splitting**: Use dynamic imports for all page components to enable lazy loading per route
+**Feature-Based Splitting**: Split composables and heavy features into separate chunks for on-demand loading
+**Component-Based Splitting**: Use defineAsyncComponent for heavy components with proper loading and error states
+**Vendor Splitting**: Separate vendor libraries (Vue, Pinia, Chart.js) into dedicated chunks for better caching
+**Critical Path**: Keep only essential code in main bundle for fastest initial page load
+
+### 2. Tree Shaking Optimization
+**Rule**: Structure exports and imports to enable effective tree shaking and eliminate dead code.
+
+**Named Exports**: Use specific named exports instead of barrel exports that prevent tree shaking
+**Specific Imports**: Import only needed functions/components rather than entire modules
+**Avoid Wildcard**: Never use `export *` or `import *` patterns that bundle unused code
+**Library Selection**: Choose libraries that support tree shaking and provide ES modules
+**Bundle Analysis**: Regularly analyze bundle composition to identify unused code
+
+### 3. Asset Optimization
+**Rule**: Configure Vite build optimization for optimal bundle size and loading performance.
+
+**Manual Chunking**: Separate vendor libraries (Vue, Pinia, Chart.js) and feature modules into dedicated chunks
+**Asset Inlining**: Inline small assets (< 4KB) to reduce HTTP requests
+**CSS Code Splitting**: Enable CSS code splitting for better caching
+**Source Maps**: Disable source maps in production builds
+**Minification**: Use Terser with console/debugger removal for production
+**Asset Processing**: Include font files and other static assets in build process
+
+## Memory Management
+
+### 1. Memory Leak Prevention
+**Rule**: Implement proper cleanup patterns for event listeners, timers, and subscriptions to prevent memory leaks.
+
+**Event Listener Cleanup**: Use onMounted/onUnmounted lifecycle hooks to add and remove event listeners
+**Timer Management**: Create composables that automatically clear intervals and timeouts on component unmount
+**Subscription Cleanup**: Properly unsubscribe from Supabase real-time subscriptions and other observables
+**Resource Management**: Track and clean up all resources that could cause memory leaks
+**Lifecycle Integration**: Use Vue 3 lifecycle hooks to ensure cleanup happens automatically
+
+### 2. Object Pool Pattern
+**Rule**: Implement object pooling for frequently created objects to reduce garbage collection overhead.
+
+**Pool Management**: Maintain pool of reusable objects with configurable maximum size
+**Acquire/Release Pattern**: Provide methods to get objects from pool and return them when done
+**Object Reuse**: Reuse existing objects instead of creating new ones for better performance
+**Memory Limits**: Set maximum pool size to prevent unlimited memory growth
+**Cleanup Methods**: Provide clear method to empty pool when needed
+**Singleton Pattern**: Use singleton instances for global object pools
+
+## Performance Monitoring
+
+### 1. Performance Metrics Collection
+**Rule**: Implement comprehensive performance monitoring service to track and analyze operation timing.
+
+**Metric Storage**: Use Map to store arrays of timing measurements for different operations
+**Sync/Async Measurement**: Provide both synchronous and asynchronous measurement wrapper functions
+**Automatic Recording**: Record timing data and maintain rolling window of recent measurements
+**Threshold Monitoring**: Define operation-specific thresholds and report slow operations
+**Error Timing**: Track timing even for failed operations to understand failure patterns
+**Statistical Analysis**: Calculate min, max, average, and percentile statistics for performance data
+**Analytics Integration**: Report performance issues to external analytics services
+
+### 2. Core Web Vitals Tracking
+**Rule**: Implement Core Web Vitals monitoring using web-vitals library for comprehensive user experience tracking.
+
+**Vital Metrics**: Track CLS (Cumulative Layout Shift), FID (First Input Delay), FCP (First Contentful Paint), LCP (Largest Contentful Paint), and TTFB (Time to First Byte)
+**Automatic Reporting**: Set up callbacks for each vital metric to automatically log and report measurements
+**Analytics Integration**: Send vital metrics to Google Analytics or other analytics services with proper event structure
+**Metric Details**: Include metric ID, value, and delta information for comprehensive tracking
+**Performance Budgets**: Compare vital metrics against established performance budgets and alert on violations
+
+## Performance Best Practices
+
+### 1. Rendering Optimization
+- Use `v-memo` for expensive list items
+- Implement virtual scrolling for large lists
+- Use `shallowRef` for large objects
+- Lazy load heavy components
+- Minimize watchers and computed dependencies
+
+### 2. Bundle Optimization
+- Implement strategic code splitting
+- Use tree shaking effectively
+- Optimize asset loading
+- Minimize vendor bundle size
+- Use compression and minification
+
+### 3. Runtime Performance
+- Memoize expensive calculations
+- Use Web Workers for heavy computations
+- Implement object pooling
+- Batch API requests
+- Optimize algorithm complexity
+
+### 4. Memory Management
+- Clean up event listeners
+- Clear timers and intervals
+- Unsubscribe from observables
+- Implement proper component cleanup
+- Monitor memory usage
+
+### 5. Network Optimization
+- Implement request caching
+- Use compression
+- Optimize image loading
+- Implement progressive loading
+- Use CDN for static assets

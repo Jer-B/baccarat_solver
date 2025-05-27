@@ -11,6 +11,10 @@ import type {
   CardValue,
 } from '../types/cards';
 import { useProfessionalBurnEstimation } from '../composables/useProfessionalBurnEstimation';
+import {
+  BurnAnalysisIntegration,
+  type BurnAnalysisMetadata,
+} from '../services/burnAnalysisIntegration';
 
 interface BettingStats {
   totalHands: number;
@@ -40,6 +44,7 @@ interface BaccaratState {
   patternAnalysis: PatternAnalysis;
   burnedCardAnalysis: BurnedCardAnalysis;
   bettingStats: BettingStats;
+  burnAnalysisMetadata?: BurnAnalysisMetadata;
   settings: {
     numberOfDecks: number;
     cutCardPosition: number;
@@ -102,6 +107,7 @@ interface BaccaratState {
     globalToggleMode: boolean; // When true, all toggles are active; when false, all sections are hidden by default
     sessionActive: boolean; // Track if a gaming session is active
     sessionStartTime: number | null; // Timestamp when session started
+    currentSessionId: string | null; // Current session ID from Supabase
     visibility: {
       shoeComposition: {
         cutCardInfo: boolean;
@@ -115,6 +121,22 @@ interface BaccaratState {
       };
       bettingInterface: {
         payoutInfo: boolean;
+      };
+      burnAnalysis: {
+        professionalNotes: boolean;
+      };
+      professionalRecommendations: {
+        professionalNotes: boolean;
+      };
+      professionalBurnAnalysis: {
+        professionalNotes: boolean;
+      };
+      burnCardEstimator: {
+        professionalTips: boolean;
+        burnIntelligence: boolean;
+      };
+      dealerTellAnalysis: {
+        professionalTips: boolean;
       };
     };
   };
@@ -250,6 +272,7 @@ export const useBaccaratStore = defineStore('baccarat', {
       globalToggleMode: true, // Default to showing all sections
       sessionActive: false, // Session starts inactive
       sessionStartTime: null, // No session started yet
+      currentSessionId: null, // Current session ID from Supabase
       visibility: {
         shoeComposition: {
           cutCardInfo: true,
@@ -263,6 +286,22 @@ export const useBaccaratStore = defineStore('baccarat', {
         },
         bettingInterface: {
           payoutInfo: true,
+        },
+        burnAnalysis: {
+          professionalNotes: false,
+        },
+        professionalRecommendations: {
+          professionalNotes: true,
+        },
+        professionalBurnAnalysis: {
+          professionalNotes: true,
+        },
+        burnCardEstimator: {
+          professionalTips: true,
+          burnIntelligence: true,
+        },
+        dealerTellAnalysis: {
+          professionalTips: true,
         },
       },
     },
@@ -460,9 +499,34 @@ export const useBaccaratStore = defineStore('baccarat', {
       const sectionVisibility = (state.ui.visibility as Record<string, Record<string, boolean>>)[
         section
       ];
-      if (!sectionVisibility) return false;
+      if (!sectionVisibility) {
+        return false;
+      }
 
       return sectionVisibility[subsection] ?? false;
+    },
+
+    // Get the button text for toggle buttons that respects global state
+    getToggleButtonText: state => (section: string, subsection: string) => {
+      if (!state.ui.globalToggleMode) {
+        return '👁️‍🗨️ Show'; // When global is hidden, all buttons show "Show"
+      }
+
+      // When global is visible, check individual section state
+      const sectionVisibility = (state.ui.visibility as Record<string, Record<string, boolean>>)[
+        section
+      ];
+      if (!sectionVisibility) {
+        return '👁️‍🗨️ Show';
+      }
+
+      const isVisible = sectionVisibility[subsection] ?? false;
+      return isVisible ? '👁️ Hide' : '👁️‍🗨️ Show';
+    },
+
+    // Check if a toggle button should be enabled
+    isToggleEnabled: state => () => {
+      return state.ui.globalToggleMode; // Only enable individual toggles when global is on
     },
 
     // Detailed pair analysis for each rank
@@ -632,6 +696,52 @@ export const useBaccaratStore = defineStore('baccarat', {
       this.trackBurnedCard(card);
     },
 
+    // Professional burn card tracking - tracks unknown burns
+    burnUnknownCards(count: number): void {
+      // Input validation
+      if (count <= 0) {
+        console.warn('Cannot burn zero or negative cards');
+        return;
+      }
+
+      if (count > this.totalCardsRemaining) {
+        console.error(`Cannot burn ${count} cards - only ${this.totalCardsRemaining} remaining`);
+        return;
+      }
+
+      // Professional approach: Track that cards were burned without revealing specific cards
+      try {
+        for (let i = 0; i < count; i++) {
+          // Create unknown burn record without revealing specific card
+          const unknownBurn: Card = {
+            rank: 'UNKNOWN' as any, // Explicitly unknown - not a real rank
+            suit: 'UNKNOWN' as any, // Explicitly unknown - not a real suit
+            value: -1 as any, // Explicitly unknown - invalid value
+            isBurned: true,
+            isUnknownBurn: true, // Key flag for professional tracking
+            timestamp: Date.now(),
+            handNumber: this.history.currentHandNumber,
+          };
+
+          this.shoe.burnedCards.push(unknownBurn);
+          this.burnedCardAnalysis.totalBurned++;
+
+          // Decrement total cards without specifying which cards
+          this.shoe.cardsDealt++;
+          this.shoe.penetration = this.shoe.cardsDealt / this.shoe.totalCards;
+        }
+
+        // Trigger professional analysis to estimate impact without revealing cards
+        this.triggerProfessionalBurnAnalysis();
+
+        console.log(
+          `Successfully burned ${count} unknown cards. Total burned: ${this.burnedCardAnalysis.totalBurned}`
+        );
+      } catch (error) {
+        console.error('Error burning unknown cards:', error);
+      }
+    },
+
     // Apply suspected burn card with confidence weighting
     applySuspectedBurn(card: Card, confidence: number): void {
       // Weight the impact based on confidence level
@@ -774,7 +884,9 @@ export const useBaccaratStore = defineStore('baccarat', {
       const totalBurned = this.burnedCardAnalysis.totalBurned;
       const totalCards = this.shoe.totalCards;
 
-      if (totalBurned === 0) return 0;
+      if (totalBurned === 0) {
+        return 0;
+      }
 
       // Impact increases with more cards burned (higher penetration)
       const penetrationImpact = (totalBurned / totalCards) * 0.5; // Max 50% impact
@@ -815,7 +927,9 @@ export const useBaccaratStore = defineStore('baccarat', {
     },
 
     calculateCutCardImpact(): number {
-      if (!this.shoe.cutCardPosition) return 0;
+      if (!this.shoe.cutCardPosition) {
+        return 0;
+      }
 
       const remainingCards = this.totalCardsRemaining;
       const cutCardDistance = remainingCards - this.shoe.cutCardPosition;
@@ -835,7 +949,9 @@ export const useBaccaratStore = defineStore('baccarat', {
         0
       );
 
-      if (totalCardsRemaining < 2) return -1; // Can't form pairs with less than 2 cards
+      if (totalCardsRemaining < 2) {
+        return -1;
+      } // Can't form pairs with less than 2 cards
 
       let totalPairProbability = 0;
 
@@ -879,7 +995,9 @@ export const useBaccaratStore = defineStore('baccarat', {
         0
       );
 
-      if (totalCardsRemaining === 0) return 0;
+      if (totalCardsRemaining === 0) {
+        return 0;
+      }
 
       // Edge sorting focuses on identifying high-value vs low-value cards
       // High cards (6,7,8,9,10,J,Q,K,A) favor banker slightly
@@ -945,7 +1063,9 @@ export const useBaccaratStore = defineStore('baccarat', {
     },
 
     updatePatternAnalysis(winner: 'player' | 'banker' | 'tie') {
-      if (!this.settings.showPatternAnalysis) return;
+      if (!this.settings.showPatternAnalysis) {
+        return;
+      }
 
       this.patternAnalysis.lastOutcomes.push(winner);
 
@@ -1166,7 +1286,9 @@ export const useBaccaratStore = defineStore('baccarat', {
       betAmount: number,
       won: boolean
     ): number {
-      if (!won) return 0;
+      if (!won) {
+        return 0;
+      }
 
       const payouts = this.settings.payouts;
 
@@ -1249,19 +1371,114 @@ export const useBaccaratStore = defineStore('baccarat', {
       this.ui.globalToggleMode = visible;
     },
 
-    startSession() {
-      this.ui.sessionActive = true;
-      this.ui.sessionStartTime = Date.now();
-      // Initialize a fresh shoe when starting a session
-      this.initializeShoe();
+    // Toggle individual section visibility (only works when global is enabled)
+    toggleSectionVisibility(section: string, subsection: string) {
+      if (!this.ui.globalToggleMode) {
+        return; // Don't allow individual toggles when global is off
+      }
+
+      const sectionVisibility = (this.ui.visibility as Record<string, Record<string, boolean>>)[
+        section
+      ];
+      if (sectionVisibility) {
+        sectionVisibility[subsection] = !sectionVisibility[subsection];
+      }
     },
 
-    endSession() {
+    // Set individual section visibility (only works when global is enabled)
+    setSectionVisibility(section: string, subsection: string, visible: boolean) {
+      if (!this.ui.globalToggleMode) {
+        return; // Don't allow individual toggles when global is off
+      }
+
+      const sectionVisibility = (this.ui.visibility as Record<string, Record<string, boolean>>)[
+        section
+      ];
+      if (sectionVisibility) {
+        sectionVisibility[subsection] = visible;
+      }
+    },
+
+    async startSession() {
+      this.ui.sessionActive = true;
+      this.ui.sessionStartTime = Date.now();
+
+      // Initialize a fresh shoe when starting a session
+      this.initializeShoe();
+
+      // Record session to Supabase
+      try {
+        const { sessionService } = await import('../services/sessionService');
+        const session = await sessionService.createSession({
+          started_at: new Date().toISOString(),
+        });
+
+        // Store the session ID for later updates
+        this.ui.currentSessionId = session.id;
+
+        console.log('[session-tracking][initialization] Session recorded to database', {
+          sessionId: session.id,
+        });
+      } catch (error) {
+        console.error('[session-tracking][error] Failed to record session to database', { error });
+        // Continue with local session even if database fails
+        // Note: Toast notification is handled by sessionService
+      }
+
+      // Session started
+    },
+
+    async endSession() {
+      // Calculate session duration before clearing session data
+      let duration = '00:00:00';
+      let handsPlayed = 0;
+      let durationSeconds = 0;
+      const sessionId = this.ui.currentSessionId;
+
+      if (this.ui.sessionStartTime) {
+        const elapsed = Date.now() - this.ui.sessionStartTime;
+        durationSeconds = Math.floor(elapsed / 1000);
+        const hours = Math.floor(elapsed / (1000 * 60 * 60));
+        const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+        duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        handsPlayed = this.history.hands.length;
+      }
+
       this.ui.sessionActive = false;
       this.ui.sessionStartTime = null;
+      this.ui.currentSessionId = null;
+
+      // Update session in Supabase
+      if (sessionId) {
+        try {
+          const { sessionService } = await import('../services/sessionService');
+          await sessionService.updateSession(sessionId, {
+            ended_at: new Date().toISOString(),
+            duration_seconds: durationSeconds,
+            total_hands: handsPlayed,
+            status: 'completed',
+          });
+
+          console.log('[session-tracking][cleanup] Session updated in database', {
+            sessionId,
+            duration: durationSeconds,
+            hands: handsPlayed,
+          });
+        } catch (error) {
+          console.error('[session-tracking][error] Failed to update session in database', {
+            error,
+            sessionId,
+          });
+          // Note: Toast notification is handled by sessionService
+        }
+      }
+
       // Clear current hand and reset betting stats when ending session
       this.shoe.currentHand = { player: [], banker: [] };
       this.resetBettingStats();
+
+      // Session ended
     },
 
     setupEdgeSortingDemo() {
@@ -1325,64 +1542,101 @@ export const useBaccaratStore = defineStore('baccarat', {
 
     // Professional burn card analysis integration
     runProfessionalBurnAnalysis() {
+      // Only run if we have unknown burns to analyze
+      const unknownBurns = this.shoe.burnedCards.filter(card => card.isUnknownBurn);
+      if (unknownBurns.length === 0) {
+        return;
+      }
+
+      // Use the professional burn estimation composable
       const burnEstimation = useProfessionalBurnEstimation();
 
-      // Run the analysis with current game state
       const analysis = burnEstimation.analyzeBurnScenarios(
         this.shoe.remainingCards,
         this.history.hands,
-        this.shoe.burnedCards,
+        this.shoe.burnedCards.filter(card => !card.isUnknownBurn), // Only known burns
         this.currentPenetration
       );
 
-      // Update the current analysis
-      burnEstimation.currentAnalysis.value = analysis;
-
-      // Apply burn analysis to edge calculations
+      // Apply the analysis results to our calculations
       this.applyBurnAnalysisToEdges(analysis);
 
-      return analysis;
+      // Update burn analysis metadata for Kelly and Monte Carlo integration
+      this.burnAnalysisMetadata = {
+        weightedEdgeImpact: analysis.weightedEdgeImpact,
+        uncertaintyLevel: analysis.confidenceInterval
+          ? analysis.confidenceInterval[1] - analysis.confidenceInterval[0]
+          : 0.1,
+        kellyMultiplier: analysis.kellyMultiplier,
+        monteCarloAdjustment: analysis.monteCarloAdjustment,
+        lastUpdated: Date.now(),
+      };
+
+      console.log('Professional burn analysis completed:', {
+        scenarios: analysis.scenarios.length,
+        weightedEdgeImpact: analysis.weightedEdgeImpact,
+        kellyMultiplier: analysis.kellyMultiplier,
+        recommendedAction: analysis.recommendedAction,
+      });
     },
 
-    // Apply professional burn analysis to edge calculations
     applyBurnAnalysisToEdges(analysis: {
       weightedEdgeImpact?: number;
       confidenceInterval?: [number, number];
+      kellyMultiplier?: number;
+      monteCarloAdjustment?: number;
+      uncertaintyLevel?: number;
     }) {
-      if (!analysis) return;
-
-      // Adjust edges based on professional burn analysis
-      const basePlayerEdge = -0.0106;
-      const baseBankerEdge = -0.0106;
-
-      this.edgeCalculations.playerEdge = basePlayerEdge + (analysis.weightedEdgeImpact || 0);
-      this.edgeCalculations.bankerEdge = baseBankerEdge + (analysis.weightedEdgeImpact || 0);
-
-      // Update confidence based on burn analysis
-      if (
-        analysis.confidenceInterval &&
-        Array.isArray(analysis.confidenceInterval) &&
-        analysis.confidenceInterval.length >= 2
-      ) {
-        const interval = analysis.confidenceInterval as [number, number];
-        const burnConfidence = 1 - (interval[1] - interval[0]);
-        this.edgeCalculations.confidence = Math.max(
-          this.edgeCalculations.confidence,
-          burnConfidence
-        );
+      if (!analysis) {
+        return;
       }
 
-      // Add burn impact to edge sorting advantage
-      if (this.edgeCalculations.edgeSortingAdvantage !== undefined) {
-        this.edgeCalculations.edgeSortingAdvantage += (analysis.weightedEdgeImpact || 0) * 0.5;
+      // Create burn analysis metadata using standardized service
+      const burnMetadata: BurnAnalysisMetadata = {
+        weightedEdgeImpact: analysis.weightedEdgeImpact || 0,
+        uncertaintyLevel: analysis.uncertaintyLevel || 0.1,
+        kellyMultiplier: analysis.kellyMultiplier || 1.0,
+        monteCarloAdjustment: analysis.monteCarloAdjustment || 1.0,
+        lastUpdated: Date.now(),
+      };
+
+      // Validate metadata using standardized service
+      if (!BurnAnalysisIntegration.validateMetadata(burnMetadata)) {
+        console.warn('Invalid burn analysis metadata, using defaults');
+        this.burnAnalysisMetadata = BurnAnalysisIntegration.createDefaultMetadata();
+        return;
       }
+
+      // Store the validated metadata
+      this.burnAnalysisMetadata = burnMetadata;
+
+      // Apply edge adjustments using standardized integration
+      this.edgeCalculations = BurnAnalysisIntegration.applyToEdges(
+        this.edgeCalculations,
+        this.burnAnalysisMetadata
+      );
+
+      console.log('Applied burn analysis to edges using standardized integration:', {
+        burnMetadata: this.burnAnalysisMetadata,
+        updatedEdges: this.edgeCalculations,
+      });
     },
 
     // Auto-run professional burn analysis when conditions change
     triggerProfessionalBurnAnalysis() {
-      // Only run if we have enough data and penetration
-      if (this.history.hands.length >= 3 && this.currentPenetration > 0.1) {
-        this.runProfessionalBurnAnalysis();
+      try {
+        // Only run if we have enough data and penetration
+        if (this.history.hands.length >= 3 && this.currentPenetration > 0.1) {
+          this.runProfessionalBurnAnalysis();
+        } else {
+          console.log('Insufficient data for professional burn analysis:', {
+            hands: this.history.hands.length,
+            penetration: this.currentPenetration,
+            required: { minHands: 3, minPenetration: 0.1 },
+          });
+        }
+      } catch (error) {
+        console.error('Error triggering professional burn analysis:', error);
       }
     },
   },

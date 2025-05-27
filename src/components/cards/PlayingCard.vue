@@ -500,12 +500,16 @@ const cardRank = computed(() => props.card?.rank || props.rank);
 const cardSuit = computed(() => props.card?.suit || props.suit);
 
 const displayRank = computed(() => {
-  if (!cardRank.value) return '';
+  if (!cardRank.value) {
+    return '';
+  }
   return cardRank.value;
 });
 
 const suitSymbol = computed(() => {
-  if (!cardSuit.value) return '';
+  if (!cardSuit.value) {
+    return '';
+  }
   const symbols = {
     hearts: '♥',
     diamonds: '♦',
@@ -516,25 +520,43 @@ const suitSymbol = computed(() => {
 });
 
 const cardColor = computed(() => {
-  if (!cardSuit.value) return '#000000';
+  if (!cardSuit.value) {
+    return '#000000';
+  }
   return cardSuit.value === 'hearts' || cardSuit.value === 'diamonds' ? '#dc2626' : '#000000';
 });
 
 const cardStateClass = computed(() => {
-  if (props.disabled) return 'card-disabled';
+  if (props.disabled) {
+    return 'card-disabled';
+  }
   if (props.count !== undefined) {
-    if (props.count === 0) return 'card-empty';
-    if (props.count <= 2) return 'card-low';
-    if (props.count <= 4) return 'card-medium';
+    if (props.count === 0) {
+      return 'card-empty';
+    }
+    if (props.count <= 2) {
+      return 'card-low';
+    }
+    if (props.count <= 4) {
+      return 'card-medium';
+    }
   }
   return 'card-normal';
 });
 
 const getCountBadgeClass = () => {
-  if (props.count === undefined) return '';
-  if (props.count === 0) return 'badge-empty';
-  if (props.count <= 2) return 'badge-low';
-  if (props.count <= 4) return 'badge-medium';
+  if (props.count === undefined) {
+    return '';
+  }
+  if (props.count === 0) {
+    return 'badge-empty';
+  }
+  if (props.count <= 2) {
+    return 'badge-low';
+  }
+  if (props.count <= 4) {
+    return 'badge-medium';
+  }
   return 'badge-normal';
 };
 

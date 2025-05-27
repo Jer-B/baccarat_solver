@@ -1013,6 +1013,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useBaccaratStore } from '../../stores/baccaratStore';
+import { BurnAnalysisIntegration } from '../../services/burnAnalysisIntegration';
 
 const store = useBaccaratStore();
 const isSimulating = ref(false);
@@ -1286,8 +1287,25 @@ const calculateKellyOptimal = () => {
   const fractionalMultiplier = store.settings.kelly.fractionalKelly;
   const maxKellyAllowed = store.settings.kelly.maxKellyPercentage;
 
+  // Apply professional burn analysis adjustment using standardized integration
+  const burnAdjustedKellyPercentage = BurnAnalysisIntegration.applyToKelly(
+    kellyPercentage,
+    store.burnAnalysisMetadata
+  );
+
+  if (store.burnAnalysisMetadata) {
+    console.log('Kelly burn adjustment:', {
+      originalKelly: kellyPercentage,
+      adjustedKelly: burnAdjustedKellyPercentage,
+      burnMetadata: store.burnAnalysisMetadata,
+    });
+  }
+
   // Apply fractional Kelly and max Kelly limits
-  const adjustedKellyPercentage = Math.min(kellyPercentage * fractionalMultiplier, maxKellyAllowed);
+  const adjustedKellyPercentage = Math.min(
+    burnAdjustedKellyPercentage * fractionalMultiplier,
+    maxKellyAllowed
+  );
   const optimalBetSize = adjustedKellyPercentage * bankroll;
 
   // Store previous bet size for comparison
@@ -1344,23 +1362,51 @@ const runMonteCarloSimulation = async () => {
   const avgWin = kellyOptimal.value.averageWin || avgBetSize;
   const avgLoss = kellyOptimal.value.averageLoss || avgBetSize;
 
+  // Apply professional burn analysis adjustments using standardized integration
+  const baseParams = {
+    winRate: winRate || 0.5,
+    avgBetSize,
+    avgWin: kellyOptimal.value.averageWin || avgBetSize,
+    avgLoss: kellyOptimal.value.averageLoss || avgBetSize,
+    simulations,
+    handsToSimulate,
+  };
+
+  const adjustedParams = BurnAnalysisIntegration.applyToMonteCarlo(
+    baseParams,
+    store.burnAnalysisMetadata
+  );
+
+  if (store.burnAnalysisMetadata) {
+    console.log('Monte Carlo burn adjustments:', {
+      originalParams: baseParams,
+      adjustedParams,
+      burnMetadata: store.burnAnalysisMetadata,
+    });
+  }
+
   for (let sim = 0; sim < simulations; sim++) {
     let totalReturn = 0;
     let currentBankroll = 1000;
     let ruined = false;
 
     for (let hand = 0; hand < handsToSimulate; hand++) {
-      if (ruined) break;
+      if (ruined) {
+        break;
+      }
 
-      const isWin = Math.random() < winRate;
+      // Use adjusted parameters from burn analysis integration
+      const isWin = Math.random() < adjustedParams.winRate;
       const betSize = Math.min(avgBetSize, currentBankroll * 0.05); // Max 5% of bankroll
 
       if (isWin) {
-        const winAmount = Math.min(avgWin, betSize * 2); // Cap winnings
+        // Use adjusted win amounts from burn analysis integration
+        const winAmount = Math.min(adjustedParams.avgWin, betSize * 2); // Cap winnings
         totalReturn += winAmount;
         currentBankroll += winAmount;
       } else {
-        const lossAmount = Math.min(avgLoss, betSize); // Loss is limited to bet size
+        // Use adjusted loss amounts from burn analysis integration
+        const lossAmount = Math.min(adjustedParams.avgLoss, betSize); // Loss is limited to bet size
         totalReturn -= lossAmount;
         currentBankroll -= lossAmount;
 
@@ -1399,47 +1445,79 @@ const runMonteCarloSimulation = async () => {
 
 // Utility functions for styling
 const getSharpeClass = (ratio: number): string => {
-  if (ratio > 2) return 'text-green-600';
-  if (ratio > 1) return 'text-blue-600';
-  if (ratio > 0) return 'text-yellow-600';
+  if (ratio > 2) {
+    return 'text-green-600';
+  }
+  if (ratio > 1) {
+    return 'text-blue-600';
+  }
+  if (ratio > 0) {
+    return 'text-yellow-600';
+  }
   return 'text-red-600';
 };
 
 const getSharpeDescription = (ratio: number): string => {
-  if (ratio > 3) return 'Outstanding';
-  if (ratio > 2) return 'Excellent';
-  if (ratio > 1) return 'Good';
-  if (ratio > 0) return 'Acceptable';
+  if (ratio > 3) {
+    return 'Outstanding';
+  }
+  if (ratio > 2) {
+    return 'Excellent';
+  }
+  if (ratio > 1) {
+    return 'Good';
+  }
+  if (ratio > 0) {
+    return 'Acceptable';
+  }
   return 'Poor';
 };
 
 const getProfitFactorClass = (factor: number): string => {
-  if (factor > 2) return 'text-green-600';
-  if (factor > 1) return 'text-blue-600';
+  if (factor > 2) {
+    return 'text-green-600';
+  }
+  if (factor > 1) {
+    return 'text-blue-600';
+  }
   return 'text-red-600';
 };
 
 const getProfitFactorDescription = (factor: number): string => {
-  if (factor > 2) return 'Very Good';
-  if (factor > 1) return 'Profitable';
+  if (factor > 2) {
+    return 'Very Good';
+  }
+  if (factor > 1) {
+    return 'Profitable';
+  }
   return 'Losing';
 };
 
 const getRecoveryFactorClass = (factor: number): string => {
-  if (factor > 3) return 'text-green-600';
-  if (factor > 1) return 'text-blue-600';
+  if (factor > 3) {
+    return 'text-green-600';
+  }
+  if (factor > 1) {
+    return 'text-blue-600';
+  }
   return 'text-red-600';
 };
 
 const getRecoveryFactorDescription = (factor: number): string => {
-  if (factor > 3) return 'Excellent';
-  if (factor > 1) return 'Good';
+  if (factor > 3) {
+    return 'Excellent';
+  }
+  if (factor > 1) {
+    return 'Good';
+  }
   return 'Poor';
 };
 
 // Kelly change detection functions
 const hasSignificantKellyChange = (): boolean => {
-  if (previousKellyBetSize.value === 0 || kellyOptimal.value.optimalBetSize === 0) return false;
+  if (previousKellyBetSize.value === 0 || kellyOptimal.value.optimalBetSize === 0) {
+    return false;
+  }
 
   const changeRatio =
     Math.abs(kellyOptimal.value.optimalBetSize - previousKellyBetSize.value) /
@@ -1448,14 +1526,20 @@ const hasSignificantKellyChange = (): boolean => {
 };
 
 const getKellyChangeDirection = (): 'increase' | 'decrease' | 'none' => {
-  if (!hasSignificantKellyChange()) return 'none';
+  if (!hasSignificantKellyChange()) {
+    return 'none';
+  }
 
-  if (kellyOptimal.value.optimalBetSize > previousKellyBetSize.value) return 'increase';
+  if (kellyOptimal.value.optimalBetSize > previousKellyBetSize.value) {
+    return 'increase';
+  }
   return 'decrease';
 };
 
 const getKellyChangePercentage = (): number => {
-  if (previousKellyBetSize.value === 0) return 0;
+  if (previousKellyBetSize.value === 0) {
+    return 0;
+  }
 
   return (
     ((kellyOptimal.value.optimalBetSize - previousKellyBetSize.value) /
@@ -1466,7 +1550,9 @@ const getKellyChangePercentage = (): number => {
 
 const getKellyChangeClass = (): string => {
   const direction = getKellyChangeDirection();
-  if (direction === 'none') return '';
+  if (direction === 'none') {
+    return '';
+  }
 
   return direction === 'increase' ? 'kelly-increase' : 'kelly-decrease';
 };
@@ -1484,7 +1570,9 @@ const detectRiskScenarios = () => {
   }> = [];
   const results = monteCarloResults.value;
 
-  if (results.simulations === 0) return scenarios;
+  if (results.simulations === 0) {
+    return scenarios;
+  }
 
   // High Risk of Ruin
   if (results.riskOfRuin >= riskThresholds.value.highRiskOfRuin) {
@@ -1547,9 +1635,15 @@ const getRiskScenarios = computed(() => detectRiskScenarios());
 const getOverallRiskLevel = (): 'low' | 'medium' | 'high' | 'critical' => {
   const scenarios = getRiskScenarios.value;
 
-  if (scenarios.some(s => s.severity === 'critical')) return 'critical';
-  if (scenarios.some(s => s.severity === 'high')) return 'high';
-  if (scenarios.some(s => s.severity === 'medium')) return 'medium';
+  if (scenarios.some(s => s.severity === 'critical')) {
+    return 'critical';
+  }
+  if (scenarios.some(s => s.severity === 'high')) {
+    return 'high';
+  }
+  if (scenarios.some(s => s.severity === 'medium')) {
+    return 'medium';
+  }
   return 'low';
 };
 
@@ -1586,14 +1680,15 @@ const getNextRunInfo = (): string => {
     return 'Next hand';
   } else if (handsUntilNext === 1) {
     return 'In 1 hand';
-  } else {
-    return `In ${handsUntilNext} hands`;
   }
+  return `In ${handsUntilNext} hands`;
 };
 
 // Auto-run Monte Carlo logic
 const checkAutoRun = () => {
-  if (isSimulating.value) return;
+  if (isSimulating.value) {
+    return;
+  }
 
   const currentHands = store.bettingStats.totalHands;
   const interval = store.settings.monteCarlo.runEveryNHands;
@@ -1616,13 +1711,17 @@ const checkAutoRun = () => {
 
 // Check for significant edge changes
 const checkSignificantEdgeChange = () => {
-  if (isSimulating.value) return;
+  if (isSimulating.value) {
+    return;
+  }
 
   const currentEdges = store.edgeCalculations;
   const currentHands = store.bettingStats.totalHands;
 
   // Don't check on the very first hand or if we just ran due to edge change
-  if (currentHands === 0 || currentHands === lastEdgeRunHand.value) return;
+  if (currentHands === 0 || currentHands === lastEdgeRunHand.value) {
+    return;
+  }
 
   // Calculate edge changes
   const edgeChanges = {

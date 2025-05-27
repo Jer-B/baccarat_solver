@@ -1,0 +1,128 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# ESLint & Husky Configuration Standards
+
+> **Note**: Package Manager Standards (Yarn-Only Policy) are defined in `architecture.mdc` to avoid duplication.
+
+## ESLint Rules Enhancement
+
+### 1. Structured Logging Enforcement
+**Rule**: Configure ESLint rules to enforce structured logging format and DRY principles across the codebase.
+
+**Structured Logging Rules**: Allow console statements in development, enforce template literals, and use spaced-comment rule to allow structured logging markers
+**DRY Principle Rules**: Prevent duplicate imports, useless constructors, and enforce const usage with complexity limits (max 10 complexity, 50 lines per function, 4 max depth/params)
+**Vue-Specific Rules**: Enforce component structure order (template, script, style), kebab-case event naming, camelCase prop naming, and prevent unused components/variables
+**TypeScript Strict Rules**: Prohibit explicit any, enforce type imports, require explicit function return types, and ensure proper async/await usage
+**Domain-Specific Rules**: Set identifier length limits (3-30 characters) and allow gambling-specific abbreviations (kelly_criterion, monte_carlo, burn_cards, edge_calc)
+
+### 2. Custom ESLint Rules for Structured Logging
+**Rule**: Create custom ESLint rule to enforce structured logging format across all console statements.
+
+**Rule Implementation**: Create structured-logging rule that validates console.log/warn/error/info calls against regex pattern `/^\[[\w-]+\]\[[\w-]+\]/`
+**Pattern Detection**: Check CallExpression nodes for console member expressions and validate first argument against structured format
+**Error Reporting**: Report violations with clear message "Console logs must follow structured format: [feature][category] message"
+**Rule Configuration**: Set rule type as 'problem' with appropriate documentation and schema definition
+**Integration**: Add rule to ESLint configuration with 'error' level for strict enforcement
+
+## Husky Git Hooks Enhancement
+
+### 1. Enhanced Pre-commit Hook
+**Rule**: Implement comprehensive pre-commit validation to enforce code quality standards before commits.
+
+**Lint-Staged Integration**: Run lint-staged for file-specific linting and formatting checks
+**Structured Logging Validation**: Check TypeScript/Vue/JavaScript files for console statements without [feature][category] format and fail commit if found
+**DRY Violation Detection**: Scan for TODO/FIXME comments mentioning DRY or duplicate code and warn developers
+**TypeScript Validation**: Run full TypeScript type checking to catch type errors before commit
+**Documentation Validation**: Check composables for missing JSDoc @param and @returns documentation
+**Exit Strategy**: Fail commit process if critical violations are found, allow warnings to proceed
+
+### 2. Enhanced Commit Message Hook
+**Rule**: Validate commit messages and provide guidance for better commit practices.
+
+**Commitlint Integration**: Run commitlint to enforce conventional commit message format
+**Logging Context Validation**: Check if commit mentions logging without specifying structured format and suggest improvement
+**DRY Principle Recognition**: Detect and acknowledge commits that address code duplication (duplicate, refactor, extract keywords)
+**Documentation Reminder**: Suggest updating documentation when code changes are made without corresponding documentation updates
+**Guidance Approach**: Provide helpful suggestions rather than blocking commits for message improvements
+
+### 3. Pre-push Hook
+**Rule**: Run comprehensive validation before pushing code to remote repository.
+
+**Test Suite Execution**: Run full test suite to ensure all tests pass before push
+**Build Validation**: Execute production build to catch build-time errors and ensure deployability
+**File Size Monitoring**: Check for files larger than 1MB and suggest optimization or Git LFS usage
+**Security Scanning**: Perform basic security checks for potential secrets (password, secret, key patterns) excluding test files
+**Blocking Strategy**: Fail push for critical issues (test failures, build errors, large files) while warning for security concerns
+
+## Package.json Scripts Enhancement
+
+### 1. Enhanced Scripts
+**Rule**: Define comprehensive package.json scripts for development, quality assurance, and analysis workflows.
+
+**Development Scripts**: Standard Vite development, build, and preview commands
+**Linting Scripts**: ESLint with auto-fix, check-only mode, and structured logging validation
+**Formatting Scripts**: Prettier with write and check modes for consistent code formatting
+**Type Checking**: Vue TypeScript compilation with watch mode for development
+**Testing Scripts**: Vitest with UI and coverage reporting capabilities
+**Analysis Scripts**: Code duplication detection with jscpd and complexity analysis with ESLint
+**Documentation Scripts**: TypeDoc generation and JSDoc validation for composables
+**Quality Gates**: Combined scripts for comprehensive quality checking and automated fixing
+**Lint-Staged Configuration**: File-specific linting, formatting, and validation rules for staged files
+
+### 2. Additional Development Dependencies
+**Rule**: Include essential development dependencies for code quality, testing, and security analysis.
+
+**Code Quality Tools**: jscpd for duplicate code detection, typedoc for documentation generation
+**Testing Enhancements**: Vitest UI for interactive testing, V8 coverage provider for comprehensive test coverage
+**Git Workflow Tools**: Commitizen for conventional commits, conventional changelog for automated changelog generation
+**Security Tools**: audit-ci for automated security vulnerability scanning in CI/CD pipelines
+**Version Management**: Use specific version ranges (^) to allow compatible updates while maintaining stability
+
+## IDE Integration
+
+### 1. VSCode Settings
+**Rule**: Configure VSCode settings to support ESLint, TypeScript, and development workflow standards.
+
+**ESLint Integration**: Enable ESLint validation for JavaScript, TypeScript, and Vue files with auto-fix on save
+**Code Actions**: Automatically fix ESLint issues and organize imports when saving files
+**Snippet Configuration**: Prioritize custom snippets for structured logging and development patterns
+**TODO Tree Integration**: Track TODO, FIXME, DRY, and DUPLICATE comments for code quality monitoring
+**TypeScript Configuration**: Enable strict mode and auto-import suggestions for better development experience
+**Editor Behavior**: Configure editor to support development workflow and code quality standards
+
+### 2. Code Snippets for Structured Logging
+**Rule**: Create VSCode snippets to accelerate structured logging implementation and ensure consistency.
+
+**Snippet Types**: clog (basic log), cerr (error log), cwarn (warning log), sperf (performance log)
+**Template Structure**: Pre-filled placeholders for feature name, category, message, and context parameters
+**Tab Navigation**: Use numbered placeholders (${1}, ${2}, ${3}) for efficient tab-completion workflow
+**Consistency Enforcement**: Ensure all team members use identical logging patterns through shared snippets
+**Developer Experience**: Reduce syntax errors and speed up development with auto-completion
+
+## Continuous Integration Integration
+
+### 1. GitHub Actions Workflow
+**Rule**: Implement comprehensive CI/CD workflow for automated code quality validation.
+
+**Workflow Triggers**: Run on push and pull request events for continuous validation
+**Environment Setup**: Use Node.js 18 with Yarn caching for consistent and fast builds
+**Dependency Installation**: Use frozen lockfile to ensure reproducible builds
+**Structured Logging Validation**: Check for unstructured console logs and fail build if found
+**Code Duplication Analysis**: Run jscpd analysis to detect and report code duplication
+**Quality Gate Steps**: Execute linting, type checking, testing, and build validation in sequence
+**Failure Strategy**: Fail fast on any quality gate failure to prevent problematic code from merging
+
+## Rule Evolution Monitoring
+
+### 1. Rule Usage Analytics
+**Rule**: Implement automated analysis to track rule compliance and effectiveness across the codebase.
+
+**Compliance Tracking**: Scan source files to measure structured logging adoption rate and identify violations
+**Pattern Detection**: Use regex patterns to detect console statements and validate against structured format requirements
+**Metrics Calculation**: Calculate compliance percentages and track trends over time
+**Threshold Monitoring**: Set compliance thresholds (90%) and suggest rule improvements when not met
+**Automated Reporting**: Generate regular compliance reports to identify areas needing attention
+**Rule Evolution Triggers**: Use compliance data to propose stricter rules or additional enforcement mechanisms

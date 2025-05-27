@@ -1,0 +1,228 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Vue 3 Component Design Patterns
+
+## Component Architecture Principles
+
+### 1. Atomic Design Implementation
+```
+Atoms (Basic UI elements)
+├── BaseButton.vue
+├── BaseInput.vue
+├── BaseCard.vue
+├── BaseIcon.vue
+├── BaseBadge.vue
+└── BaseSpinner.vue
+
+Molecules (Simple combinations)
+├── FormField.vue (Label + Input + Error)
+├── MetricCard.vue (Value + Label + Description)
+├── StatusIndicator.vue (Dot + Text)
+├── SearchBox.vue (Input + Button)
+└── ProgressBar.vue (Bar + Label)
+
+Organisms (Complex components)
+├── AnalyticsPanel.vue
+├── BurnCardEstimator.vue
+├── ProfessionalRecommendations.vue
+├── DealerTellAnalysis.vue
+└── NavigationHeader.vue
+
+Templates (Page layouts)
+├── DashboardLayout.vue
+├── AnalysisLayout.vue
+├── SettingsLayout.vue
+└── AuthLayout.vue
+
+Pages (Complete views)
+├── DashboardPage.vue
+├── AnalysisPage.vue
+├── SettingsPage.vue
+└── LoginPage.vue
+```
+
+### 2. Component Naming Conventions
+- **Base Components**: `Base` prefix (BaseButton, BaseInput)
+- **Single Instance**: `The` prefix (TheHeader, TheNavigation)
+- **Child Components**: Parent name prefix (TodoList, TodoItem)
+- **Feature Components**: Feature prefix (BurnCardEstimator, KellyCriterionCalculator)
+
+### 3. Component Size Guidelines
+- **Atoms**: < 50 lines
+- **Molecules**: < 100 lines
+- **Organisms**: < 200 lines
+- **Templates**: < 150 lines
+- **Pages**: < 100 lines (mostly composition)
+
+## Component Structure Standards
+
+### 1. Mandatory Component Order
+**Rule**: All Vue components MUST follow this exact order for consistency and maintainability.
+
+**Template Section**: Semantic HTML with proper accessibility attributes and ARIA labels
+**Script Setup Section**: Composition API logic with specific import order and organization
+**Style Section**: Component-specific styles using Tailwind CSS classes
+
+**Import Order Requirements**:
+1. Type-only imports from local types
+2. Vue composition API imports (ref, computed, watch, lifecycle hooks)
+3. External library imports (stores, composables, utilities)
+4. Local component imports
+
+**Script Organization**:
+1. Props and emits interfaces with TypeScript
+2. Reactive state declarations using ref/reactive
+3. Computed properties for derived state
+4. Method definitions with proper async handling
+5. Lifecycle hooks (onMounted, onUpdated, onUnmounted)
+6. Watchers for reactive data changes
+
+### 2. Props Design Patterns
+**Rule**: Define explicit, readonly props with TypeScript interfaces and sensible defaults.
+
+**Good Practices**: Use readonly modifiers, specific union types for variants, optional props with defaults
+**Required Props**: Always specify required props without optional modifiers
+**Default Values**: Use withDefaults for optional props with sensible fallback values
+**Type Safety**: Avoid any, object, or unknown types - use specific interfaces instead
+**Naming**: Use descriptive prop names that clearly indicate purpose and expected values
+**Validation**: Use union types for constrained values (variants, sizes, states)
+
+### 3. Event Handling Patterns
+**Rule**: Define typed events with descriptive names and proper payload types.
+
+**Event Naming**: Use kebab-case for event names with descriptive action verbs
+**Type Safety**: Define Emits interface with tuple types for event payloads
+**Handler Naming**: Prefix event handlers with 'handle' followed by descriptive action
+**Error Handling**: Emit error events for failed operations with proper error objects
+**Payload Types**: Use specific types for event payloads instead of generic objects
+**Async Events**: Handle async operations properly and emit completion/error events
+
+## Component Composition Patterns
+
+### 1. Composable Integration
+**Rule**: Use composables for shared reactive logic and combine them for complex functionality.
+
+**Destructuring**: Extract only needed properties and methods from composables
+**Naming**: Use descriptive names that clearly indicate composable purpose
+**Combination**: Combine multiple composables to build complex component functionality
+**State Management**: Let composables handle their own state while components orchestrate interactions
+**Error Handling**: Use composable error states and propagate them through component events
+**Async Operations**: Coordinate async operations between multiple composables properly
+
+### 2. Slot Patterns
+**Rule**: Design flexible slot patterns for reusable components with proper fallback content.
+
+**Named Slots**: Use descriptive names for specific content areas (header, footer, actions)
+**Default Slot**: Provide default slot for main content area
+**Conditional Rendering**: Use v-if with $slots to conditionally render slot containers
+**Fallback Content**: Provide sensible fallback content for optional slots
+**Slot Composition**: Allow nested slot patterns for complex component hierarchies
+**Semantic Structure**: Use semantic HTML elements for slot containers (header, main, footer)
+
+### 3. Provide/Inject Patterns
+**Rule**: Use provide/inject for dependency injection with proper TypeScript typing and error handling.
+
+**Type Safety**: Use InjectionKey symbols with TypeScript generics for type-safe injection
+**Error Handling**: Always check for undefined injection results and throw descriptive errors
+**Context Objects**: Create well-defined context interfaces with methods and reactive state
+**Provider Responsibility**: Parent components should provide complete, functional contexts
+**Consumer Validation**: Child components must validate injected dependencies exist
+**Naming**: Use descriptive names for injection keys that clearly indicate purpose
+
+## Performance Optimization Patterns
+
+### 1. Lazy Loading Components
+**Rule**: Use defineAsyncComponent for heavy components with proper loading and error states.
+
+**Async Components**: Wrap heavy components with defineAsyncComponent for code splitting
+**Loading States**: Provide meaningful loading components during async component loading
+**Error Handling**: Define error components for failed component loading scenarios
+**Timeout Configuration**: Set appropriate timeout values for component loading
+**Suspense Integration**: Use Suspense boundaries for coordinated loading states
+**Conditional Loading**: Only load heavy components when actually needed (v-if conditions)
+
+### 2. Computed Memoization
+**Rule**: Use computed properties to memoize expensive calculations and minimize re-computations.
+
+**Expensive Operations**: Wrap costly calculations in computed properties for automatic memoization
+**Dependency Tracking**: Ensure computed properties only depend on necessary reactive data
+**Early Returns**: Use early returns in computed properties to avoid unnecessary calculations
+**Shallow Refs**: Use shallowRef for large objects that don't need deep reactivity
+**Conditional Logic**: Include null/undefined checks to handle empty or invalid states
+**Performance**: Prefer computed over methods for derived state that doesn't change often
+
+### 3. Virtual Scrolling for Large Lists
+**Rule**: Implement virtual scrolling for large lists to maintain performance with thousands of items.
+
+**Virtual Libraries**: Use established virtual scrolling libraries like @tanstack/vue-virtual
+**Dynamic Sizing**: Support dynamic item heights based on content expansion states
+**Performance**: Only render visible items plus small buffer for smooth scrolling
+**Memory Management**: Properly clean up virtual list references in component lifecycle
+**Accessibility**: Ensure virtual lists maintain proper keyboard navigation and screen reader support
+**Item Keys**: Use stable, unique keys for virtual list items to prevent rendering issues
+
+## Accessibility Patterns
+
+### 1. ARIA Implementation
+**Rule**: Implement comprehensive ARIA attributes for screen reader accessibility and semantic structure.
+
+**Semantic Roles**: Use appropriate ARIA roles (region, button, status, alert) for component sections
+**Labeling**: Provide aria-labelledby and aria-describedby for complex components
+**Live Regions**: Use aria-live for dynamic content updates (polite for status, assertive for errors)
+**State Attributes**: Include aria-pressed, aria-expanded, aria-selected for interactive elements
+**Hidden Content**: Use sr-only class for screen reader only content that provides context
+**Relationships**: Link related elements with aria-describedby and aria-labelledby attributes
+
+### 2. Keyboard Navigation
+**Rule**: Implement comprehensive keyboard navigation support for all interactive elements.
+
+**Key Handlers**: Support standard keyboard interactions (Enter, Space, Escape, Arrow keys)
+**Focus Management**: Use tabindex appropriately and manage focus programmatically
+**Event Prevention**: Prevent default behavior when handling custom keyboard interactions
+**Navigation Patterns**: Implement arrow key navigation for lists, grids, and complex components
+**Focus Indicators**: Ensure visible focus indicators for all interactive elements
+**Accessibility Standards**: Follow WCAG guidelines for keyboard navigation patterns
+
+## Error Handling Patterns
+
+### 1. Error Boundaries
+**Rule**: Implement error boundaries to gracefully handle component errors and provide recovery options.
+
+**Error Capture**: Use onErrorCaptured lifecycle hook to catch child component errors
+**Error State**: Maintain error state and display appropriate fallback UI
+**Error Reporting**: Log errors and report to external error tracking services
+**Recovery Mechanism**: Provide retry functionality to recover from error states
+**Fallback UI**: Display user-friendly error messages with actionable recovery options
+**Error Propagation**: Control error propagation by returning false from error handlers
+
+### 2. Result Pattern Implementation
+**Rule**: Use Result pattern for handling success/error states in async operations with proper UI feedback.
+
+**Result Type**: Use discriminated union types for success/error states with proper typing
+**State Management**: Maintain result state and handle both success and error scenarios
+**UI Feedback**: Provide different UI components for success and error states
+**Error Handling**: Wrap async operations in try-catch and convert to Result pattern
+**Retry Mechanism**: Provide retry functionality for failed operations
+**Type Safety**: Use TypeScript generics to maintain type safety for success/error data
+
+## Toast Notification Standards
+
+### 1. Toast Configuration
+**Rule**: Configure vue-toastification with professional settings in dedicated config file for maintainability.
+
+**Configuration File**: Store toast configuration in `src/config/toast.ts` with comprehensive documentation
+**Main.ts Integration**: Import and use `toastConfig` from config file to keep main.ts clean
+**Timeout Constants**: Use `TOAST_TIMEOUTS` constants for consistent timing across different notification types
+**Category Mapping**: Use `TOAST_CATEGORIES` for structured logging integration with notification system
+**Professional Settings**: Disable pause on hover, enable drag-to-dismiss, limit to 5 max toasts, use bounce transition
+
+### 2. Notification Usage Patterns
+**Rule**: Use structured logging with domain-specific notification methods for consistent user feedback.
+
+**Domain Methods**: Use specific methods for gambling operations (kellyCriterion, burnAnalysis, riskManagement, sessionTracking)
+**Structured Logging**: All notifications must include structured logging with [feature][category] format
+**Timing Consistency**: Use consistent timeout values (4s default, 5s for warnings, 6s for errors)
+**Message Format**: Use clear, actionable messages with appropriate emojis for visual recognition

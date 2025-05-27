@@ -1,0 +1,168 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Visibility Management Standards
+
+## Global Toggle System
+
+### 1. Centralized Visibility Control
+**Rule**: All visibility toggles must respect the global toggle mode and use centralized store methods for consistency.
+
+**Global Toggle Behavior**: When global toggle is OFF, all individual sections are hidden regardless of their local state
+**Individual Toggle Behavior**: Individual toggles only work when global toggle is ON
+**Button State Consistency**: Toggle buttons show correct text based on global state, not just local state
+**Disabled State**: Individual toggle buttons are disabled when global toggle is OFF
+
+### 2. Store Methods for Visibility
+**Rule**: Use store methods instead of direct state manipulation for all visibility operations.
+
+**Toggle Method**: Use `store.toggleSectionVisibility(section, subsection)` instead of direct state assignment
+**Button Text**: Use `store.getToggleButtonText(section, subsection)` for consistent button text
+**Visibility Check**: Use `store.isVisible(section, subsection)` for conditional rendering
+**Enable Check**: Use `store.isToggleEnabled()` to determine if individual toggles should be enabled
+
+### 3. Button Implementation Pattern
+**Rule**: All toggle buttons must follow the standardized pattern with proper accessibility and state management.
+
+**Button Structure**: Include click handler, disabled state, CSS classes, title attribute, and button text
+**Click Handler**: Use `@click="store.toggleSectionVisibility('section', 'subsection')"`
+**Disabled State**: Use `:disabled="!store.isToggleEnabled()"`
+**CSS Classes**: Include disabled styles with `disabled:opacity-50 disabled:cursor-not-allowed`
+**Title Attribute**: Provide contextual help text that changes based on global toggle state
+**Button Text**: Use `store.getToggleButtonText('section', 'subsection')` for consistent text
+
+### 4. Section Registration
+**Rule**: All new visibility sections must be registered in the store state and TypeScript interfaces.
+
+**State Registration**: Add new sections to `ui.visibility` in store state with appropriate default values
+**Type Definition**: Update the TypeScript interface to include new visibility sections
+**Naming Convention**: Use camelCase for section names and subsection names
+**Default Values**: Set sensible defaults (usually `true` for most sections)
+
+## Implementation Examples
+
+### 1. Toggle Button Pattern
+```vue
+<button
+  @click="store.toggleSectionVisibility('sectionName', 'subsectionName')"
+  :disabled="!store.isToggleEnabled()"
+  class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  :title="
+    store.ui.globalToggleMode
+      ? (store.isVisible('sectionName', 'subsectionName') ? 'Hide content' : 'Show content')
+      : 'Enable info panels to toggle individual sections'
+  "
+>
+  {{ store.getToggleButtonText('sectionName', 'subsectionName') }}
+</button>
+```
+
+### 2. Conditional Content Pattern
+```vue
+<div
+  v-if="store.isVisible('sectionName', 'subsectionName')"
+  class="content-classes"
+>
+  <!-- Content that can be toggled -->
+</div>
+```
+
+### 3. Header with Toggle Pattern
+```vue
+<div class="flex items-center justify-between mb-2">
+  <h4 class="text-sm font-semibold text-gray-800">Section Title</h4>
+  <button
+    @click="store.toggleSectionVisibility('sectionName', 'subsectionName')"
+    :disabled="!store.isToggleEnabled()"
+    class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    :title="
+      store.ui.globalToggleMode
+        ? (store.isVisible('sectionName', 'subsectionName') ? 'Hide content' : 'Show content')
+        : 'Enable info panels to toggle individual sections'
+    "
+  >
+    {{ store.getToggleButtonText('sectionName', 'subsectionName') }}
+  </button>
+</div>
+```
+
+## Store Configuration
+
+### 1. Required Store State
+```typescript
+ui: {
+  globalToggleMode: boolean; // Master toggle for all visibility
+  visibility: {
+    sectionName: {
+      subsectionName: boolean;
+    };
+  };
+}
+```
+
+### 2. Required Store Getters
+```typescript
+// Check if content should be visible
+isVisible: (section: string, subsection: string) => boolean;
+
+// Get appropriate button text
+getToggleButtonText: (section: string, subsection: string) => string;
+
+// Check if individual toggles should be enabled
+isToggleEnabled: () => boolean;
+```
+
+### 3. Required Store Actions
+```typescript
+// Toggle global visibility mode
+toggleGlobalVisibility(): void;
+
+// Set global visibility mode
+setGlobalVisibility(visible: boolean): void;
+
+// Toggle individual section visibility
+toggleSectionVisibility(section: string, subsection: string): void;
+
+// Set individual section visibility
+setSectionVisibility(section: string, subsection: string, visible: boolean): void;
+```
+
+## Accessibility Requirements
+
+### 1. Keyboard Navigation
+**Rule**: All toggle buttons must be keyboard accessible with proper focus management.
+
+**Tab Order**: Toggle buttons should be in logical tab order
+**Focus Indicators**: Visible focus rings for keyboard navigation
+**Keyboard Activation**: Support Enter and Space key activation
+**Screen Reader Support**: Proper ARIA labels and state announcements
+
+### 2. Visual Feedback
+**Rule**: Provide clear visual feedback for all toggle states and interactions.
+
+**Disabled State**: Clear visual indication when toggles are disabled
+**Hover Effects**: Appropriate hover states for interactive elements
+**State Indication**: Clear visual difference between show/hide states
+**Loading States**: Show loading indicators during state changes if needed
+
+## Error Prevention
+
+### 1. Defensive Programming
+**Rule**: Implement proper error handling and validation for all visibility operations.
+
+**Null Checks**: Validate section and subsection existence before operations
+**Type Safety**: Use TypeScript interfaces to prevent invalid section names
+**Fallback Values**: Provide sensible defaults for missing configuration
+**Error Logging**: Log visibility-related errors with structured logging format
+
+### 2. Development Guidelines
+**Rule**: Follow consistent patterns to prevent visibility-related bugs.
+
+**Code Review**: Review all visibility implementations for consistency
+**Testing**: Test visibility behavior with global toggle on/off
+**Documentation**: Document all new visibility sections and their purpose
+**Migration**: Provide migration guides when changing visibility structure
+
+This system ensures consistent, accessible, and maintainable visibility management across the entire application while providing a great user experience.

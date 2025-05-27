@@ -1,0 +1,156 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# DRY (Don't Repeat Yourself) Principles
+
+## Core DRY Philosophy
+
+### 1. Definition and Scope
+- **DRY Principle**: Every piece of knowledge must have a single, unambiguous, authoritative representation within a system
+- **Scope**: Code, configuration, documentation, types, styles, and business logic
+- **Goal**: Reduce maintenance burden, improve consistency, and minimize bugs
+- **Threshold**: If code appears 3+ times, it MUST be abstracted
+
+### 2. DRY Hierarchy (Order of Preference)
+1. **Pure Functions**: Stateless, predictable utilities
+2. **Composables**: Vue 3 reactive logic abstraction
+3. **Components**: UI pattern abstraction
+4. **Services**: Business logic abstraction
+5. **Types**: TypeScript interface abstraction
+6. **Constants**: Configuration abstraction
+
+## Code Duplication Detection
+
+### 1. Automated Detection Rules
+**Rule**: Extract common validation patterns into reusable validator functions.
+
+**Pattern**: When multiple functions perform similar range validation with different parameters
+**Solution**: Create factory functions that generate validators with specific parameters
+**Example**: Replace individual validation functions with a createRangeValidator factory that accepts min, max, and integer constraints
+
+### 2. Component Pattern Abstraction
+**Rule**: Extract repeated form field patterns into reusable base components.
+
+**Pattern**: Multiple forms with similar input field structures (label, input, error display)
+**Solution**: Create BaseFormField component with props for label, type, validation, and accessibility
+**Benefits**: Consistent styling, built-in accessibility, reduced code duplication
+**Implementation**: Use v-model for two-way binding, proper ARIA attributes, and error handling
+
+### 3. Composable Logic Abstraction
+**Rule**: Extract common async operation patterns into generic composables.
+
+**Pattern**: Multiple composables with identical loading, error, and data state management
+**Solution**: Create useAsyncOperation generic composable that accepts operation function as parameter
+**Benefits**: Consistent error handling, loading states, and data management across all async operations
+**Usage**: Wrap specific operations (analyzeBurnCards, calculateKelly) with the generic async handler
+
+## Type System DRY
+
+### 1. Shared Type Patterns
+**Rule**: Create base interfaces for common request/response patterns and extend them for specific use cases.
+
+**Pattern**: Multiple request interfaces with shared fields (timestamp, requestId)
+**Solution**: Define BaseAnalysisRequest interface and extend it for specific analysis types
+**Benefits**: Consistent structure, easier maintenance, type safety across all analysis operations
+**Implementation**: Use generic AnalysisResult<TData> pattern for consistent response handling
+
+### 2. Branded Type Utilities
+**Rule**: Use branded types for domain-specific values to prevent type confusion and add runtime validation.
+
+**Pattern**: Numbers representing different concepts (probability, percentage, currency) being mixed up
+**Solution**: Create Brand<T, TBrand> utility type and factory functions with validation
+**Benefits**: Type safety, runtime validation, clear domain semantics
+**Implementation**: Define specific branded types (Probability, EdgePercentage, Currency) with appropriate validators
+
+## Configuration DRY
+
+### 1. Centralized Constants
+**Rule**: Centralize all configuration values, limits, and method definitions in dedicated config files.
+
+**Pattern**: Magic numbers and string literals scattered across components
+**Solution**: Create ANALYSIS_LIMITS and ANALYSIS_METHODS configuration objects with proper typing
+**Benefits**: Single source of truth, easier maintenance, type extraction for consistent usage
+**Implementation**: Use 'as const' assertions and extract types from configuration objects
+
+### 2. Shared Validation Rules
+**Rule**: Create centralized validation rules and generic validator factory for consistent validation across forms.
+
+**Pattern**: Repeated validation logic with similar patterns across different forms
+**Solution**: Define VALIDATION_RULES configuration object and createValidator factory function
+**Benefits**: Consistent validation behavior, centralized rule management, reusable validation logic
+**Implementation**: Use configuration-driven validation with generic factory pattern
+
+## Style System DRY
+
+### 1. Tailwind Configuration Abstraction
+**Rule**: Centralize all design tokens (colors, spacing, typography) in Tailwind configuration and create reusable component classes.
+
+**Pattern**: Repeated style patterns and magic values scattered across components
+**Solution**: Define semantic color palettes, spacing scales, and typography systems in Tailwind config
+**Benefits**: Consistent design system, easier theme changes, reusable component classes
+**Implementation**: Use Tailwind plugins to create component classes like .btn-analysis, .card-analysis
+
+### 2. CSS Custom Properties for Dynamic Values
+**Rule**: Use CSS custom properties with Vue's v-bind for dynamic styling instead of inline styles.
+
+**Pattern**: Inline styles or computed style objects for dynamic values
+**Solution**: Use CSS custom properties with v-bind() to pass reactive values to CSS
+**Benefits**: Better performance, cleaner templates, easier debugging, CSS-in-CSS approach
+**Implementation**: Define CSS variables with v-bind() and use them in CSS rules
+
+## Service Layer DRY
+
+### 1. API Client Abstraction
+**Rule**: Create generic API client class to handle common HTTP operations and error handling.
+
+**Pattern**: Repeated fetch calls with identical error handling and request formatting
+**Solution**: Implement ApiClient class with generic post/get methods and centralized error handling
+**Benefits**: Consistent error handling, logging, request formatting across all API calls
+**Implementation**: Use singleton pattern for API client and create service objects that use the client
+
+## DRY Monitoring and Enforcement
+
+### 1. Automated DRY Checks
+**Rule**: Implement automated tools to detect code duplication and configuration violations.
+
+**Tools**: Use jscpd for duplicate code detection, custom scripts for magic number detection
+**Process**: Run checks before commits, fail builds on significant duplication
+**Thresholds**: 3+ line duplicates trigger warnings, 5+ line duplicates fail builds
+**Monitoring**: Track magic numbers outside configuration files, warn on potential violations
+
+### 2. DRY Metrics Dashboard
+**Rule**: Track DRY compliance metrics to measure abstraction effectiveness and code reuse.
+
+**Metrics**: Count composables, shared components, utility functions, duplicate blocks
+**Analysis**: Calculate similarity scores, abstraction layers, complexity reduction
+**Reporting**: Generate regular reports on DRY compliance and improvement opportunities
+**Action**: Use metrics to identify areas needing refactoring or better abstraction
+
+## DRY Best Practices Summary
+
+### 1. When to Apply DRY
+- ✅ **Apply**: Identical business logic, validation rules, API patterns
+- ✅ **Apply**: Similar UI components with minor variations
+- ✅ **Apply**: Configuration values used in multiple places
+- ❌ **Don't Apply**: Coincidentally similar code with different purposes
+- ❌ **Don't Apply**: Code that might diverge in the future
+- ❌ **Don't Apply**: Over-abstraction that reduces readability
+
+### 2. DRY Checklist
+- [ ] Extract common validation logic into reusable validators
+- [ ] Create base components for similar UI patterns
+- [ ] Centralize configuration in dedicated config files
+- [ ] Use composables for shared reactive logic
+- [ ] Implement generic utilities for common operations
+- [ ] Create branded types for domain-specific values
+- [ ] Use CSS custom properties for dynamic styles
+- [ ] Implement service layer abstractions for API calls
+
+### 3. Monitoring and Maintenance
+- Run `yarn analyze:duplicates` before each commit
+- Review abstraction effectiveness quarterly
+- Update shared components when patterns emerge
+- Document abstraction decisions and trade-offs
+- Monitor bundle size impact of abstractions

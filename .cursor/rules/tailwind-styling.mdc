@@ -1,0 +1,152 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Tailwind CSS + Design System
+
+## Tailwind CSS Configuration & Directives
+
+### Valid Tailwind Directives
+- `@tailwind` - Import Tailwind's base, components, and utilities
+- `@apply` - Apply utility classes within CSS rules (use sparingly)
+- `@layer` - Add custom styles to Tailwind's layers
+- `@screen` - Create responsive variants
+- `@variants` - Generate responsive, hover, focus variants
+- `@responsive` - Generate responsive variants (deprecated, use @screen)
+
+### CSS Validation Rules
+- All Tailwind directives are valid and should not be flagged as errors
+- PostCSS is configured with tailwindcss and autoprefixer
+- Unknown at-rules should be ignored in CSS validation
+- Prefer utility classes over custom CSS when possible
+- Use `@apply` sparingly, only for component-level abstractions
+- Custom CSS should use `@layer` directive when needed
+
+### Project Configuration
+- Tailwind CSS v3.4.17
+- PostCSS configured with tailwindcss and autoprefixer
+- Custom design system with professional gambling aesthetic
+
+## Design System Principles
+
+### 1. Professional Gambling Aesthetic
+- **Primary Colors**: Purple/Indigo gradient (professional, trustworthy)
+- **Secondary Colors**: Green (positive), Red (negative), Orange (warning)
+- **Neutral Colors**: Gray scale for text and backgrounds
+- **Accent Colors**: Gold for premium features
+
+### 2. Color Palette
+**Rule**: Use CSS custom properties for consistent color theming across the application.
+
+**Color Structure**: Define primary (purple/indigo), success (green), danger (red), warning (orange), and premium (gold) color scales
+**Variable Naming**: Use semantic color names with numeric scales (50, 500, 600, 700) for consistent theming
+**Professional Theme**: Implement gambling-appropriate colors that convey trust and professionalism
+**Accessibility**: Ensure all color combinations meet WCAG contrast requirements
+
+## Component Styling Patterns
+
+### 1. Card Components
+**Rule**: Create consistent card styling patterns using Tailwind utility classes and component abstractions.
+
+**Base Card Styling**: Use background, rounded corners, shadow, border, and padding utilities for consistent card appearance
+**Card Variants**: Implement elevated, professional, and analysis card variants with appropriate styling
+**Hover Effects**: Add transition utilities for smooth hover state changes
+**Component Classes**: Use @layer components to create reusable card classes
+
+### 2. Button System
+**Rule**: Implement comprehensive button system with variants, sizes, and states using Tailwind utilities.
+
+**Button Variants**: Create primary, secondary, success, danger, outline, and ghost button styles
+**Button States**: Implement hover, focus, disabled states with appropriate visual feedback
+**Button Sizes**: Provide small, default, and large button sizes with consistent spacing
+**Accessibility**: Include focus ring utilities and proper disabled state styling
+
+### 3. Form Elements
+**Rule**: Create consistent form styling with proper validation states and accessibility features.
+
+**Form Structure**: Use form-group, form-label, form-input patterns for consistent form layout
+**Input States**: Implement default, error, and success input states with appropriate colors
+**Form Validation**: Use border and background colors to indicate validation states
+**Select Styling**: Create custom select styling with proper dropdown indicators
+**Error Messaging**: Style error and help text with appropriate colors and spacing
+
+### 4. Analysis Components
+**Rule**: Design professional analysis component styling that conveys data credibility and clarity.
+
+**Analysis Sections**: Use consistent background, padding, and border styling for analysis containers
+**Metric Cards**: Create gradient backgrounds and proper spacing for metric display cards
+**Metric Values**: Use color coding for positive, negative, and neutral metric values
+**Professional Layout**: Implement clean, organized layouts that enhance data readability
+
+### 5. Status Indicators
+**Rule**: Create comprehensive status and badge system for application state communication.
+
+**Badge Variants**: Implement success, warning, danger, info, and premium badge styles
+**Status Dots**: Create colored status indicators with animation for real-time status
+**Badge Sizing**: Provide consistent badge sizing and spacing patterns
+**Premium Styling**: Use gradient styling for premium features and status indicators
+
+## Layout Patterns
+
+### 1. Responsive Grid System
+**Rule**: Implement responsive grid patterns using Tailwind's grid utilities for consistent layouts.
+
+**Grid Patterns**: Create responsive, analytics, and metrics grid patterns with appropriate breakpoints
+**Flexbox Utilities**: Define common flexbox patterns (flex-between, flex-center, flex-col-center)
+**Responsive Design**: Use mobile-first responsive design with appropriate breakpoint utilities
+**Layout Consistency**: Maintain consistent spacing and alignment across all grid layouts
+
+### 2. Professional Gradients
+**Rule**: Use professional gradient patterns for backgrounds and visual hierarchy.
+
+**Gradient Variants**: Create primary, secondary, success, warning, and premium gradient patterns
+**Subtle Backgrounds**: Implement subtle gradient backgrounds for professional appearance
+**Visual Hierarchy**: Use gradients to create visual depth and component separation
+**Brand Consistency**: Maintain consistent gradient usage across the application
+
+## Animation & Transitions
+
+### 1. Professional Animations
+**Rule**: Implement smooth, professional animations that enhance user experience without distraction.
+
+**Transition Utilities**: Use smooth and fast transition classes for different interaction types
+**Hover Effects**: Implement lift and scale hover effects for interactive elements
+**Loading Animations**: Create pulse and fade-in animations for loading states
+**Performance**: Use CSS transforms and opacity for performant animations
+
+## Responsive Design
+
+### 1. Mobile-First Approach
+**Rule**: Implement mobile-first responsive design using Tailwind's responsive utilities.
+
+**Container Patterns**: Create responsive container patterns with appropriate padding and margins
+**Text Scaling**: Implement responsive text sizing that works across all device sizes
+**Spacing Patterns**: Use responsive padding and margin utilities for consistent spacing
+**Visibility Controls**: Implement show/hide patterns for different screen sizes
+
+### 2. Professional Spacing
+**Rule**: Use consistent spacing system based on Tailwind's spacing scale for professional layouts.
+
+**Spacing Hierarchy**: Define section, component, and element spacing patterns
+**Professional Margins**: Use consistent margin and padding patterns for professional appearance
+**Vertical Rhythm**: Maintain consistent vertical spacing throughout the application
+**Layout Consistency**: Ensure spacing patterns work across all component types
+
+## Accessibility
+
+### 1. Focus States
+**Rule**: Implement comprehensive focus management for keyboard navigation and accessibility.
+
+**Focus Ring Utilities**: Use focus ring utilities with appropriate colors and offset
+**Focus Visibility**: Ensure all interactive elements have visible focus indicators
+**Skip Links**: Implement skip link styling for keyboard navigation
+**Focus Management**: Use proper focus ring patterns for different component types
+
+### 2. Screen Reader Support
+**Rule**: Use screen reader utilities and semantic styling for accessibility compliance.
+
+**Screen Reader Classes**: Implement sr-only and sr-only-focusable classes for screen reader content
+**Semantic Styling**: Use semantic HTML with appropriate styling for accessibility
+**Color Contrast**: Ensure all text and background combinations meet WCAG standards
+**Interactive Feedback**: Provide clear visual feedback for all interactive elements

@@ -552,7 +552,9 @@ function updatePatternAnalysis(hands: HandResult[]) {
 function updateBigEyeBoy(hands: HandResult[]) {
   clearPatternGrid(bigEyeBoyGrid);
 
-  if (hands.length < 2) return;
+  if (hands.length < 2) {
+    return;
+  }
 
   const bigRoadColumns = getBigRoadColumns(hands);
   let patternCol = 0;
@@ -586,7 +588,9 @@ function updateBigEyeBoy(hands: HandResult[]) {
 function updateSmallRoad(hands: HandResult[]) {
   clearPatternGrid(smallRoadGrid);
 
-  if (hands.length < 3) return;
+  if (hands.length < 3) {
+    return;
+  }
 
   const bigRoadColumns = getBigRoadColumns(hands);
   let patternCol = 0;
@@ -620,7 +624,9 @@ function updateSmallRoad(hands: HandResult[]) {
 function updateCockroachPig(hands: HandResult[]) {
   clearPatternGrid(cockroachPigGrid);
 
-  if (hands.length < 4) return;
+  if (hands.length < 4) {
+    return;
+  }
 
   const bigRoadColumns = getBigRoadColumns(hands);
   let patternCol = 0;
@@ -660,7 +666,9 @@ function getBigRoadColumns(hands: HandResult[]): string[][] {
     const result = hand.winner;
 
     // Skip ties for column structure
-    if (result === 'tie') return;
+    if (result === 'tie') {
+      return;
+    }
 
     if (result === lastResult) {
       // Same result - add to current column
@@ -692,11 +700,15 @@ function compareColumns(current: string[], compare: string[], offset: number): b
   }
 
   // For Small Road and Cockroach Pig: Check if patterns are the same
-  if (current.length !== compare.length) return false;
+  if (current.length !== compare.length) {
+    return false;
+  }
 
   // Compare each position
   for (let i = 0; i < current.length; i++) {
-    if (current[i] !== compare[i]) return false;
+    if (current[i] !== compare[i]) {
+      return false;
+    }
   }
 
   return true;
@@ -718,7 +730,9 @@ function clearPatternGrid(grid: Ref<PatternCell[][]>) {
 
 // Helper function for pattern tooltips
 function getPatternTooltip(cell: PatternCell, patternName: string): string {
-  if (!cell.result) return '';
+  if (!cell.result) {
+    return '';
+  }
 
   const color = cell.result === 'red' ? 'Red' : 'Blue';
   return `${patternName} - Hand #${cell.handNumber}: ${color}`;
@@ -739,7 +753,9 @@ function getResultSymbol(result: string): string {
 }
 
 function getCellTooltip(cell: ScoreboardCell): string {
-  if (!cell.result) return '';
+  if (!cell.result) {
+    return '';
+  }
 
   let tooltip = `Hand #${cell.handNumber}: ${cell.result.toUpperCase()}`;
 
@@ -760,8 +776,12 @@ function getCellTooltip(cell: ScoreboardCell): string {
   }
 
   // Add pair information
-  if (cell.playerPair) tooltip += '\n+ Player Pair';
-  if (cell.bankerPair) tooltip += '\n+ Banker Pair';
+  if (cell.playerPair) {
+    tooltip += '\n+ Player Pair';
+  }
+  if (cell.bankerPair) {
+    tooltip += '\n+ Banker Pair';
+  }
 
   // Add betting information
   if (cell.betInfo) {

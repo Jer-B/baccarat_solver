@@ -163,10 +163,29 @@
 
     <!-- Professional Tips -->
     <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-      <h4 class="text-sm font-semibold text-yellow-800 mb-2">
-        💡 Professional Burn Card Intelligence
-      </h4>
-      <div class="text-xs text-yellow-700 space-y-1">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-sm font-semibold text-yellow-800">
+          💡 Professional Burn Card Intelligence
+        </h4>
+        <button
+          @click="store.toggleSectionVisibility('burnCardEstimator', 'burnIntelligence')"
+          :disabled="!store.isToggleEnabled()"
+          class="text-xs px-2 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="
+            store.ui.globalToggleMode
+              ? store.isVisible('burnCardEstimator', 'burnIntelligence')
+                ? 'Hide burn intelligence tips'
+                : 'Show burn intelligence tips'
+              : 'Enable info panels to toggle individual sections'
+          "
+        >
+          {{ store.getToggleButtonText('burnCardEstimator', 'burnIntelligence') }}
+        </button>
+      </div>
+      <div
+        v-if="store.isVisible('burnCardEstimator', 'burnIntelligence')"
+        class="text-xs text-yellow-700 space-y-1"
+      >
         <div>
           <strong>Dealer Tells:</strong> Watch for hesitation, card positioning, or timing patterns
           during burns
@@ -217,7 +236,9 @@ const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', '
 
 // Computed properties
 const estimationConfidence = computed(() => {
-  if (suspectedBurns.value.length === 0) return 0;
+  if (suspectedBurns.value.length === 0) {
+    return 0;
+  }
   const avgConfidence =
     suspectedBurns.value.reduce((sum, burn) => sum + burn.confidence, 0) /
     suspectedBurns.value.length;
@@ -283,7 +304,9 @@ const getSuitSymbol = (suit: Suit): string => {
 };
 
 const addSuspectedBurnCard = (): void => {
-  if (!selectedRank.value || !selectedSuit.value) return;
+  if (!selectedRank.value || !selectedSuit.value) {
+    return;
+  }
 
   // Check if this card is already suspected
   const exists = suspectedBurns.value.find(
@@ -363,7 +386,9 @@ const applyBurnScenario = (scenario: 'conservative' | 'aggressive' | 'random'): 
 
 const generateRandomBurns = (): void => {
   const remaining = estimatedBurnCount.value - suspectedBurns.value.length;
-  if (remaining <= 0) return;
+  if (remaining <= 0) {
+    return;
+  }
 
   for (let i = 0; i < remaining; i++) {
     const rank = ranks[Math.floor(Math.random() * ranks.length)];
