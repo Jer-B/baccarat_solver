@@ -16,7 +16,7 @@ export function useSessionExport() {
     try {
       // Get all sessions from the service
       const sessions = await sessionService.getAllSessions();
-      
+
       // Create export data structure
       const exportData: SessionExportData = {
         exportDate: new Date().toISOString(),
@@ -31,24 +31,24 @@ export function useSessionExport() {
 
       // Convert to JSON
       const jsonString = JSON.stringify(exportData, null, 2);
-      
+
       // Create and download file
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `baccarat-sessions-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       URL.revokeObjectURL(url);
-      
-      console.log('[session-export][success] Exported sessions to JSON', { 
+
+      console.log('[session-export][success] Exported sessions to JSON', {
         sessionCount: sessions.length,
-        filename: link.download 
+        filename: link.download,
       });
     } catch (error) {
       console.error('[session-export][error] Failed to export sessions', { error });
@@ -60,7 +60,7 @@ export function useSessionExport() {
     try {
       // Get all sessions from the service
       const sessions = await sessionService.getAllSessions();
-      
+
       // Define CSV headers
       const headers = [
         'ID',
@@ -77,38 +77,40 @@ export function useSessionExport() {
       // Convert sessions to CSV rows
       const csvRows = [
         headers.join(','),
-        ...sessions.map(session => [
-          session.id,
-          `"${session.session_name}"`, // Wrap in quotes for CSV safety
-          session.status,
-          session.started_at,
-          session.ended_at || '',
-          session.duration_seconds || '',
-          session.total_hands,
-          session.created_at,
-          session.updated_at,
-        ].join(',')),
+        ...sessions.map(session =>
+          [
+            session.id,
+            `"${session.session_name}"`, // Wrap in quotes for CSV safety
+            session.status,
+            session.started_at,
+            session.ended_at || '',
+            session.duration_seconds || '',
+            session.total_hands,
+            session.created_at,
+            session.updated_at,
+          ].join(',')
+        ),
       ];
 
       const csvString = csvRows.join('\n');
-      
+
       // Create and download file
       const blob = new Blob([csvString], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `baccarat-sessions-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       URL.revokeObjectURL(url);
-      
-      console.log('[session-export][success] Exported sessions to CSV', { 
+
+      console.log('[session-export][success] Exported sessions to CSV', {
         sessionCount: sessions.length,
-        filename: link.download 
+        filename: link.download,
       });
     } catch (error) {
       console.error('[session-export][error] Failed to export sessions to CSV', { error });
@@ -120,10 +122,10 @@ export function useSessionExport() {
     try {
       // Read file content
       const fileContent = await readFileAsText(file);
-      
+
       // Parse JSON
       const importData: SessionExportData = JSON.parse(fileContent);
-      
+
       // Validate import data structure
       if (!importData.sessions || !Array.isArray(importData.sessions)) {
         throw new Error('Invalid import file format: missing sessions array');
@@ -144,7 +146,7 @@ export function useSessionExport() {
         try {
           // Create new session (without ID to let database generate new one)
           const { id, created_at, updated_at, ...sessionToImport } = sessionData;
-          
+
           await sessionService.createSession({
             session_name: sessionToImport.session_name,
             started_at: sessionToImport.started_at,
@@ -159,26 +161,28 @@ export function useSessionExport() {
 
           importedCount++;
         } catch (error) {
-          console.warn('[session-import][warning] Failed to import session', { 
+          console.warn('[session-import][warning] Failed to import session', {
             sessionName: sessionData.session_name,
-            error 
+            error,
           });
           skippedCount++;
         }
       }
 
-      console.log('[session-import][success] Import completed', { 
+      console.log('[session-import][success] Import completed', {
         totalSessions: importData.sessions.length,
         imported: importedCount,
-        skipped: skippedCount 
+        skipped: skippedCount,
       });
 
       if (skippedCount > 0) {
-        throw new Error(`Import completed with warnings: ${importedCount} imported, ${skippedCount} skipped`);
+        throw new Error(
+          `Import completed with warnings: ${importedCount} imported, ${skippedCount} skipped`
+        );
       }
     } catch (error) {
       console.error('[session-import][error] Failed to import sessions', { error });
-      
+
       if (error instanceof Error) {
         throw error;
       } else {
@@ -190,8 +194,8 @@ export function useSessionExport() {
   const readFileAsText = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
-      reader.onload = (event) => {
+
+      reader.onload = event => {
         const result = event.target?.result;
         if (typeof result === 'string') {
           resolve(result);
@@ -199,11 +203,11 @@ export function useSessionExport() {
           reject(new Error('Failed to read file as text'));
         }
       };
-      
+
       reader.onerror = () => {
         reject(new Error('Failed to read file'));
       };
-      
+
       reader.readAsText(file);
     });
   };
@@ -213,4 +217,4 @@ export function useSessionExport() {
     exportToCSV,
     importFromJSON,
   };
-} 
+}

@@ -12,10 +12,7 @@ export function useSupabaseConnection() {
 
     try {
       // Try to perform a simple query to test connection
-      const { error } = await supabase
-        .from('user_sessions')
-        .select('id')
-        .limit(1);
+      const { error } = await supabase.from('user_sessions').select('id').limit(1);
 
       if (error) {
         // Check if it's an API key issue
@@ -34,7 +31,7 @@ export function useSupabaseConnection() {
       return true;
     } catch (error) {
       console.error('[supabase][connection] Connection check failed', { error });
-      
+
       if (error instanceof Error) {
         if (error.message.includes('fetch')) {
           connectionError.value = 'Network connection failed';
@@ -44,7 +41,7 @@ export function useSupabaseConnection() {
       } else {
         connectionError.value = 'Unknown connection error';
       }
-      
+
       isConnected.value = false;
       return false;
     } finally {
@@ -53,15 +50,21 @@ export function useSupabaseConnection() {
   };
 
   const getConnectionStatus = () => {
-    if (isChecking.value) return 'checking';
-    if (isConnected.value === null) return 'unknown';
-    if (isConnected.value) return 'connected';
+    if (isChecking.value) {
+      return 'checking';
+    }
+    if (isConnected.value === null) {
+      return 'unknown';
+    }
+    if (isConnected.value) {
+      return 'connected';
+    }
     return 'disconnected';
   };
 
   const getConnectionMessage = () => {
     const status = getConnectionStatus();
-    
+
     switch (status) {
       case 'checking':
         return 'Checking database connection...';
@@ -87,4 +90,4 @@ export function useSupabaseConnection() {
     getConnectionStatus,
     getConnectionMessage,
   };
-} 
+}

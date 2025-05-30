@@ -111,12 +111,11 @@ Use descriptive categories that indicate the type of operation:
 **Error Levels**: Use appropriate levels (error for failures, warn for validation issues)
 
 ### 4. Performance Logging
-**Rule**: Track timing and resource usage for expensive operations to identify performance bottlenecks.
+**Rule**: For comprehensive performance monitoring and tracking patterns, refer to `performance.mdc` as the single source of truth.
 
-**Timing**: Log start time, completion time, and duration for all significant operations
-**Resource Usage**: Include memory usage, CPU time, and other relevant metrics
-**Error Timing**: Log duration even for failed operations to understand failure patterns
-**Performance Thresholds**: Warn when operations exceed expected duration limits
+**Performance Integration**: All performance logging, timing tracking, and threshold monitoring patterns are defined in performance.mdc
+**Structured Format**: Use structured logging format for performance logs with [performance][category] pattern
+**Context Integration**: Include performance context in structured logs when relevant to debugging and monitoring
 
 ### 5. State Change Logging
 **Rule**: Log all significant state transitions with previous state, new state, and transition context.
@@ -182,21 +181,12 @@ Use descriptive categories that indicate the type of operation:
 
 ## ESLint Integration
 
-### 1. Custom ESLint Rule for Structured Logging
-**Rule**: Implement custom ESLint rule to enforce structured logging format across the codebase.
+**Rule**: For comprehensive ESLint rules and VSCode snippets for structured logging, refer to `eslint-husky.mdc` as the single source of truth.
 
-**Pattern Detection**: Use regex pattern `/^\[[\w-]+\]\[[\w-]+\]/` to validate log format
-**Auto-fixing**: Provide automatic fixes by adding placeholder structure to unstructured logs
-**Integration**: Add rule to ESLint configuration with 'error' level for strict enforcement
-**Scope**: Apply to all console.log, console.warn, console.error, and console.info calls
-
-### 2. VSCode Snippets for Structured Logging
-**Rule**: Create VSCode snippets to accelerate structured logging implementation and ensure consistency.
-
-**Snippet Types**: slog (basic log), serr (error log), swarn (warning log), sperf (performance log)
-**Template Structure**: Pre-filled placeholders for feature name, category, message, and context
-**Developer Experience**: Tab-completion for faster development and reduced syntax errors
-**Consistency**: Ensures all team members use identical logging patterns
+**ESLint Rules**: All custom ESLint rule implementation for structured logging format enforcement is defined in eslint-husky.mdc
+**VSCode Snippets**: Structured logging snippets and developer experience enhancements are covered in eslint-husky.mdc
+**Pattern Detection**: Regex patterns and validation logic for structured logging are maintained in eslint-husky.mdc
+**Integration Strategy**: Complete integration with development workflow and CI/CD pipeline is documented in eslint-husky.mdc
 
 ## Monitoring and Analytics
 

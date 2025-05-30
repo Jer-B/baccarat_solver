@@ -7,36 +7,25 @@ alwaysApply: true
 
 ## Testing Philosophy
 
-### 1. Testing Pyramid
-```
-E2E Tests (10%)
-├── Critical user journeys
-├── Integration between major features
-└── Cross-browser compatibility
+### 1. Testing Strategy Requirements
+**Rule**: Implement comprehensive testing strategy with proper test distribution and coverage priorities.
 
-Integration Tests (20%)
-├── Component integration
-├── Store integration
-├── API integration
-└── Composable integration
+**Unit Test Priority**: Focus 70% of testing effort on unit tests for pure functions, composables, store actions/getters, and utility functions
+**Integration Test Coverage**: Allocate 20% of testing effort to component integration, store integration, API integration, and composable integration
+**E2E Test Focus**: Limit 10% of testing effort to critical user journeys, major feature integration, and cross-browser compatibility
+**Coverage Balance**: Maintain proper balance between test types to ensure comprehensive coverage without over-testing
 
-Unit Tests (70%)
-├── Pure functions
-├── Composables
-├── Store actions/getters
-├── Utility functions
-└── Component logic
-```
+### 2. Test-Driven Development Standards
+**Rule**: Follow TDD principles with proper development cycle and behavior-focused testing.
 
-### 2. Test-Driven Development (TDD)
-- Write tests before implementation
-- Red → Green → Refactor cycle
-- Focus on behavior, not implementation
-- Test edge cases and error conditions
+**Development Cycle**: Write tests before implementation using Red → Green → Refactor cycle
+**Behavior Focus**: Focus on testing behavior rather than implementation details
+**Edge Case Coverage**: Test edge cases and error conditions systematically
+**Continuous Refactoring**: Refactor both code and tests to maintain quality and clarity
 
 ## Testing Framework Configuration
 
-### 1. Vitest Configuration
+### 1. Vitest Configuration Standards
 **Rule**: Configure Vitest with Vue support, JSDOM environment, and comprehensive coverage reporting.
 
 **Environment Setup**: Use JSDOM environment for DOM testing with Vue plugin support
@@ -46,7 +35,7 @@ Unit Tests (70%)
 **File Exclusions**: Exclude node_modules, test files, type definitions, and config files from coverage
 **Path Resolution**: Configure path aliases to match application structure for consistent imports
 
-### 2. Test Setup
+### 2. Test Setup Standards
 **Rule**: Configure global test setup with Vue Test Utils, Pinia testing, and browser API mocks.
 
 **Vue Test Utils**: Configure global plugins including testing Pinia with spy functions
@@ -55,9 +44,9 @@ Unit Tests (70%)
 **Global Configuration**: Set up consistent test environment that all test files can rely on
 **Mock Strategy**: Provide minimal viable mocks for browser APIs while keeping business logic real
 
-## Unit Testing Patterns
+## Unit Testing Standards
 
-### 1. Composable Testing
+### 1. Composable Testing Requirements
 **Rule**: Test composables using AAA pattern (Arrange, Act, Assert) with proper setup and teardown.
 
 **Test Structure**: Use describe blocks for composable and method grouping with beforeEach for setup
@@ -67,8 +56,8 @@ Unit Tests (70%)
 **Return Value Testing**: Validate return types, method properties, and confidence ranges
 **Reset Functionality**: Test state reset methods to ensure clean state between operations
 
-### 2. Store Testing
-**Rule**: Test Pinia stores with proper setup, action testing, and getter validation.
+### 2. Store Testing Standards
+**Rule**: Test Pinia stores with proper setup, action testing, and getter validation. For comprehensive store architecture and testing patterns, refer to `pinia-stores.mdc`.
 
 **Store Setup**: Use setActivePinia and createPinia for each test to ensure clean state
 **Action Testing**: Test store actions with proper input/output validation and state changes
@@ -76,9 +65,10 @@ Unit Tests (70%)
 **State Mutations**: Test that actions properly update store state with expected values
 **Error Handling**: Test store error states and recovery mechanisms
 **Async Actions**: Test async store actions with proper promise handling and loading states
+**Advanced Patterns**: See pinia-stores.mdc for testing composition patterns, cross-store communication, and performance optimization
 
-### 3. Component Testing
-**Rule**: Test Vue components with proper mounting, event handling, and state validation.
+### 3. Component Testing Standards
+**Rule**: Test Vue components with proper mounting, event handling, and state validation. For headless component testing patterns, refer to `vue-components.mdc`.
 
 **Component Mounting**: Use mount with proper props and global plugin configuration
 **Rendering Tests**: Verify component renders correctly with expected elements and content
@@ -86,10 +76,11 @@ Unit Tests (70%)
 **State Testing**: Verify component reacts properly to prop changes and internal state updates
 **Error Handling**: Test component error states and recovery mechanisms
 **User Interaction**: Test user interactions like clicks, form submissions, and keyboard events
+**Headless Architecture Testing**: See vue-components.mdc for comprehensive testing patterns for headless primitives and styled wrappers
 
-## Integration Testing Patterns
+## Integration Testing Standards
 
-### 1. Component Integration
+### 1. Component Integration Requirements
 **Rule**: Test component integration with stores and other components to ensure proper data flow.
 
 **Store Integration**: Test components with real store instances to verify state synchronization
@@ -98,7 +89,7 @@ Unit Tests (70%)
 **Lifecycle Integration**: Test component lifecycle interactions with external services
 **Real-time Updates**: Test components respond correctly to real-time data changes
 
-### 2. API Integration Testing
+### 2. API Integration Testing Standards
 **Rule**: Test API integrations with proper setup, cleanup, and real-time functionality validation.
 
 **Service Setup**: Create service instances with proper configuration for testing
@@ -108,9 +99,9 @@ Unit Tests (70%)
 **Error Scenarios**: Test API error handling and network failure scenarios
 **Cleanup Strategy**: Ensure all test data is properly cleaned up after each test
 
-## E2E Testing Patterns
+## E2E Testing Standards
 
-### 1. Playwright Configuration
+### 1. Playwright Configuration Requirements
 **Rule**: Configure Playwright for comprehensive E2E testing across multiple browsers with proper CI/CD integration.
 
 **Test Directory**: Organize E2E tests in dedicated directory with proper structure
@@ -120,7 +111,7 @@ Unit Tests (70%)
 **Trace and Screenshots**: Enable debugging tools for test failures
 **Base URL Configuration**: Set consistent base URL for all tests
 
-### 2. E2E Test Examples
+### 2. E2E Test Implementation Standards
 **Rule**: Test complete user workflows from start to finish with proper setup and error handling.
 
 **Workflow Testing**: Test complete user journeys including navigation, form submission, and result validation
@@ -130,9 +121,9 @@ Unit Tests (70%)
 **Assertion Strategy**: Verify both successful outcomes and error states with appropriate expectations
 **Network Mocking**: Mock API calls to test error scenarios and edge cases
 
-## Test Utilities
+## Test Utilities Standards
 
-### 1. Test Factories
+### 1. Test Factory Requirements
 **Rule**: Create factory functions for generating test data with sensible defaults and override capabilities.
 
 **Factory Pattern**: Use factory functions that accept partial overrides for flexible test data creation
@@ -142,7 +133,7 @@ Unit Tests (70%)
 **Realistic Data**: Use realistic values that match production data patterns
 **Unique Identifiers**: Generate unique IDs to avoid test data conflicts
 
-### 2. Custom Matchers
+### 2. Custom Matcher Standards
 **Rule**: Create domain-specific custom matchers for more expressive and reusable test assertions.
 
 **Domain Validation**: Create matchers for domain-specific validation (valid cards, probabilities, etc.)
@@ -155,52 +146,70 @@ Unit Tests (70%)
 ## Coverage Requirements
 
 ### 1. Minimum Coverage Thresholds
-- **Statements**: 80%
-- **Branches**: 80%
-- **Functions**: 80%
-- **Lines**: 80%
+**Rule**: Maintain minimum 80% coverage across all metrics with higher requirements for critical paths.
 
-### 2. Critical Path Coverage
-- All gambling algorithms: 95%
-- Financial calculations: 95%
-- Security functions: 90%
-- Error handling: 85%
+**Statement Coverage**: Minimum 80% statement coverage across all source files
+**Branch Coverage**: Minimum 80% branch coverage for conditional logic
+**Function Coverage**: Minimum 80% function coverage for all defined functions
+**Line Coverage**: Minimum 80% line coverage for executable code
 
-### 3. Coverage Exclusions
-- Type definitions
-- Configuration files
-- Test utilities
-- Development tools
-- Third-party integrations (mocked)
+### 2. Critical Path Coverage Requirements
+**Rule**: Implement higher coverage standards for critical business logic and security functions.
+
+**Gambling Algorithms**: Minimum 95% coverage for all gambling calculation algorithms
+**Financial Calculations**: Minimum 95% coverage for all financial and monetary calculations
+**Security Functions**: Minimum 90% coverage for authentication and authorization logic
+**Error Handling**: Minimum 85% coverage for error handling and recovery mechanisms
+
+### 3. Coverage Exclusion Standards
+**Rule**: Exclude appropriate files from coverage requirements while maintaining comprehensive testing.
+
+**Type Definitions**: Exclude TypeScript type definition files from coverage requirements
+**Configuration Files**: Exclude build and configuration files from coverage metrics
+**Test Utilities**: Exclude test helper functions and utilities from coverage calculations
+**Development Tools**: Exclude development-only tools and scripts from coverage
+**Third-party Integrations**: Exclude mocked third-party integrations from coverage requirements
 
 ## Testing Best Practices
 
-### 1. Test Organization
-- Group related tests with `describe` blocks
-- Use descriptive test names that explain behavior
-- Follow AAA pattern (Arrange, Act, Assert)
-- Keep tests focused and independent
+### 1. Test Organization Standards
+**Rule**: Organize tests with clear structure, descriptive naming, and proper isolation.
 
-### 2. Mocking Strategy
-- Mock external dependencies
-- Use real implementations for internal logic
-- Mock time-dependent functions
-- Avoid over-mocking
+**Grouping Strategy**: Group related tests with describe blocks for logical organization
+**Naming Convention**: Use descriptive test names that explain expected behavior clearly
+**AAA Pattern**: Follow Arrange, Act, Assert pattern for consistent test structure
+**Test Isolation**: Keep tests focused and independent to prevent cascading failures
 
-### 3. Data Management
-- Use factories for test data creation
-- Clean up test data after each test
-- Use realistic test data
-- Avoid hardcoded values
+### 2. Mocking Strategy Standards
+**Rule**: Implement strategic mocking that balances isolation with realistic testing.
 
-### 4. Async Testing
-- Always await async operations
-- Use proper timeout handling
-- Test both success and failure cases
-- Handle race conditions
+**External Dependencies**: Mock external dependencies to ensure test isolation
+**Internal Logic**: Use real implementations for internal business logic testing
+**Time Dependencies**: Mock time-dependent functions for consistent test results
+**Mocking Balance**: Avoid over-mocking that reduces test value and confidence
 
-### 5. Performance Testing
-- Test with realistic data volumes
-- Monitor test execution time
-- Use performance budgets
-- Profile critical paths
+### 3. Data Management Standards
+**Rule**: Implement systematic test data management with factories and cleanup procedures.
+
+**Factory Usage**: Use factories for test data creation to ensure consistency
+**Data Cleanup**: Clean up test data after each test to prevent pollution
+**Realistic Data**: Use realistic test data that matches production patterns
+**Value Variation**: Avoid hardcoded values that reduce test coverage
+
+### 4. Async Testing Standards
+**Rule**: Handle async operations properly with appropriate timeout and error handling.
+
+**Await Operations**: Always await async operations to ensure proper test execution
+**Timeout Handling**: Use proper timeout handling for async operations
+**Success and Failure**: Test both success and failure cases for async operations
+**Race Conditions**: Handle race conditions and timing issues in async tests
+
+### 5. Performance Testing Standards
+**Rule**: Include performance considerations in testing strategy with realistic data volumes.
+
+**Data Volume Testing**: Test with realistic data volumes to identify performance issues
+**Execution Monitoring**: Monitor test execution time to identify slow tests
+**Performance Budgets**: Use performance budgets for critical operations
+**Profiling**: Profile critical paths to identify optimization opportunities
+
+This comprehensive testing framework ensures high-quality, maintainable code with proper coverage and confidence in system behavior across all testing levels.

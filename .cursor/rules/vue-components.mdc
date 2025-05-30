@@ -9,13 +9,21 @@ alwaysApply: true
 
 ### 1. Atomic Design Implementation
 ```
-Atoms (Basic UI elements)
-├── BaseButton.vue
-├── BaseInput.vue
-├── BaseCard.vue
-├── BaseIcon.vue
-├── BaseBadge.vue
-└── BaseSpinner.vue
+Headless Primitives (Pure logic)
+├── design-system/primitives/Button/
+├── design-system/primitives/Input/
+├── design-system/primitives/Toggle/
+├── design-system/primitives/Modal/
+├── design-system/primitives/Panel/
+└── design-system/primitives/Dropdown/
+
+Styled Atoms (Headless + Design tokens)
+├── BaseButton.vue (Button primitive + tokens)
+├── BaseInput.vue (Input primitive + tokens)
+├── BaseCard.vue (Panel primitive + tokens)
+├── BaseIcon.vue (Icon primitive + tokens)
+├── BaseBadge.vue (Badge primitive + tokens)
+└── BaseSpinner.vue (Spinner primitive + tokens)
 
 Molecules (Simple combinations)
 ├── FormField.vue (Label + Input + Error)
@@ -45,7 +53,8 @@ Pages (Complete views)
 ```
 
 ### 2. Component Naming Conventions
-- **Base Components**: `Base` prefix (BaseButton, BaseInput)
+- **Headless Primitives**: Located in `design-system/primitives/ComponentName/` directories
+- **Styled Atoms**: `Base` prefix for headless + design token combinations (BaseButton, BaseInput)
 - **Single Instance**: `The` prefix (TheHeader, TheNavigation)
 - **Child Components**: Parent name prefix (TodoList, TodoItem)
 - **Feature Components**: Feature prefix (BurnCardEstimator, KellyCriterionCalculator)
@@ -56,6 +65,56 @@ Pages (Complete views)
 - **Organisms**: < 200 lines
 - **Templates**: < 150 lines
 - **Pages**: < 100 lines (mostly composition)
+
+## Headless Component Architecture
+
+### 1. Three-Layer Component System
+**Rule**: Implement professional headless component architecture with clear separation of logic, styling, and feature implementation.
+
+**Layer 1 - Headless Primitives**: Pure logic components in design-system/primitives/ directory with no styling, only behavior and accessibility
+**Layer 2 - Styled Wrappers**: Components that combine headless primitives with design system tokens for consistent visual appearance
+**Layer 3 - Feature Components**: Domain-specific components that use styled wrappers for business logic implementation
+
+**Directory Structure**: Organize as design-system/primitives/ComponentName/ with compound component pattern for related functionality
+**Separation Principle**: Headless components handle state, events, accessibility while styled components handle visual presentation
+**Reusability**: Headless primitives can be styled differently across projects while maintaining consistent behavior
+
+### 2. Headless Component Standards
+**Rule**: Create headless components that provide pure logic and accessibility without any visual styling dependencies.
+
+**Pure Logic Focus**: Implement only state management, event handling, keyboard navigation, and accessibility features
+**Slot-Based API**: Use slots for all visual content with descriptive slot props for state and behavior
+**TypeScript Interfaces**: Define clear interfaces for props, emits, and slot props with comprehensive typing
+**Accessibility First**: Include ARIA attributes, keyboard navigation, and screen reader support in headless layer
+**Framework Agnostic**: Design headless components to be potentially portable across different styling systems
+**Compound Patterns**: Group related headless components together for complex UI patterns like Toggle, Panel, Modal
+
+### 3. Design System Token Integration
+**Rule**: For comprehensive design system token architecture including TypeScript tokens, CSS custom properties, and component classes, refer to `tailwind-styling.mdc` as the single source of truth.
+
+**Token Integration**: All design token implementation, CSS custom property generation, and component class systems are defined in tailwind-styling.mdc
+**Headless Bridge**: Use design tokens as the bridge between headless components and visual styling for consistent theming
+**Component Integration**: Apply design tokens through CSS custom properties and component classes rather than hardcoded values
+
+### 4. Styled Wrapper Implementation
+**Rule**: Create styled wrapper components that combine headless primitives with design system tokens for production use.
+
+**Headless Integration**: Use headless components as the foundation and add visual styling through design tokens
+**Design Token Usage**: Apply tokens through CSS custom properties and component classes rather than inline styles
+**Backward Compatibility**: Ensure styled wrappers maintain existing component APIs for seamless migration
+**Variant Support**: Implement variant props that map to different token combinations for flexible styling
+**Responsive Design**: Use design tokens for responsive behavior and breakpoint-specific styling
+**Accessibility Preservation**: Maintain all accessibility features from headless layer while adding visual enhancements
+
+### 5. Migration Strategy for Existing Components
+**Rule**: Systematically migrate existing components to headless architecture without breaking existing functionality.
+
+**Gradual Migration**: Convert components one at a time starting with most reused components like buttons and toggles
+**API Preservation**: Maintain existing component APIs during migration to avoid breaking changes
+**Feature Parity**: Ensure migrated components have identical functionality and visual appearance
+**Testing Strategy**: Test both headless and styled layers independently plus integration testing
+**Documentation Updates**: Update component documentation to reflect new architecture and usage patterns
+**Performance Validation**: Verify that headless architecture doesn't negatively impact bundle size or runtime performance
 
 ## Component Structure Standards
 
@@ -131,38 +190,6 @@ Pages (Complete views)
 **Provider Responsibility**: Parent components should provide complete, functional contexts
 **Consumer Validation**: Child components must validate injected dependencies exist
 **Naming**: Use descriptive names for injection keys that clearly indicate purpose
-
-## Performance Optimization Patterns
-
-### 1. Lazy Loading Components
-**Rule**: Use defineAsyncComponent for heavy components with proper loading and error states.
-
-**Async Components**: Wrap heavy components with defineAsyncComponent for code splitting
-**Loading States**: Provide meaningful loading components during async component loading
-**Error Handling**: Define error components for failed component loading scenarios
-**Timeout Configuration**: Set appropriate timeout values for component loading
-**Suspense Integration**: Use Suspense boundaries for coordinated loading states
-**Conditional Loading**: Only load heavy components when actually needed (v-if conditions)
-
-### 2. Computed Memoization
-**Rule**: Use computed properties to memoize expensive calculations and minimize re-computations.
-
-**Expensive Operations**: Wrap costly calculations in computed properties for automatic memoization
-**Dependency Tracking**: Ensure computed properties only depend on necessary reactive data
-**Early Returns**: Use early returns in computed properties to avoid unnecessary calculations
-**Shallow Refs**: Use shallowRef for large objects that don't need deep reactivity
-**Conditional Logic**: Include null/undefined checks to handle empty or invalid states
-**Performance**: Prefer computed over methods for derived state that doesn't change often
-
-### 3. Virtual Scrolling for Large Lists
-**Rule**: Implement virtual scrolling for large lists to maintain performance with thousands of items.
-
-**Virtual Libraries**: Use established virtual scrolling libraries like @tanstack/vue-virtual
-**Dynamic Sizing**: Support dynamic item heights based on content expansion states
-**Performance**: Only render visible items plus small buffer for smooth scrolling
-**Memory Management**: Properly clean up virtual list references in component lifecycle
-**Accessibility**: Ensure virtual lists maintain proper keyboard navigation and screen reader support
-**Item Keys**: Use stable, unique keys for virtual list items to prevent rendering issues
 
 ## Accessibility Patterns
 

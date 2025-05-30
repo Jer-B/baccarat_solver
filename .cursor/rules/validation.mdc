@@ -40,7 +40,7 @@ alwaysApply: true
 ### 4. Runtime Validation Utilities
 **Rule**: Create utility functions for safe validation, error handling, and UI integration.
 
-**Result Type Pattern**: Use discriminated union types for validation results with success/error states
+**Result Type Pattern**: Use discriminated union types for validation results with success/error states (see `vue-components.mdc` for comprehensive Result pattern implementation)
 **Safe Validation**: Provide wrapper functions that never throw and return structured results
 **Async Validation**: Support async validation for complex forms with proper error handling
 **Error Formatting**: Transform Zod errors into UI-friendly format with field paths and messages
@@ -113,22 +113,10 @@ alwaysApply: true
 **Type Safety**: Maintain TypeScript type safety through the validation middleware
 **Reusable Patterns**: Create reusable validation middleware for common operation patterns
 
-## Testing Validation
-
-### 1. Validation Test Patterns
-**Rule**: Test validation schemas comprehensively with valid inputs, invalid inputs, and business rule enforcement.
-
-**Valid Input Testing**: Test that valid data passes validation without throwing errors
-**Invalid Input Testing**: Test that invalid data is properly rejected with appropriate error messages
-**Business Rule Testing**: Test cross-field validation and complex business rules
-**Default Value Testing**: Verify that default values are applied correctly for optional fields
-**Error Message Testing**: Ensure error messages are clear and helpful for debugging
-**Edge Case Testing**: Test boundary conditions and edge cases for all validation rules
-
 ## Best Practices
 
 ### 1. Schema Design
-- Use branded types for domain-specific values
+- Use branded types for domain-specific values (see `dry-principles.mdc` for comprehensive branded type patterns)
 - Implement custom refinements for business rules
 - Provide clear error messages
 - Use transforms for data normalization

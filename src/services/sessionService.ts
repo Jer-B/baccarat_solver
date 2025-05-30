@@ -2,7 +2,9 @@ import { supabase } from '../lib/supabase';
 
 // Dynamic import for notifications to avoid circular dependencies
 let notificationsModule: typeof import('../composables/useNotifications') | null = null;
-const getNotifications = async (): Promise<ReturnType<typeof import('../composables/useNotifications').useNotifications>> => {
+const getNotifications = async (): Promise<
+  ReturnType<typeof import('../composables/useNotifications').useNotifications>
+> => {
   if (!notificationsModule) {
     notificationsModule = await import('../composables/useNotifications');
   }
@@ -101,7 +103,7 @@ export class SessionService {
       ended_at: data.ended_at || null,
       duration_seconds: data.duration_seconds || null,
       total_hands: data.total_hands || 0,
-      status: data.status || 'completed' as const,
+      status: data.status || ('completed' as const),
     };
 
     const { data: session, error } = await supabase
@@ -288,10 +290,15 @@ export class SessionService {
       throw new Error(`Failed to calculate analytics: ${error.message}`);
     }
 
-    const completedSessions = sessions.filter(session => session.status === 'completed' && session.duration_seconds);
+    const completedSessions = sessions.filter(
+      session => session.status === 'completed' && session.duration_seconds
+    );
     const totalSessions = sessions.length;
     const totalHands = sessions.reduce((sum, session) => sum + (session.total_hands || 0), 0);
-    const totalDuration = completedSessions.reduce((sum, session) => sum + (session.duration_seconds || 0), 0);
+    const totalDuration = completedSessions.reduce(
+      (sum, session) => sum + (session.duration_seconds || 0),
+      0
+    );
     const averageDuration =
       completedSessions.length > 0 ? totalDuration / completedSessions.length : 0;
 

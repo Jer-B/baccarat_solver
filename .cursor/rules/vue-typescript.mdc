@@ -22,47 +22,18 @@ alwaysApply: true
 - Follow Vue 3 style guide and naming conventions
 - Use Vite for fast development and building
 
-### 2. Folder Structure Standards - Reusable Component-Driven Development
-```
-src/
-  components/          # Vue components (PascalCase, multi-word names)
-    common/           # Shared components across features
-    cards/            # Card-related components
-    analysis/         # Analysis-specific components
-    forms/            # Form components
-  composables/        # Reusable reactive logic (camelCase)
-  views/             # Page-level components
-  stores/            # Pinia state management
-  services/          # Business logic and API calls
-  types/             # TypeScript type definitions
-  utils/             # Pure utility functions
-  config/            # Configuration constants
-  assets/            # Static assets
-  lib/               # External library integrations
-  App.vue
-  main.ts
-```
+### 2. Folder Structure Standards
+**Rule**: For complete folder structure and component organization standards, refer to `architecture.mdc` as the single source of truth.
 
-## Component Structure (Mandatory Order)
-**Rule**: All Vue components MUST follow this exact order for consistency and maintainability.
+**Key Reference**: All project structure, component naming conventions, and directory organization patterns are defined in the main architecture file.
 
-**Template Section**: Semantic HTML with proper accessibility attributes and ARIA labels
-**Script Setup Section**: Composition API logic with specific import order and organization
-**Style Section**: Component-specific styles using Tailwind CSS classes
+## Component Standards Reference
+**Rule**: For component structure, props, events, and accessibility patterns, refer to `vue-components.mdc` as the single source of truth.
 
-**Import Order Requirements**:
-1. Type-only imports from local types
-2. Vue composition API imports (ref, computed, watch, lifecycle hooks)
-3. External library imports (stores, composables, utilities)
-4. Local component imports
-
-**Script Organization**:
-1. Props and emits interfaces with TypeScript
-2. Reactive state declarations using ref/reactive
-3. Computed properties for derived state
-4. Method definitions with proper async handling
-5. Lifecycle hooks (onMounted, onUpdated, onUnmounted)
-6. Watchers for reactive data changes
+**Component Structure**: See vue-components.mdc for mandatory component order and organization
+**Props & Events**: See vue-components.mdc for props design patterns and event handling
+**Accessibility**: See vue-components.mdc for comprehensive accessibility implementation
+**Performance**: See vue-components.mdc for lazy loading and optimization patterns
 
 ## TypeScript Rules
 
@@ -70,7 +41,7 @@ src/
 **Rule**: Never use `any` type and implement branded types for domain-specific values.
 
 **Type Safety**: Use proper types or `unknown` instead of any, implement strict type checking
-**Branded Types**: Create branded types for domain values (Probability, EdgePercentage, Confidence)
+**Branded Types**: Create branded types for domain values (Probability, EdgePercentage, Confidence) - see `dry-principles.mdc` for comprehensive implementation patterns
 **Type Validation**: Ensure all data structures have proper TypeScript interfaces
 **Generic Usage**: Use generics for reusable type patterns and maintain type safety
 
@@ -82,15 +53,7 @@ src/
 **Method Signatures**: Include proper parameter and return types for all methods
 **Documentation**: Add JSDoc comments for complex interfaces and business logic
 
-### 3. Props & Events
-**Rule**: Define explicit, readonly props with TypeScript interfaces and typed events with descriptive names.
-
-**Props Interface**: Use readonly modifiers, specific union types, and optional props with defaults
-**Event Typing**: Define Emits interface with tuple types for event payloads
-**Validation**: Use union types for constrained values and avoid generic object types
-**Error Handling**: Emit error events for failed operations with proper error objects
-
-### 4. Composable Return Types
+### 3. Composable Return Types
 **Rule**: Define explicit return types for composables with readonly state and clear method signatures.
 
 **Return Structure**: Return object with readonly state references, computed properties, and action methods
@@ -117,9 +80,9 @@ src/
 **Cleanup**: Properly handle watcher cleanup and avoid memory leaks
 
 ### 3. Error Handling with Structured Logging
-**Rule**: Implement Result pattern for error handling with proper logging and type safety.
+**Rule**: Implement Result pattern for error handling with proper logging and type safety. For comprehensive Result pattern implementation, refer to `vue-components.mdc`.
 
-**Result Pattern**: Use discriminated union types for success/error states with proper typing
+**Result Pattern**: Use discriminated union types for success/error states with proper typing (see vue-components.mdc for detailed implementation)
 **Error Logging**: Use structured logging format for all errors with relevant context
 **Type Safety**: Maintain TypeScript type safety through error handling pipeline
 **Recovery**: Provide error recovery mechanisms and user-friendly error messages
@@ -133,64 +96,9 @@ src/
 **Logging**: Include structured logging for lifecycle events and component state changes
 
 ### 5. Provide/Inject Pattern
-**Rule**: Use provide/inject for dependency injection with proper TypeScript typing and error handling.
+**Rule**: For comprehensive provide/inject patterns and dependency injection, refer to `vue-components.mdc` as the single source of truth.
 
-**Type Safety**: Use InjectionKey symbols with TypeScript generics for type-safe injection
-**Error Handling**: Always validate injected dependencies and throw descriptive errors if missing
-**Context Design**: Create well-defined context interfaces with methods and reactive state
-**Naming**: Use descriptive names for injection keys that clearly indicate purpose
-
-## Performance Optimization
-
-### 1. Lazy Loading
-**Rule**: Use defineAsyncComponent for heavy components with proper loading and error states.
-
-**Component Splitting**: Wrap heavy components with defineAsyncComponent for code splitting
-**Loading States**: Provide meaningful loading components during async component loading
-**Error Handling**: Define error components for failed component loading scenarios
-**Timeout Configuration**: Set appropriate timeout values and use Suspense for coordination
-
-### 2. Computed Memoization
-**Rule**: Use computed properties to memoize expensive calculations and minimize re-computations.
-
-**Memoization Strategy**: Wrap expensive calculations in computed properties for automatic caching
-**Dependency Management**: Ensure computed properties only depend on necessary reactive data
-**Early Returns**: Use early returns and null checks to avoid unnecessary calculations
-**Performance**: Prefer computed over methods for derived state that changes infrequently
-
-### 3. Virtual Scrolling for Large Lists
-**Rule**: Implement virtual scrolling for large lists to maintain performance with thousands of items.
-
-**Library Usage**: Use established virtual scrolling libraries like @tanstack/vue-virtual
-**Performance**: Only render visible items plus small buffer for smooth scrolling
-**Accessibility**: Ensure virtual lists maintain proper keyboard navigation and screen reader support
-**Memory Management**: Properly clean up virtual list references in component lifecycle
-
-## Template Best Practices
-
-### 1. Semantic HTML
-**Rule**: Use semantic HTML structure with proper accessibility attributes and ARIA labels.
-
-**HTML Structure**: Use semantic elements (main, section, header, nav) for proper document structure
-**Accessibility**: Include ARIA attributes, labels, and roles for screen reader compatibility
-**Form Design**: Use proper form elements with labels, validation, and error messaging
-**Navigation**: Implement proper focus management and keyboard navigation patterns
-
-### 2. Accessibility
-**Rule**: Implement comprehensive accessibility features following WCAG 2.1 AA standards.
-
-**Form Accessibility**: Use proper labels, ARIA attributes, and error messaging for form elements
-**Interactive Elements**: Ensure all interactive elements are keyboard accessible
-**Screen Readers**: Provide appropriate ARIA labels and descriptions for complex components
-**Focus Management**: Implement proper focus indicators and programmatic focus management
-
-### 3. Event Handling
-**Rule**: Implement descriptive event handlers with proper async handling and error management.
-
-**Handler Naming**: Use descriptive names that clearly indicate the action being performed
-**Async Operations**: Properly handle async operations with loading states and error handling
-**Event Prevention**: Use appropriate event prevention and propagation control
-**Logging**: Include structured logging for user interactions and component events
+**Key Reference**: All provide/inject implementation details, TypeScript typing, and error handling patterns are defined in the dedicated Vue components file.
 
 ## JSDoc Documentation Standards
 
@@ -227,13 +135,3 @@ src/
 **Performance**: Prefer CSS custom properties over computed style objects
 **Maintainability**: Keep styling logic in CSS rather than JavaScript when possible
 **Debugging**: Use CSS custom properties for easier debugging and development
-
-## Testing Integration
-
-### 1. Component Testing Setup
-**Rule**: Test Vue components with proper mounting, prop validation, and event testing.
-
-**Test Structure**: Use describe blocks for component organization and beforeEach for setup
-**Component Mounting**: Use mount with proper props and global plugin configuration
-**Event Testing**: Test component events are emitted with correct payloads
-**State Testing**: Verify component reacts properly to prop changes and internal state updates

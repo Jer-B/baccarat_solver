@@ -302,23 +302,16 @@
     <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">💡 Professional Tell Recognition Tips</h4>
-        <button
-          @click="store.toggleSectionVisibility('dealerTellAnalysis', 'professionalTips')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('dealerTellAnalysis', 'professionalTips')
-                ? 'Hide professional tips'
-                : 'Show professional tips'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('dealerTellAnalysis', 'professionalTips') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="dealerTellAnalysis"
+          subsection="professionalTips"
+          variant="default"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('dealerTellAnalysis', 'professionalTips')"
+        v-if="visibilityStore.isVisible('dealerTellAnalysis', 'professionalTips')"
         class="text-xs text-gray-600 space-y-1"
       >
         <div>
@@ -352,11 +345,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useBaccaratStore } from '../../stores/baccaratStore';
+import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useProfessionalBurnEstimation } from '../../composables/useProfessionalBurnEstimation';
 import type { Rank, Suit } from '../../types/cards';
+import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 const store = useBaccaratStore();
+const visibilityStore = useVisibilityStore();
 const burnEstimation = useProfessionalBurnEstimation();
 
 // Component state

@@ -167,23 +167,16 @@
         <h4 class="text-sm font-semibold text-yellow-800">
           💡 Professional Burn Card Intelligence
         </h4>
-        <button
-          @click="store.toggleSectionVisibility('burnCardEstimator', 'burnIntelligence')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('burnCardEstimator', 'burnIntelligence')
-                ? 'Hide burn intelligence tips'
-                : 'Show burn intelligence tips'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('burnCardEstimator', 'burnIntelligence') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="burnCardEstimator"
+          subsection="burnIntelligence"
+          variant="warning"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('burnCardEstimator', 'burnIntelligence')"
+        v-if="visibilityStore.isVisible('burnCardEstimator', 'burnIntelligence')"
         class="text-xs text-yellow-700 space-y-1"
       >
         <div>
@@ -212,11 +205,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useBaccaratStore } from '../../stores/baccaratStore';
-import type { Card, Rank, Suit } from '../../types/cards';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useVisibilityStore } from '@/stores/visibilityStore';
+import type { Card, Rank, Suit } from '@/types/cards';
+import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 const store = useBaccaratStore();
+const visibilityStore = useVisibilityStore();
 
 // Component state
 const selectedRank = ref<Rank | ''>('');

@@ -7,16 +7,18 @@
         <div class="flex items-center space-x-2 mr-4">
           <label class="text-sm text-yellow-800">Info Panels:</label>
           <button
-            @click="store.toggleGlobalVisibility()"
+            @click="visibilityStore.toggleGlobalVisibility()"
             :class="[
               'px-2 py-1 rounded text-xs font-medium transition-colors',
-              store.ui.globalToggleMode
+              visibilityStore.globalToggleMode
                 ? 'bg-green-100 text-green-800 hover:bg-green-200'
                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200',
             ]"
-            :title="store.ui.globalToggleMode ? 'Hide all info panels' : 'Show all info panels'"
+            :title="
+              visibilityStore.globalToggleMode ? 'Hide all info panels' : 'Show all info panels'
+            "
           >
-            {{ store.ui.globalToggleMode ? '👁️ Show' : '👁️‍🗨️ Hide' }}
+            {{ visibilityStore.globalToggleMode ? '👁️ Show' : '👁️‍🗨️ Hide' }}
           </button>
         </div>
 
@@ -144,23 +146,16 @@
     <div class="mt-4 p-3 bg-white rounded-lg border">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">💰 Payout Examples (for $10 bet)</h4>
-        <button
-          @click="store.toggleSectionVisibility('payoutSettings', 'payoutExamples')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('payoutSettings', 'payoutExamples')
-                ? 'Hide examples'
-                : 'Show examples'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('payoutSettings', 'payoutExamples') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="payoutSettings"
+          subsection="payoutExamples"
+          variant="default"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('payoutSettings', 'payoutExamples')"
+        v-if="visibilityStore.isVisible('payoutSettings', 'payoutExamples')"
         class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs"
       >
         <div class="space-y-1">
@@ -195,23 +190,16 @@
     <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-blue-800">📋 Preset Information</h4>
-        <button
-          @click="store.toggleSectionVisibility('payoutSettings', 'presetInfo')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('payoutSettings', 'presetInfo')
-                ? 'Hide preset info'
-                : 'Show preset info'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('payoutSettings', 'presetInfo') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="payoutSettings"
+          subsection="presetInfo"
+          variant="primary"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('payoutSettings', 'presetInfo')"
+        v-if="visibilityStore.isVisible('payoutSettings', 'presetInfo')"
         class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-blue-700"
       >
         <div>
@@ -231,9 +219,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { useBaccaratStore } from '../../stores/baccaratStore';
+import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useVisibilityStore } from '@/stores/visibilityStore';
+import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 const store = useBaccaratStore();
+const visibilityStore = useVisibilityStore();
 
 // Local reactive copies for immediate UI updates
 const localPayouts = reactive({

@@ -118,23 +118,16 @@
     <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">📚 Professional Notes</h4>
-        <button
-          @click="store.toggleSectionVisibility('professionalRecommendations', 'professionalNotes')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('professionalRecommendations', 'professionalNotes')
-                ? 'Hide professional notes'
-                : 'Show professional notes'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('professionalRecommendations', 'professionalNotes') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="professionalRecommendations"
+          subsection="professionalNotes"
+          variant="default"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('professionalRecommendations', 'professionalNotes')"
+        v-if="visibilityStore.isVisible('professionalRecommendations', 'professionalNotes')"
         class="text-xs text-gray-600 space-y-1"
       >
         <div>
@@ -160,10 +153,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useBaccaratStore } from '../../stores/baccaratStore';
+import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useVisibilityStore } from '@/stores/visibilityStore';
 import { BurnAnalysisIntegration } from '../../services/burnAnalysisIntegration';
+import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 const store = useBaccaratStore();
+const visibilityStore = useVisibilityStore();
 
 // Generate professional recommendation using integrated analysis
 const recommendation = computed(() => {

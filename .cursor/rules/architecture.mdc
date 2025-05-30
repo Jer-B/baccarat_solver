@@ -33,71 +33,15 @@ If you think there might not be a correct answer, you say so. If you do not know
 
 ## DRY (Don't Repeat Yourself) Principles
 
-### 1. Code Duplication Detection
-- **Rule**: Before writing any code, check if similar functionality exists
-- **Action**: Extract common patterns into composables, utilities, or components
-- **Threshold**: If code block appears 3+ times, it MUST be abstracted
-- **Documentation**: Document all abstractions with clear usage examples
+**Rule**: For comprehensive DRY principles, patterns, and enforcement strategies, refer to `dry-principles.mdc` as the single source of truth.
 
-### 2. Configuration Centralization
-- **Constants**: All magic numbers/strings in dedicated config files
-- **Types**: Shared types in `src/types/` directory
-- **Utilities**: Common functions in `src/utils/` with proper typing
-- **Styles**: Shared CSS classes in Tailwind config or CSS variables
-
-### 3. Component Reusability
-- **Atomic Design**: Build reusable atoms before molecules
-- **Props Interface**: Standardize common prop patterns
-- **Slot Patterns**: Use consistent slot naming across similar components
-- **Event Patterns**: Standardize event naming and payload structures
-
-## Structured Logging Standards
-
-### 1. Console Log Format
-**MANDATORY FORMAT**: `[feature-name][log-category] message`
-
-**Rule**: Use structured logging format with feature name and category in brackets, followed by descriptive message. Include good examples (burn-analysis calculation, kelly-criterion validation) and bad examples (unstructured messages like "Starting calculation").
-
-### 2. Log Categories
-- **`[calculation]`**: Mathematical computations and algorithms
-- **`[validation]`**: Input validation and data verification
-- **`[simulation]`**: Monte Carlo and statistical simulations
-- **`[detection]`**: Pattern recognition and analysis
-- **`[api]`**: Supabase and external API calls
-- **`[state]`**: Pinia store state changes
-- **`[performance]`**: Performance monitoring and optimization
-- **`[error]`**: Error handling and recovery
-- **`[user-action]`**: User interaction tracking
-- **`[debug]`**: Development debugging information
-
-### 3. Feature Names
-- **`burn-analysis`**: Burn card estimation and analysis
-- **`kelly-criterion`**: Kelly Criterion calculations
-- **`monte-carlo`**: Monte Carlo simulations
-- **`edge-calculations`**: Edge sorting and advantage calculations
-- **`dealer-tells`**: Dealer tell analysis and detection
-- **`risk-management`**: Bankroll and risk calculations
-- **`session-tracking`**: Game session management
-- **`card-counting`**: Card counting methodologies
-- **`pattern-recognition`**: Statistical pattern analysis
-- **`ui-components`**: User interface components
+**Key Reference**: All DRY-related standards including the 3+ occurrence rule, component abstraction patterns, and monitoring strategies are defined in the dedicated DRY principles file.
 
 ## Automatic Rule Evolution
 
-### 1. Rule Monitoring
-- **Trigger**: When implementing new patterns or solving recurring issues
-- **Action**: Automatically propose rule updates to prevent future occurrences
-- **Documentation**: Update rules with new best practices and anti-patterns
-- **Validation**: User must approve all rule changes before implementation
+**Rule**: For comprehensive rule evolution and monitoring strategies, refer to `rule-evolution.mdc` as the single source of truth.
 
-### 2. Pattern Recognition
-- **Code Smells**: Detect and propose rules for common anti-patterns
-- **Performance Issues**: Create rules for performance optimization patterns
-- **Security Concerns**: Add rules for security best practices
-- **Accessibility Gaps**: Enhance rules for better accessibility compliance
-
-### 3. Rule Proposal Format
-**Rule**: Use structured format for rule change proposals including trigger, current issue, proposed solution, impact assessment, and before/after examples.
+**Key Reference**: All rule monitoring, pattern detection, proposal systems, and continuous improvement cycles are defined in the dedicated rule evolution file.
 
 ## Documentation Update Requirements
 
@@ -123,10 +67,10 @@ If you think there might not be a correct answer, you say so. If you do not know
 ## Architecture Patterns
 
 ### 1. Component-Driven Development (CDD)
-- **Atomic Design**: Atoms → Molecules → Organisms → Templates → Pages
-- **Single Responsibility**: Each component has one clear purpose
-- **Composition over Inheritance**: Use composables for shared logic
-- **Props Down, Events Up**: Unidirectional data flow
+**Rule**: For detailed component architecture patterns, refer to `vue-components.mdc` as the single source of truth.
+
+**Key Principles**: Atomic Design, Single Responsibility, Composition over Inheritance, Props Down/Events Up
+**Reference**: All component structure, headless architecture, and design patterns are defined in the dedicated Vue components file.
 
 ### 2. Feature-Based Architecture
 **Rule**: Organize code by features with dedicated folders for burn-analysis, kelly-criterion, monte-carlo, edge-calculations, and dealer-tells. Each feature should contain components, composables, services, stores, and types subdirectories. Include shared folder for reusable components, composables, services, stores, types, and utils.
@@ -172,7 +116,6 @@ If you think there might not be a correct answer, you say so. If you do not know
 - Leverage VueUse for enhanced reactivity
 
 ### 3. Performance Optimization
-- Implement lazy loading for heavy components
 - Use dynamic imports for code splitting
 - Optimize bundle size with Vite chunking strategy
 - Implement proper caching for expensive calculations
@@ -238,60 +181,29 @@ If you think there might not be a correct answer, you say so. If you do not know
 ### 3. Composable Organization
 **Rule**: Group composables by domain functionality with feature-specific composables (useBurnAnalysis, useKellyCriterion, useMonteCarloSimulation) and generic reusable composables (useAsyncOperation, useLocalStorage, useDebounce). Ensure clear interfaces with well-defined input/output types.
 
+## Design System Integration
+
+**Rule**: For comprehensive design system architecture including headless components, design tokens, and styling patterns, refer to `vue-components.mdc` and `tailwind-styling.mdc` as the authoritative sources.
+
+**Key Integration Points**: TypeScript design tokens, CSS custom property generation, headless component architecture, and professional styling patterns are defined in the dedicated design system files.
+
 ## Professional Development Standards
 
 ### 1. DRY Principles Enforcement
-- **3+ Occurrence Rule**: Any code pattern appearing 3+ times MUST be abstracted
-- **Component Abstraction**: Create reusable components for repeated UI patterns
-- **Composable Logic**: Extract shared reactive logic into composables
-- **Utility Functions**: Pure functions for common operations
-- **Type Definitions**: Shared TypeScript interfaces and types
-- **Configuration**: Centralized constants and configuration
+**Rule**: For comprehensive DRY enforcement strategies, refer to `dry-principles.mdc`.
 
-### 2. Structured Logging Requirements
-- **Mandatory Format**: `[feature-name][log-category] message`
-- **Feature Names**: Use kebab-case (burn-analysis, kelly-criterion, monte-carlo)
-- **Log Categories**: initialization, calculation, validation, error, performance
-- **Context Data**: Always include relevant context as second parameter
-- **Security**: Never log sensitive data (passwords, tokens, personal info)
-
-### 3. TypeScript-First Development
+### 2. TypeScript-First Development
 - **Strict Mode**: Enable all strict TypeScript compiler options
 - **Explicit Types**: Prefer explicit type annotations over inference
 - **Interface Definitions**: Define interfaces for all data structures
 - **Generic Types**: Use generics for reusable type patterns
 - **Branded Types**: Use branded types for domain-specific values
 
-### 4. Vue 3 Composition API Standards
-- **Setup Function**: Use `<script setup>` syntax for all components
-- **Reactive References**: Use `ref()` for primitive values, `reactive()` for objects
-- **Computed Properties**: Use `computed()` for derived state
-- **Lifecycle Hooks**: Use composition API lifecycle hooks (onMounted, onUpdated)
-- **Props/Emits**: Define explicit interfaces for props and emits
-
-### 5. Component Structure Order
-**Rule**: All Vue components MUST follow exact order: Template (component markup), Script Setup (Composition API logic with imports, props/emits interfaces, reactive state, computed properties, methods, lifecycle hooks), Style (component-specific styles).
-
 ## Rule Evolution and Monitoring
 
-### 1. Automatic Rule Evolution
-- **Pattern Detection**: Monitor code patterns for new abstraction opportunities
-- **Rule Effectiveness**: Track rule adoption and developer satisfaction
-- **Automated Proposals**: Generate rule updates based on usage patterns
-- **User Validation**: All rule changes require explicit user approval
-- **Documentation Updates**: Automatic documentation updates for rule changes
+**Rule**: For comprehensive rule evolution and monitoring strategies, refer to `rule-evolution.mdc` as the single source of truth.
 
-### 2. Quality Assurance Integration
-- **ESLint Rules**: Enforce all standards through ESLint configuration
-- **Husky Hooks**: Pre-commit validation of all standards
-- **Package Scripts**: Quality gate scripts for comprehensive checking
-- **VSCode Integration**: Snippets and settings for standard compliance
-
-### 3. Professional Gambling Domain Standards
-- **Domain Expertise**: Maintain professional gambling terminology and concepts
-- **Mathematical Accuracy**: Ensure all calculations use proper mathematical methods
-- **Industry Standards**: Follow established gambling analysis practices
-- **Performance Requirements**: Optimize for real-time analysis needs
+**Key Reference**: All rule monitoring, pattern detection, proposal systems, quality assurance integration, and continuous improvement cycles are defined in the dedicated rule evolution file.
 
 ## Architecture Documentation Requirements
 

@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     class="space-y-6"
     @dragover.prevent="handleGlobalDragOver"
     @dragleave.prevent="handleGlobalDragLeave"
@@ -12,17 +12,22 @@
         <!-- Export Dropdown -->
         <div class="relative">
           <button
-            @click.stop="showExportDropdown = !showExportDropdown"
+            @click.stop="toggleMainExportDropdown"
             :disabled="loading || sessions.length === 0"
             class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             title="Export all sessions"
           >
             <span>📥 Export All</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
             </svg>
           </button>
-          
+
           <!-- Export Dropdown Menu -->
           <div
             v-if="showExportDropdown"
@@ -96,10 +101,22 @@
       @dragleave="isDragOver = false"
     >
       <div class="bg-white rounded-lg p-8 border-4 border-dashed border-blue-500 text-center">
-        <svg class="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        <svg
+          class="w-16 h-16 text-blue-500 mx-auto mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          ></path>
         </svg>
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">Drop JSON or CSV file to import sessions</h3>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">
+          Drop JSON or CSV file to import sessions
+        </h3>
         <p class="text-gray-600">Release to import session data</p>
       </div>
     </div>
@@ -112,15 +129,26 @@
     >
       <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
         <div class="flex items-center mb-4">
-          <svg class="w-8 h-8 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          <svg
+            class="w-8 h-8 text-red-500 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            ></path>
           </svg>
           <h3 class="text-lg font-semibold text-gray-800">Delete All Sessions</h3>
         </div>
-        
+
         <div class="mb-6">
           <p class="text-gray-600 mb-3">
-            ⚠️ <strong>Warning:</strong> This action will permanently delete all {{ sessions.length }} sessions and cannot be undone.
+            ⚠️ <strong>Warning:</strong> This action will permanently delete all
+            {{ sessions.length }} sessions and cannot be undone.
           </p>
           <p class="text-gray-600 mb-4">
             Would you like to export your sessions before deleting them?
@@ -166,22 +194,31 @@
     >
       <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
         <div class="flex items-center mb-4">
-          <svg class="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <svg
+            class="w-8 h-8 text-green-500 mr-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
           </svg>
           <h3 class="text-lg font-semibold text-gray-800">Export Completed</h3>
         </div>
-        
+
         <div class="mb-6">
-          <p class="text-gray-600 mb-3">
-            ✅ Your sessions have been exported successfully.
-          </p>
+          <p class="text-gray-600 mb-3">✅ Your sessions have been exported successfully.</p>
           <p class="text-gray-600 mb-4">
-            <strong>Are you sure you want to proceed with deleting all {{ sessions.length }} sessions?</strong>
+            <strong
+              >Are you sure you want to proceed with deleting all
+              {{ sessions.length }} sessions?</strong
+            >
           </p>
-          <p class="text-red-600 text-sm">
-            This action cannot be undone.
-          </p>
+          <p class="text-red-600 text-sm">This action cannot be undone.</p>
         </div>
 
         <div class="flex flex-col space-y-3">
@@ -212,11 +249,23 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       @click.self="showImportDialog = false"
     >
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[80vh] overflow-y-auto">
+      <div
+        class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[80vh] overflow-y-auto"
+      >
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center">
-            <svg class="w-8 h-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            <svg
+              class="w-8 h-8 text-blue-500 mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              ></path>
             </svg>
             <h3 class="text-lg font-semibold text-gray-800">Import Sessions</h3>
           </div>
@@ -225,7 +274,12 @@
             class="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
         </div>
@@ -240,8 +294,18 @@
             @drop.prevent="handleDialogDrop"
             :class="{ 'border-blue-400 bg-blue-50': isDragOverDialog }"
           >
-            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            <svg
+              class="w-12 h-12 text-gray-400 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              ></path>
             </svg>
             <h4 class="text-lg font-medium text-gray-800 mb-2">Select Files to Import</h4>
             <p class="text-gray-600 mb-4">Click here or drag and drop JSON/CSV files</p>
@@ -257,7 +321,9 @@
         <!-- Selected Files List -->
         <div v-if="selectedFiles.length > 0" class="mb-6">
           <div class="flex items-center justify-between mb-3">
-            <h4 class="text-md font-semibold text-gray-800">Selected Files ({{ selectedFiles.length }})</h4>
+            <h4 class="text-md font-semibold text-gray-800">
+              Selected Files ({{ selectedFiles.length }})
+            </h4>
             <button
               @click="clearSelectedFiles"
               class="text-sm text-red-600 hover:text-red-800 transition-colors"
@@ -265,7 +331,7 @@
               Clear All
             </button>
           </div>
-          
+
           <div class="space-y-2 max-h-60 overflow-y-auto">
             <div
               v-for="(file, index) in selectedFiles"
@@ -273,7 +339,12 @@
               class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div class="flex items-center space-x-3">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -294,7 +365,12 @@
                 title="Remove file"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
                 </svg>
               </button>
             </div>
@@ -308,7 +384,11 @@
             :disabled="selectedFiles.length === 0 || importingFiles"
             class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {{ importingFiles ? 'Importing...' : `Import ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}` }}
+            {{
+              importingFiles
+                ? 'Importing...'
+                : `Import ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`
+            }}
           </button>
           <button
             @click="showImportDialog = false"
@@ -375,7 +455,12 @@
                   title="Save"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
                   </svg>
                 </button>
                 <button
@@ -384,11 +469,16 @@
                   title="Cancel"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
-              
+
               <!-- Display Session Name -->
               <div v-else class="flex items-center space-x-2">
                 <h3 class="text-lg font-semibold text-gray-800">{{ session.session_name }}</h3>
@@ -398,11 +488,16 @@
                   title="Edit session name"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    ></path>
                   </svg>
                 </button>
               </div>
-              
+
               <span
                 class="px-2 py-1 text-xs font-medium rounded-full"
                 :class="
@@ -437,7 +532,7 @@
 
           <div class="flex items-center space-x-2">
             <span class="text-xs text-gray-500">ID: {{ session.id.slice(0, 8) }}...</span>
-            
+
             <!-- Export Session Dropdown -->
             <div class="relative">
               <button
@@ -454,7 +549,7 @@
                   ></path>
                 </svg>
               </button>
-              
+
               <!-- Session Export Dropdown Menu -->
               <div
                 v-if="sessionExportDropdowns[session.id]"
@@ -523,15 +618,17 @@
         <div class="mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Session Details</h3>
         </div>
-        
+
         <div v-if="selectedSession" class="space-y-4">
           <!-- Session Info Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Session Name</div>
-              <div class="text-lg font-semibold text-gray-900">{{ selectedSession.session_name }}</div>
+              <div class="text-lg font-semibold text-gray-900">
+                {{ selectedSession.session_name }}
+              </div>
             </div>
-            
+
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Status</div>
               <div class="flex items-center mt-1">
@@ -547,44 +644,56 @@
                 </span>
               </div>
             </div>
-            
+
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Total Hands</div>
-              <div class="text-lg font-semibold text-gray-900">{{ selectedSession.total_hands }}</div>
+              <div class="text-lg font-semibold text-gray-900">
+                {{ selectedSession.total_hands }}
+              </div>
             </div>
-            
+
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Started</div>
-              <div class="text-sm text-gray-900">{{ formatDateTime(selectedSession.started_at) }}</div>
+              <div class="text-sm text-gray-900">
+                {{ formatDateTime(selectedSession.started_at) }}
+              </div>
             </div>
-            
+
             <div v-if="selectedSession.ended_at" class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Ended</div>
-              <div class="text-sm text-gray-900">{{ formatDateTime(selectedSession.ended_at) }}</div>
+              <div class="text-sm text-gray-900">
+                {{ formatDateTime(selectedSession.ended_at) }}
+              </div>
             </div>
-            
+
             <div v-if="selectedSession.duration_seconds" class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Duration</div>
-              <div class="text-lg font-semibold text-gray-900">{{ formatDuration(selectedSession.duration_seconds) }}</div>
+              <div class="text-lg font-semibold text-gray-900">
+                {{ formatDuration(selectedSession.duration_seconds) }}
+              </div>
             </div>
           </div>
-          
+
           <!-- Session ID -->
           <div class="bg-blue-50 rounded-lg p-3">
             <div class="text-sm font-medium text-blue-600">Session ID</div>
             <div class="text-sm font-mono text-blue-900 break-all">{{ selectedSession.id }}</div>
           </div>
-          
+
           <!-- Timestamps -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Created</div>
-              <div class="text-sm text-gray-900">{{ formatDateTime(selectedSession.created_at) }}</div>
+              <div class="text-sm text-gray-900">
+                {{ formatDateTime(selectedSession.created_at) }}
+              </div>
             </div>
-            
+
             <div class="bg-gray-50 rounded-lg p-3">
               <div class="text-sm font-medium text-gray-600">Last Updated</div>
-              <div class="text-sm text-gray-900">{{ formatDateTime(selectedSession.updated_at) }}</div>
+              <div class="text-sm text-gray-900">
+                {{ formatDateTime(selectedSession.updated_at) }}
+              </div>
             </div>
           </div>
         </div>
@@ -602,15 +711,21 @@
           </div>
           <div>
             <span class="font-medium text-gray-600">Completed:</span>
-            <span class="ml-2 text-gray-800">{{ sessions.filter(s => s.status === 'completed').length }}</span>
+            <span class="ml-2 text-gray-800">{{
+              sessions.filter(s => s.status === 'completed').length
+            }}</span>
           </div>
           <div>
             <span class="font-medium text-gray-600">Active:</span>
-            <span class="ml-2 text-gray-800">{{ sessions.filter(s => s.status === 'active').length }}</span>
+            <span class="ml-2 text-gray-800">{{
+              sessions.filter(s => s.status === 'active').length
+            }}</span>
           </div>
           <div>
             <span class="font-medium text-gray-600">Total Hands:</span>
-            <span class="ml-2 text-gray-800">{{ sessions.reduce((sum, s) => sum + s.total_hands, 0) }}</span>
+            <span class="ml-2 text-gray-800">{{
+              sessions.reduce((sum, s) => sum + s.total_hands, 0)
+            }}</span>
           </div>
         </div>
       </div>
@@ -620,7 +735,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import { sessionService, type UserSession, type ImportSessionData } from '../../services/sessionService';
+import {
+  sessionService,
+  type UserSession,
+  type ImportSessionData,
+} from '../../services/sessionService';
 import { useSessionExport, type SessionExportData } from '../../composables/useSessionExport';
 
 const sessions = ref<UserSession[]>([]);
@@ -669,7 +788,9 @@ const selectSession = (sessionId: string) => {
 };
 
 const selectedSession = computed((): UserSession | null => {
-  if (!selectedSessionId.value) return null;
+  if (!selectedSessionId.value) {
+    return null;
+  }
   return sessions.value.find(session => session.id === selectedSessionId.value) || null;
 });
 
@@ -694,10 +815,13 @@ const deleteSession = async (sessionId: string) => {
 
 // Session name editing functions
 const startEditSessionName = (sessionId: string, currentName: string) => {
-  console.log('[session-tracking][user-action] Starting session name edit', { sessionId, currentName });
+  console.log('[session-tracking][user-action] Starting session name edit', {
+    sessionId,
+    currentName,
+  });
   editingSessionId.value = sessionId;
   editingSessionName.value = currentName;
-  
+
   // Focus the input after Vue updates the DOM
   nextTick(() => {
     const input = document.querySelector('input[ref="editInput"]') as HTMLInputElement;
@@ -720,15 +844,15 @@ const saveSessionName = async (sessionId: string) => {
     return;
   }
 
-  console.log('[session-tracking][user-action] Saving session name', { 
-    sessionId, 
-    newName: editingSessionName.value.trim() 
+  console.log('[session-tracking][user-action] Saving session name', {
+    sessionId,
+    newName: editingSessionName.value.trim(),
   });
 
   try {
     // Update session in database
     const updatedSession = await sessionService.updateSession(sessionId, {
-      session_name: editingSessionName.value.trim()
+      session_name: editingSessionName.value.trim(),
     });
 
     // Update local session data with the response from database
@@ -737,18 +861,18 @@ const saveSessionName = async (sessionId: string) => {
       sessions.value[sessionIndex] = updatedSession;
     }
 
-    console.log('[session-tracking][persistence] Session name updated successfully', { 
-      sessionId, 
-      newName: editingSessionName.value.trim() 
+    console.log('[session-tracking][persistence] Session name updated successfully', {
+      sessionId,
+      newName: editingSessionName.value.trim(),
     });
 
     // Clear editing state
     editingSessionId.value = null;
     editingSessionName.value = '';
   } catch (err) {
-    console.error('[session-tracking][error] Failed to update session name', { 
-      error: err, 
-      sessionId 
+    console.error('[session-tracking][error] Failed to update session name', {
+      error: err,
+      sessionId,
     });
   }
 };
@@ -772,14 +896,14 @@ const formatDuration = (seconds: number): string => {
 
 // Export all sessions to JSON or CSV file
 const exportAllSessions = async (format: 'json' | 'csv' = 'json') => {
-  console.log('[session-tracking][export] Exporting all sessions', { 
+  console.log('[session-tracking][export] Exporting all sessions', {
     count: sessions.value.length,
-    format 
+    format,
   });
-  
+
   // Close dropdown
   showExportDropdown.value = false;
-  
+
   if (sessions.value.length === 0) {
     return;
   }
@@ -790,35 +914,49 @@ const exportAllSessions = async (format: 'json' | 'csv' = 'json') => {
     } else {
       await sessionExport.exportToCSV();
     }
-    
-    console.log('[session-tracking][export] Export completed successfully', { 
+
+    console.log('[session-tracking][export] Export completed successfully', {
       sessionCount: sessions.value.length,
-      format 
+      format,
     });
   } catch (err) {
     console.error('[session-tracking][error] Export failed', { error: err, format });
   }
 };
 
+// Toggle main export dropdown
+const toggleMainExportDropdown = () => {
+  // Close all session export dropdowns first
+  Object.keys(sessionExportDropdowns.value).forEach(id => {
+    sessionExportDropdowns.value[id] = false;
+  });
+
+  // Toggle the main export dropdown
+  showExportDropdown.value = !showExportDropdown.value;
+};
+
 // Toggle session export dropdown
 const toggleSessionExportDropdown = (sessionId: string) => {
-  // Close all other dropdowns first
+  // Close main export dropdown first
+  showExportDropdown.value = false;
+
+  // Close all other session dropdowns
   Object.keys(sessionExportDropdowns.value).forEach(id => {
     if (id !== sessionId) {
       sessionExportDropdowns.value[id] = false;
     }
   });
-  
+
   // Toggle the clicked dropdown
   sessionExportDropdowns.value[sessionId] = !sessionExportDropdowns.value[sessionId];
 };
 
 // Export a single session to JSON or CSV file
 const exportSingleSession = async (session: UserSession, format: 'json' | 'csv' = 'json') => {
-  console.log('[session-tracking][export] Exporting single session', { 
+  console.log('[session-tracking][export] Exporting single session', {
     sessionId: session.id,
     sessionName: session.session_name,
-    format
+    format,
   });
 
   // Close dropdown
@@ -830,9 +968,9 @@ const exportSingleSession = async (session: UserSession, format: 'json' | 'csv' 
       .replace(/[^a-zA-Z0-9\s-_]/g, '')
       .replace(/\s+/g, '-')
       .toLowerCase();
-    
+
     const fileName = `session-${safeFileName}-${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'json') {
       const exportData: SessionExportData = {
         version: '1.0.0',
@@ -849,7 +987,7 @@ const exportSingleSession = async (session: UserSession, format: 'json' | 'csv' 
       const jsonString = JSON.stringify(exportData, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `${fileName}.json`;
@@ -884,11 +1022,11 @@ const exportSingleSession = async (session: UserSession, format: 'json' | 'csv' 
       ].join(',');
 
       const csvString = [headers.join(','), csvRow].join('\n');
-      
+
       // Create and download the CSV file
       const blob = new Blob([csvString], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `${fileName}.csv`;
@@ -898,16 +1036,16 @@ const exportSingleSession = async (session: UserSession, format: 'json' | 'csv' 
       URL.revokeObjectURL(url);
     }
 
-    console.log('[session-tracking][export] Single session export completed', { 
+    console.log('[session-tracking][export] Single session export completed', {
       sessionId: session.id,
       fileName: `${fileName}.${format}`,
-      format
+      format,
     });
   } catch (err) {
-    console.error('[session-tracking][error] Single session export failed', { 
+    console.error('[session-tracking][error] Single session export failed', {
       error: err,
       sessionId: session.id,
-      format
+      format,
     });
   }
 };
@@ -938,7 +1076,7 @@ const handleDialogDragLeave = (event: DragEvent) => {
 const handleDialogDrop = (event: DragEvent) => {
   event.preventDefault();
   isDragOverDialog.value = false;
-  
+
   const files = event.dataTransfer?.files;
   if (files) {
     addFilesToSelection(Array.from(files));
@@ -949,58 +1087,60 @@ const handleDialogDrop = (event: DragEvent) => {
 const addFilesToSelection = (files: File[]) => {
   const validFiles = files.filter(file => {
     if (!isValidImportFile(file)) {
-      console.warn('[session-tracking][import] Invalid file type', { 
-        fileName: file.name, 
-        fileType: file.type 
+      console.warn('[session-tracking][import] Invalid file type', {
+        fileName: file.name,
+        fileType: file.type,
       });
       return false;
     }
-    
+
     // Check for duplicates
-    const isDuplicate = selectedFiles.value.some(existing => 
-      existing.name === file.name && existing.size === file.size
+    const isDuplicate = selectedFiles.value.some(
+      existing => existing.name === file.name && existing.size === file.size
     );
-    
+
     if (isDuplicate) {
-      console.warn('[session-tracking][import] Duplicate file skipped', { 
-        fileName: file.name 
+      console.warn('[session-tracking][import] Duplicate file skipped', {
+        fileName: file.name,
       });
       return false;
     }
-    
+
     return true;
   });
-  
+
   selectedFiles.value.push(...validFiles);
-  console.log('[session-tracking][import] Files added to selection', { 
-    added: validFiles.length, 
-    total: selectedFiles.value.length 
+  console.log('[session-tracking][import] Files added to selection', {
+    added: validFiles.length,
+    total: selectedFiles.value.length,
   });
 };
 
 const removeFile = (index: number) => {
   const removedFile = selectedFiles.value[index];
   selectedFiles.value.splice(index, 1);
-  console.log('[session-tracking][import] File removed from selection', { 
-    fileName: removedFile?.name, 
-    remaining: selectedFiles.value.length 
+  console.log('[session-tracking][import] File removed from selection', {
+    fileName: removedFile?.name,
+    remaining: selectedFiles.value.length,
   });
 };
 
 const clearSelectedFiles = () => {
-  console.log('[session-tracking][import] Clearing all selected files', { 
-    count: selectedFiles.value.length 
+  console.log('[session-tracking][import] Clearing all selected files', {
+    count: selectedFiles.value.length,
   });
   selectedFiles.value = [];
 };
 
 // Utility functions
 const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
 const getFileTypeLabel = (file: File): string => {
@@ -1014,23 +1154,25 @@ const getFileTypeLabel = (file: File): string => {
 
 // Import selected files
 const importSelectedFiles = async () => {
-  if (selectedFiles.value.length === 0) return;
-  
-  console.log('[session-tracking][import] Starting import of selected files', { 
-    fileCount: selectedFiles.value.length 
+  if (selectedFiles.value.length === 0) {
+    return;
+  }
+
+  console.log('[session-tracking][import] Starting import of selected files', {
+    fileCount: selectedFiles.value.length,
   });
-  
+
   importingFiles.value = true;
-  
+
   try {
     for (const file of selectedFiles.value) {
       await processImportFile(file);
     }
-    
+
     // Clear selection and close dialog after successful import
     selectedFiles.value = [];
     showImportDialog.value = false;
-    
+
     console.log('[session-tracking][import] All files imported successfully');
   } catch (err) {
     console.error('[session-tracking][error] Import process failed', { error: err });
@@ -1043,7 +1185,7 @@ const importSelectedFiles = async () => {
 const handleFileImport = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const files = target.files;
-  
+
   if (files && files.length > 0) {
     if (showImportDialog.value) {
       // Add files to selection in dialog mode
@@ -1054,7 +1196,7 @@ const handleFileImport = async (event: Event) => {
         await processImportFile(file);
       }
     }
-    
+
     // Clear the input so the same files can be selected again
     target.value = '';
   }
@@ -1064,16 +1206,16 @@ const handleFileImport = async (event: Event) => {
 const handleFileDrop = async (event: DragEvent) => {
   console.log('[session-tracking][import] File dropped for import');
   isDragOver.value = false;
-  
+
   const files = event.dataTransfer?.files;
   if (files && files.length > 0) {
     const file = files[0];
     if (isValidImportFile(file)) {
       await processImportFile(file);
     } else {
-      console.error('[session-tracking][error] Invalid file type for import', { 
-        fileName: file.name, 
-        fileType: file.type 
+      console.error('[session-tracking][error] Invalid file type for import', {
+        fileName: file.name,
+        fileType: file.type,
       });
     }
   }
@@ -1081,10 +1223,10 @@ const handleFileDrop = async (event: DragEvent) => {
 
 // Process the import file and check for duplicates
 const processImportFile = async (file: File) => {
-  console.log('[session-tracking][import] Processing import file', { 
-    fileName: file.name, 
+  console.log('[session-tracking][import] Processing import file', {
+    fileName: file.name,
     fileSize: file.size,
-    fileType: file.type
+    fileType: file.type,
   });
 
   try {
@@ -1095,24 +1237,22 @@ const processImportFile = async (file: File) => {
     if (file.name.toLowerCase().endsWith('.json') || file.type === 'application/json') {
       // Parse JSON file
       const importData: SessionExportData = JSON.parse(fileContent);
-      
+
       // Validate import data structure
       if (!importData.sessions || !Array.isArray(importData.sessions)) {
         throw new Error('Invalid JSON file format: missing sessions array');
       }
-      
+
       sessionsToImport = importData.sessions;
-      console.log('[session-tracking][import] JSON data validated', { 
-        sessionCount: sessionsToImport.length 
+      console.log('[session-tracking][import] JSON data validated', {
+        sessionCount: sessionsToImport.length,
       });
-      
     } else if (file.name.toLowerCase().endsWith('.csv') || file.type.includes('csv')) {
       // Parse CSV file
       sessionsToImport = parseCSVContent(fileContent);
-      console.log('[session-tracking][import] CSV data parsed', { 
-        sessionCount: sessionsToImport.length 
+      console.log('[session-tracking][import] CSV data parsed', {
+        sessionCount: sessionsToImport.length,
       });
-      
     } else {
       throw new Error('Unsupported file format. Please use JSON or CSV files.');
     }
@@ -1123,9 +1263,7 @@ const processImportFile = async (file: File) => {
     }
 
     // Check for existing sessions by name and start time to prevent duplicates
-    const existingSessions = new Set(
-      sessions.value.map(s => `${s.session_name}|${s.started_at}`)
-    );
+    const existingSessions = new Set(sessions.value.map(s => `${s.session_name}|${s.started_at}`));
     const newSessions = sessionsToImport.filter((session: UserSession) => {
       const sessionKey = `${session.session_name}|${session.started_at}`;
       return !existingSessions.has(sessionKey);
@@ -1133,10 +1271,10 @@ const processImportFile = async (file: File) => {
     const duplicateCount = sessionsToImport.length - newSessions.length;
 
     if (duplicateCount > 0) {
-      console.log('[session-tracking][import] Found duplicate sessions', { 
+      console.log('[session-tracking][import] Found duplicate sessions', {
         duplicates: duplicateCount,
         newSessions: newSessions.length,
-        total: sessionsToImport.length
+        total: sessionsToImport.length,
       });
     }
 
@@ -1159,9 +1297,9 @@ const processImportFile = async (file: File) => {
         });
         importedCount++;
       } catch (err) {
-        console.error('[session-tracking][error] Failed to import session', { 
-          sessionName: session.session_name, 
-          error: err 
+        console.error('[session-tracking][error] Failed to import session', {
+          sessionName: session.session_name,
+          error: err,
         });
       }
     }
@@ -1169,12 +1307,11 @@ const processImportFile = async (file: File) => {
     // Refresh the sessions list
     await refreshSessions();
 
-    console.log('[session-tracking][import] Import completed', { 
-      imported: importedCount, 
+    console.log('[session-tracking][import] Import completed', {
+      imported: importedCount,
       duplicates: duplicateCount,
-      total: sessionsToImport.length
+      total: sessionsToImport.length,
     });
-
   } catch (err) {
     console.error('[session-tracking][error] Import processing failed', { error: err });
   }
@@ -1184,9 +1321,11 @@ const processImportFile = async (file: File) => {
 const isValidImportFile = (file: File): boolean => {
   const validTypes = ['application/json', 'text/csv', 'application/csv'];
   const validExtensions = ['.json', '.csv'];
-  
-  return validTypes.includes(file.type) || 
-         validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+
+  return (
+    validTypes.includes(file.type) ||
+    validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+  );
 };
 
 // Helper function to parse CSV line with proper quote handling
@@ -1194,10 +1333,10 @@ const parseCSVLine = (line: string): string[] => {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
+
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
@@ -1207,10 +1346,10 @@ const parseCSVLine = (line: string): string[] => {
       current += char;
     }
   }
-  
+
   // Add the last field
   result.push(current.trim());
-  
+
   // Remove quotes from fields
   return result.map(field => field.replace(/^"(.*)"$/, '$1'));
 };
@@ -1218,27 +1357,27 @@ const parseCSVLine = (line: string): string[] => {
 // Helper function to parse CSV content into UserSession objects
 const parseCSVContent = (csvContent: string): UserSession[] => {
   const lines = csvContent.trim().split('\n');
-  
+
   if (lines.length < 2) {
     throw new Error('CSV file must contain at least a header row and one data row');
   }
 
   // Parse header row with proper quote handling
   const headers = parseCSVLine(lines[0]);
-  
+
   console.log('[session-tracking][import] CSV headers parsed', { headers });
-  
+
   // Expected headers (flexible order)
   const requiredHeaders = ['ID', 'Session Name', 'Status', 'Started At'];
   const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-  
+
   if (missingHeaders.length > 0) {
     throw new Error(`CSV file missing required headers: ${missingHeaders.join(', ')}`);
   }
 
   // Find column indices
   const getColumnIndex = (headerName: string) => headers.findIndex(h => h === headerName);
-  
+
   const idIndex = getColumnIndex('ID');
   const nameIndex = getColumnIndex('Session Name');
   const statusIndex = getColumnIndex('Status');
@@ -1250,26 +1389,35 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
   const updatedIndex = getColumnIndex('Updated At');
 
   console.log('[session-tracking][import] CSV column indices', {
-    idIndex, nameIndex, statusIndex, startedIndex, endedIndex, 
-    durationIndex, handsIndex, createdIndex, updatedIndex
+    idIndex,
+    nameIndex,
+    statusIndex,
+    startedIndex,
+    endedIndex,
+    durationIndex,
+    handsIndex,
+    createdIndex,
+    updatedIndex,
   });
 
   // Parse data rows
   const sessions: UserSession[] = [];
-  
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (!line) continue; // Skip empty lines
-    
+    if (!line) {
+      continue;
+    } // Skip empty lines
+
     const values = parseCSVLine(line);
-    
-    console.log('[session-tracking][import] Parsing CSV row', { 
-      rowNumber: i + 1, 
+
+    console.log('[session-tracking][import] Parsing CSV row', {
+      rowNumber: i + 1,
       values,
       valuesCount: values.length,
-      headersCount: headers.length
+      headersCount: headers.length,
     });
-    
+
     try {
       const session: UserSession = {
         id: values[idIndex] || '',
@@ -1282,40 +1430,40 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
         created_at: values[createdIndex] || new Date().toISOString(),
         updated_at: values[updatedIndex] || new Date().toISOString(),
       };
-      
+
       console.log('[session-tracking][import] Parsed session data', {
         sessionName: session.session_name,
         totalHands: session.total_hands,
         status: session.status,
-        startedAt: session.started_at
+        startedAt: session.started_at,
       });
-      
+
       // Validate required fields
       if (!session.id || !session.session_name || !session.started_at) {
-        console.warn('[session-tracking][import] Skipping invalid CSV row', { 
-          rowNumber: i + 1, 
+        console.warn('[session-tracking][import] Skipping invalid CSV row', {
+          rowNumber: i + 1,
           session: {
             id: session.id,
             session_name: session.session_name,
-            started_at: session.started_at
-          }
+            started_at: session.started_at,
+          },
         });
         continue;
       }
-      
+
       sessions.push(session);
     } catch (err) {
-      console.warn('[session-tracking][import] Failed to parse CSV row', { 
-        rowNumber: i + 1, 
-        error: err, 
-        values 
+      console.warn('[session-tracking][import] Failed to parse CSV row', {
+        rowNumber: i + 1,
+        error: err,
+        values,
       });
     }
   }
 
   console.log('[session-tracking][import] CSV parsing completed', {
     totalRows: lines.length - 1,
-    parsedSessions: sessions.length
+    parsedSessions: sessions.length,
   });
 
   return sessions;
@@ -1325,8 +1473,8 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
-    reader.onload = (event) => {
+
+    reader.onload = event => {
       const result = event.target?.result;
       if (typeof result === 'string') {
         resolve(result);
@@ -1334,11 +1482,11 @@ const readFileAsText = (file: File): Promise<string> => {
         reject(new Error('Failed to read file as text'));
       }
     };
-    
+
     reader.onerror = () => {
       reject(new Error('Failed to read file'));
     };
-    
+
     reader.readAsText(file);
   });
 };
@@ -1364,14 +1512,14 @@ const handleGlobalDragLeave = (event: DragEvent) => {
 
 // Show delete all confirmation dialog
 const confirmDeleteAll = () => {
-  console.log('[session-tracking][user-action] Confirming delete all sessions', { 
-    sessionCount: sessions.value.length 
+  console.log('[session-tracking][user-action] Confirming delete all sessions', {
+    sessionCount: sessions.value.length,
   });
-  
+
   if (sessions.value.length === 0) {
     return;
   }
-  
+
   showDeleteAllDialog.value = true;
 };
 
@@ -1379,15 +1527,15 @@ const confirmDeleteAll = () => {
 const exportBeforeDelete = async () => {
   console.log('[session-tracking][delete-all] Starting export before delete process');
   deletingAll.value = true;
-  
+
   try {
     // Export all sessions
     await sessionExport.exportToJSON();
-    
+
     // Close initial dialog and show confirmation dialog
     showDeleteAllDialog.value = false;
     showExportedConfirmDialog.value = true;
-    
+
     console.log('[session-tracking][export] Export completed, showing confirmation dialog');
   } catch (err) {
     console.error('[session-tracking][error] Export before delete failed', { error: err });
@@ -1412,49 +1560,48 @@ const cancelDeleteAfterExport = () => {
 
 // Delete all sessions without export
 const deleteAllSessions = async () => {
-  console.log('[session-tracking][delete-all] Starting delete all sessions process', { 
-    sessionCount: sessions.value.length 
+  console.log('[session-tracking][delete-all] Starting delete all sessions process', {
+    sessionCount: sessions.value.length,
   });
-  
+
   deletingAll.value = true;
-  
+
   try {
     let deletedCount = 0;
     let failedCount = 0;
-    
+
     // Delete each session individually
     for (const session of sessions.value) {
       try {
         await sessionService.deleteSession(session.id);
         deletedCount++;
-        console.log('[session-tracking][delete-all] Session deleted', { 
+        console.log('[session-tracking][delete-all] Session deleted', {
           sessionId: session.id,
-          progress: `${deletedCount}/${sessions.value.length}`
+          progress: `${deletedCount}/${sessions.value.length}`,
         });
       } catch (err) {
-        console.error('[session-tracking][error] Failed to delete session', { 
-          sessionId: session.id, 
-          error: err 
+        console.error('[session-tracking][error] Failed to delete session', {
+          sessionId: session.id,
+          error: err,
         });
         failedCount++;
       }
     }
-    
+
     // Refresh the sessions list
     await refreshSessions();
-    
+
     // Clear selection since all sessions are deleted
     selectedSessionId.value = null;
-    
+
     // Close dialog
     showDeleteAllDialog.value = false;
-    
-    console.log('[session-tracking][delete-all] Delete all completed', { 
-      deleted: deletedCount, 
+
+    console.log('[session-tracking][delete-all] Delete all completed', {
+      deleted: deletedCount,
       failed: failedCount,
-      total: sessions.value.length
+      total: sessions.value.length,
     });
-    
   } catch (err) {
     console.error('[session-tracking][error] Delete all process failed', { error: err });
   } finally {
@@ -1472,7 +1619,7 @@ const handleGlobalClick = () => {
 
 onMounted(() => {
   refreshSessions();
-  
+
   // Add global click listener for dropdown management
   document.addEventListener('click', handleGlobalClick);
 });

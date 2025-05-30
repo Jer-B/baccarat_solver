@@ -104,41 +104,9 @@ interface BaccaratState {
     selectedTab: string;
     showAdvancedFeatures: boolean;
     isCalculating: boolean;
-    globalToggleMode: boolean; // When true, all toggles are active; when false, all sections are hidden by default
     sessionActive: boolean; // Track if a gaming session is active
     sessionStartTime: number | null; // Timestamp when session started
     currentSessionId: string | null; // Current session ID from Supabase
-    visibility: {
-      shoeComposition: {
-        cutCardInfo: boolean;
-      };
-      payoutSettings: {
-        payoutExamples: boolean;
-        presetInfo: boolean;
-      };
-      pairAnalysis: {
-        legendInfo: boolean;
-      };
-      bettingInterface: {
-        payoutInfo: boolean;
-      };
-      burnAnalysis: {
-        professionalNotes: boolean;
-      };
-      professionalRecommendations: {
-        professionalNotes: boolean;
-      };
-      professionalBurnAnalysis: {
-        professionalNotes: boolean;
-      };
-      burnCardEstimator: {
-        professionalTips: boolean;
-        burnIntelligence: boolean;
-      };
-      dealerTellAnalysis: {
-        professionalTips: boolean;
-      };
-    };
   };
   lastPenetrationCheck: number;
 }
@@ -266,44 +234,15 @@ export const useBaccaratStore = defineStore('baccarat', {
       currentHandNumber: 0,
     },
     ui: {
-      selectedTab: 'game',
+      selectedTab:
+        typeof window !== 'undefined'
+          ? localStorage.getItem('baccarat-selectedTab') || 'game'
+          : 'game',
       showAdvancedFeatures: false,
       isCalculating: false,
-      globalToggleMode: true, // Default to showing all sections
       sessionActive: false, // Session starts inactive
       sessionStartTime: null, // No session started yet
       currentSessionId: null, // Current session ID from Supabase
-      visibility: {
-        shoeComposition: {
-          cutCardInfo: true,
-        },
-        payoutSettings: {
-          payoutExamples: true,
-          presetInfo: true,
-        },
-        pairAnalysis: {
-          legendInfo: true,
-        },
-        bettingInterface: {
-          payoutInfo: true,
-        },
-        burnAnalysis: {
-          professionalNotes: false,
-        },
-        professionalRecommendations: {
-          professionalNotes: true,
-        },
-        professionalBurnAnalysis: {
-          professionalNotes: true,
-        },
-        burnCardEstimator: {
-          professionalTips: true,
-          burnIntelligence: true,
-        },
-        dealerTellAnalysis: {
-          professionalTips: true,
-        },
-      },
     },
     lastPenetrationCheck: 0,
   }),
@@ -489,46 +428,6 @@ export const useBaccaratStore = defineStore('baccarat', {
 
     handHistory: state => state.history.hands,
 
-    // Global visibility getter that respects globalToggleMode
-    isVisible: state => (section: string, subsection: string) => {
-      if (!state.ui.globalToggleMode) {
-        return false; // If global toggle is off, hide everything
-      }
-
-      // Access nested visibility settings
-      const sectionVisibility = (state.ui.visibility as Record<string, Record<string, boolean>>)[
-        section
-      ];
-      if (!sectionVisibility) {
-        return false;
-      }
-
-      return sectionVisibility[subsection] ?? false;
-    },
-
-    // Get the button text for toggle buttons that respects global state
-    getToggleButtonText: state => (section: string, subsection: string) => {
-      if (!state.ui.globalToggleMode) {
-        return '👁️‍🗨️ Show'; // When global is hidden, all buttons show "Show"
-      }
-
-      // When global is visible, check individual section state
-      const sectionVisibility = (state.ui.visibility as Record<string, Record<string, boolean>>)[
-        section
-      ];
-      if (!sectionVisibility) {
-        return '👁️‍🗨️ Show';
-      }
-
-      const isVisible = sectionVisibility[subsection] ?? false;
-      return isVisible ? '👁️ Hide' : '👁️‍🗨️ Show';
-    },
-
-    // Check if a toggle button should be enabled
-    isToggleEnabled: state => () => {
-      return state.ui.globalToggleMode; // Only enable individual toggles when global is on
-    },
-
     // Detailed pair analysis for each rank
     pairAnalysis: state => {
       const remainingCards = state.shoe.remainingCards;
@@ -700,17 +599,28 @@ export const useBaccaratStore = defineStore('baccarat', {
     burnUnknownCards(count: number): void {
       // Input validation
       if (count <= 0) {
-        console.warn('Cannot burn zero or negative cards');
+        console.warn('[burn-analysis][validation] Cannot burn zero or negative cards');
         return;
       }
 
       if (count > this.totalCardsRemaining) {
-        console.error(`Cannot burn ${count} cards - only ${this.totalCardsRemaining} remaining`);
+        console.error(
+          `[burn-analysis][error] Cannot burn ${count} cards - only ${this.totalCardsRemaining} remaining`
+        );
         return;
       }
 
+      console.log(`[burn-analysis][initialization] Starting burn of ${count} unknown cards`, {
+        cardsRemaining: this.totalCardsRemaining,
+        totalBurned: this.burnedCardAnalysis.totalBurned,
+      });
+
       // Professional approach: Track that cards were burned without revealing specific cards
       try {
+        // Calculate current shoe composition for proportional removal
+        const totalRemaining = this.totalCardsRemaining;
+        const cardKeys = Array.from(this.shoe.remainingCards.keys());
+
         for (let i = 0; i < count; i++) {
           // Create unknown burn record without revealing specific card
           const unknownBurn: Card = {
@@ -726,7 +636,28 @@ export const useBaccaratStore = defineStore('baccarat', {
           this.shoe.burnedCards.push(unknownBurn);
           this.burnedCardAnalysis.totalBurned++;
 
-          // Decrement total cards without specifying which cards
+          // Remove one card proportionally from remaining cards
+          // This maintains the shoe composition while reducing total count
+          if (cardKeys.length > 0) {
+            // Find a card type that still has cards remaining
+            let removedCard = false;
+            for (const key of cardKeys) {
+              const currentCount = this.shoe.remainingCards.get(key) || 0;
+              if (currentCount > 0) {
+                this.shoe.remainingCards.set(key, currentCount - 1);
+                removedCard = true;
+                break;
+              }
+            }
+
+            // If no cards found (shouldn't happen with validation), log error
+            if (!removedCard) {
+              console.error('[burn-analysis][error] No cards available to remove during burn');
+              break;
+            }
+          }
+
+          // Increment cards dealt counter
           this.shoe.cardsDealt++;
           this.shoe.penetration = this.shoe.cardsDealt / this.shoe.totalCards;
         }
@@ -734,11 +665,14 @@ export const useBaccaratStore = defineStore('baccarat', {
         // Trigger professional analysis to estimate impact without revealing cards
         this.triggerProfessionalBurnAnalysis();
 
-        console.log(
-          `Successfully burned ${count} unknown cards. Total burned: ${this.burnedCardAnalysis.totalBurned}`
-        );
+        console.log('[burn-analysis][completion] Successfully burned unknown cards', {
+          burnedCount: count,
+          totalBurned: this.burnedCardAnalysis.totalBurned,
+          cardsRemaining: this.totalCardsRemaining,
+          penetration: `${(this.shoe.penetration * 100).toFixed(1)}%`,
+        });
       } catch (error) {
-        console.error('Error burning unknown cards:', error);
+        console.error('[burn-analysis][error] Error burning unknown cards:', error);
       }
     },
 
@@ -1363,39 +1297,17 @@ export const useBaccaratStore = defineStore('baccarat', {
       }
     },
 
-    toggleGlobalVisibility() {
-      this.ui.globalToggleMode = !this.ui.globalToggleMode;
-    },
+    setSelectedTab(tabId: string) {
+      console.log('[ui-navigation][tab-change] Setting selected tab', {
+        previousTab: this.ui.selectedTab,
+        newTab: tabId,
+      });
 
-    setGlobalVisibility(visible: boolean) {
-      this.ui.globalToggleMode = visible;
-    },
+      this.ui.selectedTab = tabId;
 
-    // Toggle individual section visibility (only works when global is enabled)
-    toggleSectionVisibility(section: string, subsection: string) {
-      if (!this.ui.globalToggleMode) {
-        return; // Don't allow individual toggles when global is off
-      }
-
-      const sectionVisibility = (this.ui.visibility as Record<string, Record<string, boolean>>)[
-        section
-      ];
-      if (sectionVisibility) {
-        sectionVisibility[subsection] = !sectionVisibility[subsection];
-      }
-    },
-
-    // Set individual section visibility (only works when global is enabled)
-    setSectionVisibility(section: string, subsection: string, visible: boolean) {
-      if (!this.ui.globalToggleMode) {
-        return; // Don't allow individual toggles when global is off
-      }
-
-      const sectionVisibility = (this.ui.visibility as Record<string, Record<string, boolean>>)[
-        section
-      ];
-      if (sectionVisibility) {
-        sectionVisibility[subsection] = visible;
+      // Persist to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('baccarat-selectedTab', tabId);
       }
     },
 

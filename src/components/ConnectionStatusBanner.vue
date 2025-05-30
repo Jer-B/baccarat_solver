@@ -7,15 +7,15 @@
     <div class="container mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <div class="flex items-center space-x-2">
-          <div
-            class="w-2 h-2 rounded-full"
-            :class="statusIndicatorClass"
-          ></div>
+          <div class="w-2 h-2 rounded-full" :class="statusIndicatorClass"></div>
           <span>{{ connectionStatus.getConnectionMessage() }}</span>
         </div>
-        
+
         <!-- Additional info for disconnected state -->
-        <div v-if="connectionStatus.getConnectionStatus() === 'disconnected'" class="text-xs opacity-75">
+        <div
+          v-if="connectionStatus.getConnectionStatus() === 'disconnected'"
+          class="text-xs opacity-75"
+        >
           • Sessions will work locally
         </div>
       </div>
@@ -31,34 +31,9 @@
           {{ connectionStatus.isChecking.value ? 'Checking...' : 'Retry' }}
         </button>
 
-        <!-- Export/Import buttons -->
+        <!-- Dismiss button - only for persistent states (disconnected), not temporary states (checking) -->
         <button
-          @click="exportSessions"
-          class="px-2 py-1 text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-colors"
-          title="Export session data to JSON file"
-        >
-          📥 Export
-        </button>
-
-        <button
-          @click="triggerImport"
-          class="px-2 py-1 text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-colors"
-          title="Import session data from JSON file"
-        >
-          📤 Import
-        </button>
-
-        <!-- Hidden file input for import -->
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".json"
-          @change="handleFileImport"
-          class="hidden"
-        />
-
-        <!-- Dismiss button -->
-        <button
+          v-if="connectionStatus.getConnectionStatus() === 'disconnected'"
           @click="dismissBanner"
           class="px-2 py-1 text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-colors"
         >
@@ -70,29 +45,47 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useSupabaseConnection } from '../composables/useSupabaseConnection';
-import { useSessionExport } from '../composables/useSessionExport';
 import { useNotifications } from '../composables/useNotifications';
 
 const connectionStatus = useSupabaseConnection();
-const sessionExport = useSessionExport();
-const { success, error: errorNotification, info } = useNotifications();
+const { success } = useNotifications();
 
 const isDismissed = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
+const showConnectedBriefly = ref(false);
+
+// Watch for successful connection to show brief success state
+watch(
+  () => connectionStatus.getConnectionStatus(),
+  (newStatus, oldStatus) => {
+    if (oldStatus === 'checking' && newStatus === 'connected') {
+      showConnectedBriefly.value = true;
+      // Auto-hide the connected banner after 3.5 seconds
+      setTimeout(() => {
+        showConnectedBriefly.value = false;
+      }, 3500);
+    }
+  }
+);
 
 const shouldShowBanner = computed(() => {
-  if (isDismissed.value) return false;
-  
+  if (isDismissed.value) {
+    return false;
+  }
+
   const status = connectionStatus.getConnectionStatus();
-  // Show banner for disconnected, checking, or if explicitly requested
-  return status === 'disconnected' || status === 'checking';
+  // Show banner for disconnected, checking, or briefly for connected
+  return (
+    status === 'disconnected' ||
+    status === 'checking' ||
+    (status === 'connected' && showConnectedBriefly.value)
+  );
 });
 
 const bannerClasses = computed(() => {
   const status = connectionStatus.getConnectionStatus();
-  
+
   switch (status) {
     case 'checking':
       return 'bg-blue-500 text-white';
@@ -107,7 +100,7 @@ const bannerClasses = computed(() => {
 
 const statusIndicatorClass = computed(() => {
   const status = connectionStatus.getConnectionStatus();
-  
+
   switch (status) {
     case 'checking':
       return 'bg-blue-200 animate-pulse';
@@ -122,50 +115,14 @@ const statusIndicatorClass = computed(() => {
 
 const retryConnection = async () => {
   await connectionStatus.checkConnection();
-  
+
   if (connectionStatus.isConnected.value) {
     success('Database connection restored');
     isDismissed.value = true;
   }
 };
 
-const exportSessions = async () => {
-  try {
-    info('Exporting session data...');
-    await sessionExport.exportToJSON();
-    success('Session data exported successfully');
-  } catch (error) {
-    console.error('[export] Failed to export sessions', { error });
-    errorNotification('Failed to export session data');
-  }
-};
-
-const triggerImport = () => {
-  fileInput.value?.click();
-};
-
-const handleFileImport = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  
-  if (!file) return;
-  
-  try {
-    info('Importing session data...');
-    await sessionExport.importFromJSON(file);
-    success('Session data imported successfully');
-    
-    // Reset file input
-    if (fileInput.value) {
-      fileInput.value.value = '';
-    }
-  } catch (error) {
-    console.error('[import] Failed to import sessions', { error });
-    errorNotification('Failed to import session data');
-  }
-};
-
 const dismissBanner = () => {
   isDismissed.value = true;
 };
-</script> 
+</script>

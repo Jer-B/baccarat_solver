@@ -31,14 +31,24 @@ alwaysApply: true
 **Example**: Replace individual validation functions with a createRangeValidator factory that accepts min, max, and integer constraints
 
 ### 2. Component Pattern Abstraction
-**Rule**: Extract repeated form field patterns into reusable base components.
+**Rule**: Extract repeated form field patterns into reusable headless primitives and styled wrappers.
 
 **Pattern**: Multiple forms with similar input field structures (label, input, error display)
-**Solution**: Create BaseFormField component with props for label, type, validation, and accessibility
-**Benefits**: Consistent styling, built-in accessibility, reduced code duplication
-**Implementation**: Use v-model for two-way binding, proper ARIA attributes, and error handling
+**Solution**: Create headless FormField primitive with pure logic, then styled wrapper that combines primitive with design tokens
+**Benefits**: Maximum reusability across design systems, consistent behavior, easier testing, built-in accessibility
+**Implementation**: Separate logic (validation, state, events) in headless primitive, apply styling through design tokens in wrapper component
 
-### 3. Composable Logic Abstraction
+### 3. Headless Component Abstraction
+**Rule**: Extract common component logic into headless primitives to eliminate behavior duplication across styled variants.
+
+**Pattern**: Multiple components with identical state management, event handling, and accessibility logic but different visual styling
+**Solution**: Create headless primitive components that provide pure logic and behavior through slot props
+**Benefits**: Maximum reusability across different design systems, consistent behavior, easier testing of logic separately from presentation
+**Implementation**: Separate logic into design-system/primitives/ with slot-based API, create styled wrappers that consume headless primitives
+**Design Token Integration**: Use design tokens to bridge headless logic with visual styling for consistent theming
+**Migration Strategy**: Convert existing components to headless architecture gradually while maintaining API compatibility
+
+### 4. Composable Logic Abstraction
 **Rule**: Extract common async operation patterns into generic composables.
 
 **Pattern**: Multiple composables with identical loading, error, and data state management
@@ -85,12 +95,12 @@ alwaysApply: true
 ## Style System DRY
 
 ### 1. Tailwind Configuration Abstraction
-**Rule**: Centralize all design tokens (colors, spacing, typography) in Tailwind configuration and create reusable component classes.
+**Rule**: Centralize all design tokens in TypeScript with automatic CSS custom property generation and create reusable component classes.
 
 **Pattern**: Repeated style patterns and magic values scattered across components
-**Solution**: Define semantic color palettes, spacing scales, and typography systems in Tailwind config
-**Benefits**: Consistent design system, easier theme changes, reusable component classes
-**Implementation**: Use Tailwind plugins to create component classes like .btn-analysis, .card-analysis
+**Solution**: Define design tokens in TypeScript files with automatic CSS custom property generation, create component classes using design tokens
+**Benefits**: Type-safe design system, automatic IDE support, easier theme changes, reusable component classes
+**Implementation**: Use TypeScript design tokens with CSS custom property generation, create component classes that reference tokens
 
 ### 2. CSS Custom Properties for Dynamic Values
 **Rule**: Use CSS custom properties with Vue's v-bind for dynamic styling instead of inline styles.
@@ -140,7 +150,7 @@ alwaysApply: true
 
 ### 2. DRY Checklist
 - [ ] Extract common validation logic into reusable validators
-- [ ] Create base components for similar UI patterns
+- [ ] Create headless primitives and styled wrappers for similar UI patterns
 - [ ] Centralize configuration in dedicated config files
 - [ ] Use composables for shared reactive logic
 - [ ] Implement generic utilities for common operations

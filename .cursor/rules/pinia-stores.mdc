@@ -84,16 +84,6 @@ alwaysApply: true
 **Auto-save Logic**: Implement conditional auto-save based on user preferences
 **Data Recovery**: Handle localStorage data corruption and provide fallback defaults
 
-## Testing Store Logic
-
-### 1. Store Testing Patterns
-**Rule**: Test Pinia stores with proper setup, isolation, and comprehensive coverage.
-
-**Test Setup**: Use setActivePinia and createPinia for clean test environment
-**State Testing**: Verify initial state, state mutations, and getter calculations
-**Action Testing**: Test async actions, error scenarios, and side effects
-**Integration Testing**: Test store interactions and cross-store communication
-
 ## Performance Optimization
 
 ### 1. Computed Memoization

@@ -117,12 +117,8 @@ alwaysApply: true
 
 ## Rule Evolution Monitoring
 
-### 1. Rule Usage Analytics
-**Rule**: Implement automated analysis to track rule compliance and effectiveness across the codebase.
+**Rule**: For comprehensive rule evolution and monitoring strategies, refer to `rule-evolution.mdc` as the single source of truth.
 
-**Compliance Tracking**: Scan source files to measure structured logging adoption rate and identify violations
-**Pattern Detection**: Use regex patterns to detect console statements and validate against structured format requirements
-**Metrics Calculation**: Calculate compliance percentages and track trends over time
-**Threshold Monitoring**: Set compliance thresholds (90%) and suggest rule improvements when not met
-**Automated Reporting**: Generate regular compliance reports to identify areas needing attention
-**Rule Evolution Triggers**: Use compliance data to propose stricter rules or additional enforcement mechanisms
+**Rule Analytics**: All automated analysis, compliance tracking, and rule effectiveness monitoring is defined in rule-evolution.mdc
+**Pattern Detection**: Comprehensive pattern detection and rule proposal systems are covered in rule-evolution.mdc
+**Integration Strategy**: ESLint integration with rule evolution monitoring is part of the broader rule evolution framework

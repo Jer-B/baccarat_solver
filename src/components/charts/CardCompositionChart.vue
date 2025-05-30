@@ -100,23 +100,16 @@
     <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-blue-800">🃏 Cut Card System</h4>
-        <button
-          @click="store.toggleSectionVisibility('shoeComposition', 'cutCardInfo')"
-          :disabled="!store.isToggleEnabled()"
-          class="text-xs px-2 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="
-            store.ui.globalToggleMode
-              ? store.isVisible('shoeComposition', 'cutCardInfo')
-                ? 'Hide details'
-                : 'Show details'
-              : 'Enable info panels to toggle individual sections'
-          "
-        >
-          {{ store.getToggleButtonText('shoeComposition', 'cutCardInfo') }}
-        </button>
+        <InfoToggleButton
+          type="section"
+          section="shoeComposition"
+          subsection="cutCardInfo"
+          variant="primary"
+          size="xs"
+        />
       </div>
       <div
-        v-if="store.isVisible('shoeComposition', 'cutCardInfo')"
+        v-if="visibilityStore.isVisible('shoeComposition', 'cutCardInfo')"
         class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-blue-700"
       >
         <div>
@@ -297,13 +290,16 @@ import {
   Legend,
 } from 'chart.js';
 import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useVisibilityStore } from '@/stores/visibilityStore';
 import type { Card, Rank, Suit, CardValue } from '@/types/cards';
 import PlayingCard from '@/components/cards/PlayingCard.vue';
+import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const store = useBaccaratStore();
+const visibilityStore = useVisibilityStore();
 
 // Inject the current round bet to check if bet is placed
 const currentRoundBet = inject('currentRoundBet') as { value: string } | undefined;

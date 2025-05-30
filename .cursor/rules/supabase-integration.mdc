@@ -113,12 +113,11 @@ alwaysApply: true
 **Extensibility**: Structure types to support easy addition of new tables and fields while maintaining backward compatibility
 **Supabase Integration**: Ensure types match Supabase generated types for seamless integration with database operations
 
-### 2. Validation Schemas
-**Rule**: Create comprehensive Zod validation schemas for all database operations with proper business rule enforcement.
+### 2. Validation Integration
+**Rule**: For comprehensive validation schemas and patterns, refer to `validation.mdc` as the single source of truth.
 
-**Session Validation**: Define CreateSessionSchema with string length limits (1-100 chars), positive bankroll limits (max 1M), and enum validation for risk levels and analysis methods
-**Hand Data Validation**: Create HandDataSchema with positive hand numbers, card array validation, result enums, and optional betting fields with appropriate ranges
-**Business Rules**: Enforce domain-specific constraints like edge estimates (-1 to 1), confidence levels (0 to 1), and non-negative bet amounts
-**Type Inference**: Use Zod's infer utility to automatically generate TypeScript types from validation schemas for consistency
-**Error Handling**: Provide clear validation error messages that can be displayed to users for form validation feedback
-**Extensibility**: Structure schemas to allow easy addition of new validation rules and fields as requirements evolve
+**Database Validation**: Use Zod schemas from validation.mdc for all Supabase operations including session creation, hand data, and user settings
+**API Response Validation**: Apply validation.mdc patterns to validate all Supabase responses and ensure data integrity
+**Business Rules**: Implement domain-specific constraints defined in validation.mdc for gambling-related data validation
+**Error Handling**: Use validation.mdc error handling patterns for consistent validation error management across Supabase operations
+**Type Integration**: Leverage validation.mdc type inference patterns to automatically generate TypeScript types from Zod schemas

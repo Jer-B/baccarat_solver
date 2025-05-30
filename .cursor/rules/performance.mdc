@@ -28,7 +28,7 @@ alwaysApply: true
 ## Vue.js Performance Optimization
 
 ### 1. Component Optimization
-**Rule**: Optimize Vue components using appropriate reactivity patterns and lazy loading techniques.
+**Rule**: For comprehensive component patterns and architecture, refer to `vue-components.mdc`. This section focuses on performance-specific optimizations.
 
 **Shallow Reactivity**: Use shallowRef for large objects that don't need deep reactivity tracking
 **Non-Reactive Objects**: Use markRaw for static configuration objects that should never be reactive

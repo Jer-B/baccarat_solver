@@ -5,165 +5,133 @@ alwaysApply: true
 ---
 # Project Path Standards
 
-## Project Location
+## Project Location Requirements
 
-### 1. Absolute Path
+### 1. Absolute Path Standards
 **Full Path**: `/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant`
 
-**Rule**: This is the absolute path to the project root directory. All file operations must be relative to this location.
+**Rule**: All file operations must be relative to this absolute project root directory. Never operate outside this path.
 
-### 2. Relative Path Reference
+### 2. Relative Path Standards
 **Relative Path**: `baccarat/improved_baccarat_assistant`
 
-**Rule**: When referencing the project in documentation or relative contexts, use this path format.
+**Rule**: When referencing the project in documentation or relative contexts, always use this complete path format including the baccarat prefix.
 
-### 3. Working Directory
+### 3. Working Directory Requirements
 **Current Working Directory**: `/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant`
 
-**Rule**: All terminal commands and file operations should be executed from this directory.
+**Rule**: All terminal commands and file operations must be executed from this exact directory. Verify location before any operations.
 
-## File Creation Rules
+## File Creation Standards
 
-### 1. File Path Validation
-**Rule**: Before creating any file, verify the path is within the correct project directory.
+### 1. Path Validation Requirements
+**Rule**: Before creating any file, validate the path is within the correct project directory structure.
 
-**Valid Paths**:
-- `baccarat/improved_baccarat_assistant/src/...`
-- `baccarat/improved_baccarat_assistant/.cursor/rules/...`
-- `baccarat/improved_baccarat_assistant/public/...`
-- `baccarat/improved_baccarat_assistant/...` (project root files)
+**Valid Path Patterns**: All paths must start with `baccarat/improved_baccarat_assistant/` followed by appropriate subdirectory
+**Source Code Paths**: Use `src/` subdirectory with proper category organization
+**Rule Files**: Use `.cursor/rules/` subdirectory for rule documentation
+**Public Assets**: Use `public/` subdirectory for static assets
+**Configuration**: Place config files in project root with proper naming
 
-**Invalid Paths**:
-- `src/...` (missing project prefix)
-- `/Users/hei02/Desktop/Main/src/...` (wrong base path)
-- `improved_baccarat_assistant/...` (missing baccarat prefix)
-- Any path outside the project directory
+**Invalid Path Patterns**: Never use incomplete paths missing project prefix, wrong base directories, or paths outside project scope
 
-### 2. Tool Usage Guidelines
-**Rule**: When using file creation/editing tools, always specify the full relative path from the workspace root.
+### 2. Tool Usage Standards
+**Rule**: When using file creation/editing tools, always specify the complete relative path from workspace root.
 
-**Examples**:
-- ✅ `baccarat/improved_baccarat_assistant/src/components/NewComponent.vue`
-- ✅ `baccarat/improved_baccarat_assistant/.cursor/rules/new-rule.mdc`
-- ❌ `src/components/NewComponent.vue`
-- ❌ `improved_baccarat_assistant/src/components/NewComponent.vue`
+**Path Format**: Always use `baccarat/improved_baccarat_assistant/` prefix for all file operations
+**Component Creation**: Follow established component path patterns with category subdirectories
+**Rule Creation**: Use proper rule file naming and location in `.cursor/rules/` directory
+**Validation**: Verify path correctness before executing any file operations
 
-### 3. Terminal Commands
-**Rule**: All terminal commands must be executed from the correct working directory.
+### 3. Terminal Command Standards
+**Rule**: All terminal commands must be executed from the correct working directory with proper path verification.
 
-**Correct Usage**:
-```bash
-cd /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant
-yarn dev
-yarn build
-npm install
-```
+**Directory Navigation**: Always navigate to project root before executing commands
+**Path Verification**: Use `pwd` command to confirm current location before operations
+**Command Execution**: Use yarn commands from project root with proper relative paths
+**Error Prevention**: Verify project structure exists before executing development commands
 
-**Path Verification**:
-- Always verify current working directory before executing commands
-- Use `pwd` to confirm location if uncertain
-- Navigate to correct directory if needed
+## Directory Structure Standards
 
-## Directory Structure
+### 1. Project Root Organization
+**Rule**: Maintain strict project root structure with all required directories and configuration files.
 
-### 1. Project Root
-```
-/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/
-├── src/
-│   ├── components/
-│   ├── stores/
-│   ├── composables/
-│   ├── types/
-│   ├── utils/
-│   ├── services/
-│   └── views/
-├── .cursor/
-│   └── rules/
-├── public/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
-```
+**Source Directory**: Organize all source code within `src/` with proper subdirectory structure
+**Component Organization**: Use category-based subdirectories for component organization
+**Store Organization**: Place all Pinia stores in dedicated `stores/` subdirectory
+**Composable Organization**: Organize reusable logic in `composables/` subdirectory
+**Type Organization**: Centralize TypeScript definitions in `types/` subdirectory
+**Utility Organization**: Place pure utility functions in `utils/` subdirectory
+**Service Organization**: Organize business logic and API calls in `services/` subdirectory
+**View Organization**: Place page-level components in `views/` subdirectory
 
-### 2. Source Code Organization
-**Rule**: All source code must be within the `src/` directory using the established structure.
+### 2. Source Code Organization Standards
+**Rule**: All source code must follow established directory structure with proper path patterns.
 
-**Component Paths**: `baccarat/improved_baccarat_assistant/src/components/[category]/ComponentName.vue`
-**Store Paths**: `baccarat/improved_baccarat_assistant/src/stores/storeName.ts`
-**Composable Paths**: `baccarat/improved_baccarat_assistant/src/composables/useFeatureName.ts`
-**Type Paths**: `baccarat/improved_baccarat_assistant/src/types/typeName.ts`
+**Component Paths**: Use category-based organization with descriptive component names
+**Store Paths**: Use descriptive store names with proper TypeScript file extensions
+**Composable Paths**: Follow `use` prefix naming convention with descriptive functionality names
+**Type Paths**: Use descriptive type names with proper TypeScript file extensions
 
-### 3. Configuration Files
-**Rule**: Configuration files must be in the project root with correct relative paths.
+### 3. Configuration File Standards
+**Rule**: Configuration files must be placed in project root with correct naming and relative paths.
 
-**Rule Files**: `baccarat/improved_baccarat_assistant/.cursor/rules/rule-name.mdc`
-**Config Files**: `baccarat/improved_baccarat_assistant/[config-file-name]`
+**Rule Files**: Use descriptive names with `.mdc` extension in `.cursor/rules/` directory
+**Config Files**: Place all configuration files in project root with standard naming conventions
+**Package Management**: Maintain `package.json` in project root with proper dependencies
+**TypeScript Config**: Use proper `tsconfig.json` configuration in project root
+**Build Config**: Maintain `vite.config.ts` in project root with proper build settings
 
-## Error Prevention
+## Error Prevention Standards
 
-### 1. Path Validation Checklist
-**Before Creating Files**:
-- [ ] Verify the path starts with `baccarat/improved_baccarat_assistant/`
-- [ ] Confirm the target directory exists
-- [ ] Check the file doesn't already exist in a different location
-- [ ] Validate the path follows project structure conventions
+### 1. Path Validation Requirements
+**Rule**: Implement comprehensive path validation before any file operations.
 
-### 2. Common Path Mistakes
-**Rule**: Avoid these common path errors that have occurred in the past.
+**Prefix Validation**: Verify all paths start with correct `baccarat/improved_baccarat_assistant/` prefix
+**Directory Validation**: Confirm target directory exists before file creation
+**Duplicate Prevention**: Check for existing files before creating new ones
+**Convention Validation**: Ensure all paths follow established project structure conventions
 
-**Missing Project Prefix**:
-- ❌ `src/components/Component.vue`
-- ✅ `baccarat/improved_baccarat_assistant/src/components/Component.vue`
+### 2. Common Error Prevention
+**Rule**: Avoid common path errors that have occurred in previous development sessions.
 
-**Wrong Base Directory**:
-- ❌ `/Users/hei02/Desktop/Main/src/...`
-- ✅ `/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/...`
+**Missing Prefix**: Never use incomplete paths without project prefix
+**Wrong Base**: Avoid using incorrect base directory paths
+**Incomplete Paths**: Always use complete path including baccarat prefix
+**External Paths**: Never operate on paths outside project directory
 
-**Incomplete Project Path**:
-- ❌ `improved_baccarat_assistant/src/...`
-- ✅ `baccarat/improved_baccarat_assistant/src/...`
+### 3. Verification Standards
+**Rule**: Use systematic verification commands to ensure correct project location and structure.
 
-### 3. Verification Commands
-**Rule**: Use these commands to verify correct project location.
+**Location Verification**: Use `pwd` command to verify current working directory
+**Structure Verification**: Use `ls` command to verify project structure exists
+**Package Verification**: Check `package.json` exists and contains correct project information
+**Dependency Verification**: Ensure all required directories and files are present
 
-```bash
-# Verify current directory
-pwd
-# Should output: /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant
+## Development Workflow Standards
 
-# Verify project structure
-ls -la
-# Should show: src/, .cursor/, public/, package.json, etc.
+### 1. Session Initialization Requirements
+**Rule**: Always follow systematic session initialization to ensure correct project setup.
 
-# Verify package.json exists
-cat package.json | grep "name"
-# Should show the project name
-```
+**Directory Navigation**: Navigate to correct project directory as first step
+**Location Verification**: Verify current location using system commands
+**Structure Validation**: Check project structure exists and is complete
+**Development Server**: Start development server only after verification complete
 
-## Development Workflow
+### 2. File Operation Standards
+**Rule**: All file operations must use correct relative paths with proper validation.
 
-### 1. Session Start
-**Rule**: Always verify project location at the start of any development session.
+**Read Operations**: Use complete relative paths for all file reading operations
+**Create Operations**: Use complete relative paths for all file creation operations
+**Edit Operations**: Use complete relative paths for all file editing operations
+**Import Validation**: Ensure all imports use correct relative paths within project
 
-1. Navigate to correct directory: `cd /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant`
-2. Verify location: `pwd`
-3. Check project files: `ls -la`
-4. Start development server: `yarn dev`
+### 3. Quality Assurance Requirements
+**Rule**: Implement systematic quality assurance to prevent path-related errors.
 
-### 2. File Operations
-**Rule**: All file operations must use the correct relative paths from workspace root.
+**Location Monitoring**: Regularly verify all files are in correct locations
+**Import Validation**: Check all imports use correct relative paths
+**Structure Compliance**: Ensure all new files follow established directory structure
+**Command Verification**: Confirm all terminal commands execute from correct working directory
 
-**Reading Files**: Use `baccarat/improved_baccarat_assistant/path/to/file`
-**Creating Files**: Use `baccarat/improved_baccarat_assistant/path/to/new/file`
-**Editing Files**: Use `baccarat/improved_baccarat_assistant/path/to/existing/file`
-
-### 3. Quality Assurance
-**Rule**: Regularly verify that all files are in the correct locations.
-
-- Check that no files were created outside the project directory
-- Verify imports use correct relative paths
-- Ensure all new files follow the established directory structure
-- Confirm terminal commands execute from the correct working directory
-
-This rule ensures consistent file management and prevents path-related errors that could disrupt the development workflow.
+This comprehensive system ensures consistent file management and prevents path-related errors that could disrupt development workflow while maintaining project organization and structure integrity.

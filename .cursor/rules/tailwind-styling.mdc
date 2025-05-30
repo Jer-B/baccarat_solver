@@ -44,6 +44,68 @@ alwaysApply: true
 **Professional Theme**: Implement gambling-appropriate colors that convey trust and professionalism
 **Accessibility**: Ensure all color combinations meet WCAG contrast requirements
 
+## Design System Token Architecture
+
+### 1. TypeScript-First Token System
+**Rule**: Define all design tokens in TypeScript with automatic CSS custom property generation for type safety and IDE support.
+
+**Token Organization**: Structure tokens in dedicated files by category (colors, spacing, typography, shadows, borders)
+**Type Safety**: Use TypeScript const assertions and branded types for token values with compile-time validation
+**Semantic Naming**: Use descriptive token names that indicate purpose rather than specific values
+**Scale Systems**: Implement consistent numeric scales for spacing, typography, and color variations
+**Export Strategy**: Provide both TypeScript exports for programmatic access and CSS custom property generation
+**IDE Integration**: Enable autocomplete and type checking for design tokens in component development
+
+### 2. CSS Custom Property Generation
+**Rule**: Automatically generate CSS custom properties from TypeScript tokens to bridge type safety with runtime styling.
+
+**Property Naming**: Convert TypeScript token names to CSS custom property format with consistent kebab-case naming
+**Namespace Strategy**: Use consistent prefixing for CSS custom properties to avoid conflicts with external libraries
+**Value Transformation**: Handle unit conversion and value formatting during CSS custom property generation
+**Runtime Access**: Enable JavaScript access to CSS custom properties for dynamic styling and theme switching
+**Fallback Values**: Provide sensible fallback values for CSS custom properties to handle missing token scenarios
+**Performance**: Generate CSS custom properties at build time rather than runtime for optimal performance
+
+### 3. Component Class System
+**Rule**: Create reusable component classes using design tokens through Tailwind's layer system for consistent styling.
+
+**Layer Organization**: Use @layer components to create component-specific classes that use design tokens
+**Token Integration**: Reference CSS custom properties within component classes rather than hardcoded values
+**Variant Patterns**: Create systematic variant classes for different component states and appearances
+**Composition Strategy**: Design component classes to be composable with utility classes for maximum flexibility
+**Naming Convention**: Use descriptive class names that clearly indicate component type and variant
+**Documentation**: Document component classes with usage examples and available variants
+
+### 4. Responsive Token System
+**Rule**: Implement responsive design tokens that adapt to different screen sizes and device capabilities.
+
+**Breakpoint Tokens**: Define consistent breakpoint values as design tokens for responsive behavior
+**Fluid Typography**: Use design tokens for fluid typography scales that adapt to screen size
+**Spacing Scales**: Implement responsive spacing tokens that provide appropriate spacing at different breakpoints
+**Component Adaptation**: Design component tokens to automatically adapt to different screen sizes
+**Mobile-First**: Structure responsive tokens with mobile-first approach for optimal performance
+**Container Queries**: Prepare token system for container query support as browser adoption increases
+
+### 5. Theme System Architecture
+**Rule**: Design token system to support multiple themes and dynamic theme switching capabilities.
+
+**Theme Structure**: Organize tokens to support light/dark themes and potential custom theme variations
+**Token Inheritance**: Use semantic token layers that can inherit from base tokens while allowing theme-specific overrides
+**Runtime Switching**: Enable dynamic theme switching through CSS custom property updates
+**Persistence**: Support theme preference persistence across browser sessions
+**System Integration**: Respect user system preferences for light/dark mode with appropriate fallbacks
+**Animation Support**: Provide smooth transitions when switching between themes
+
+### 6. Professional Token Categories
+**Rule**: Organize design tokens into professional categories that support comprehensive design system requirements.
+
+**Color Tokens**: Primary, secondary, semantic, neutral, and accent color scales with accessibility compliance
+**Spacing Tokens**: Consistent spacing scale for margins, padding, gaps, and layout spacing
+**Typography Tokens**: Font families, sizes, weights, line heights, and letter spacing for text hierarchy
+**Shadow Tokens**: Elevation system with consistent shadow values for depth and layering
+**Border Tokens**: Border widths, styles, and radius values for consistent component styling
+**Animation Tokens**: Duration, easing, and timing values for consistent motion design
+
 ## Component Styling Patterns
 
 ### 1. Card Components
@@ -133,20 +195,9 @@ alwaysApply: true
 **Vertical Rhythm**: Maintain consistent vertical spacing throughout the application
 **Layout Consistency**: Ensure spacing patterns work across all component types
 
-## Accessibility
+## Accessibility Integration
+**Rule**: For comprehensive accessibility patterns, refer to `vue-components.mdc`. This section covers only styling-specific accessibility requirements.
 
-### 1. Focus States
-**Rule**: Implement comprehensive focus management for keyboard navigation and accessibility.
-
+**Color Contrast**: Ensure all color combinations meet WCAG contrast requirements
 **Focus Ring Utilities**: Use focus ring utilities with appropriate colors and offset
-**Focus Visibility**: Ensure all interactive elements have visible focus indicators
-**Skip Links**: Implement skip link styling for keyboard navigation
-**Focus Management**: Use proper focus ring patterns for different component types
-
-### 2. Screen Reader Support
-**Rule**: Use screen reader utilities and semantic styling for accessibility compliance.
-
 **Screen Reader Classes**: Implement sr-only and sr-only-focusable classes for screen reader content
-**Semantic Styling**: Use semantic HTML with appropriate styling for accessibility
-**Color Contrast**: Ensure all text and background combinations meet WCAG standards
-**Interactive Feedback**: Provide clear visual feedback for all interactive elements
