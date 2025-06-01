@@ -434,7 +434,7 @@
 // =============================================================================
 
 // Vue composition API
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 
 // External libraries
 import { useToast } from 'vue-toastification';
@@ -510,6 +510,100 @@ interface CurrentHandSectionEmits {
 
   // Error events
   'validation-error': [errors: string[]];
+
+  // ✨ NEW: Phase 7 - Enhanced Event System
+
+  // Card-level events for real-time tracking
+  'card-dealt': [
+    side: 'player' | 'banker',
+    cardIndex: number,
+    card: { rank: string; suit: string },
+    newTotal: number,
+  ];
+  'hand-value-changed': [side: 'player' | 'banker', oldValue: number, newValue: number];
+  'card-removed': [side: 'player' | 'banker', cardIndex: number, newTotal: number];
+
+  // Round state synchronization events
+  'round-state-changed': [
+    state: {
+      phase: 'waiting' | 'dealing' | 'calculating' | 'completed';
+      playerCards: number;
+      bankerCards: number;
+      canComplete: boolean;
+      hasBet: boolean;
+    },
+  ];
+  'auto-complete-toggled': [enabled: boolean];
+  'completion-readiness-changed': [canComplete: boolean, reason: string];
+
+  // Professional algorithm events
+  'algorithm-calculation-started': [algorithmsRequested: string[]];
+  'algorithm-calculation-completed': [
+    results: {
+      kelly?: any;
+      monteCarlo?: any;
+      unified?: any;
+      calculationTime: number;
+    },
+  ];
+  'algorithm-recommendation-changed': [
+    recommendation: {
+      betType?: string;
+      betSize?: number;
+      confidence: number;
+      algorithms: string[];
+    } | null,
+  ];
+  'algorithm-status-changed': [
+    status: 'inactive' | 'calculating' | 'high_confidence' | 'low_confidence' | 'warning' | 'error',
+    color: 'gray' | 'blue' | 'green' | 'yellow' | 'orange' | 'red',
+  ];
+
+  // Real-time payout integration events
+  'payout-calculation-requested': [betType: BetType, betAmount: number];
+  'expected-payout-changed': [
+    betType: BetType,
+    betAmount: number,
+    expectedPayout: number,
+    payoutRatio: string,
+  ];
+  'commission-calculated': [betType: 'banker', commission: number, netPayout: number];
+
+  // Session orchestration events
+  'session-sync-requested': [
+    syncData: {
+      balance: number;
+      payoutValues: PayoutValues;
+      currentBet: any;
+      handState: any;
+    },
+  ];
+  'component-ready': [componentName: 'CurrentHand' | 'BettingInterface' | 'PayoutSettings'];
+  'integration-error': [
+    error: {
+      component: string;
+      operation: string;
+      message: string;
+      context: any;
+    },
+  ];
+
+  // Performance and analytics events
+  'hand-timing': [
+    timing: {
+      dealingTime: number;
+      calculationTime: number;
+      completionTime: number;
+      totalTime: number;
+    },
+  ];
+  'user-interaction': [
+    interaction: {
+      type: 'auto_complete_toggle' | 'manual_complete' | 'hand_clear' | 'algorithm_recalculate';
+      timestamp: number;
+      context: any;
+    },
+  ];
 }
 
 const emit = defineEmits<CurrentHandSectionEmits>();
@@ -544,18 +638,125 @@ const handleCalculateAlgorithms = async () => {
     console.warn(
       '[current-hand-section][algorithms] Cannot calculate - missing payout values or zero balance'
     );
+
+    // ✨ NEW: Phase 7 - Emit integration error event
+    emit('integration-error', {
+      component: 'CurrentHand',
+      operation: 'algorithm_calculation',
+      message: 'Missing payout values or zero balance',
+      context: {
+        hasPayoutValues: !!props.currentPayoutValues,
+        balance: props.currentBalance,
+      },
+    });
     return;
   }
 
   console.log('[current-hand-section][algorithms] Triggering professional algorithm calculation');
+
+  // ✨ NEW: Phase 7 - Emit algorithm calculation started event
+  const algorithmsRequested = ['kelly_criterion', 'monte_carlo', 'burn_analysis'];
+  emit('algorithm-calculation-started', algorithmsRequested);
+
+  // ✨ NEW: Phase 7 - Emit algorithm status change to calculating
+  emit('algorithm-status-changed', 'calculating', 'blue');
+
+  // ✨ NEW: Phase 7 - Emit user interaction event
+  emit('user-interaction', {
+    type: 'algorithm_recalculate',
+    timestamp: Date.now(),
+    context: {
+      payoutValues: props.currentPayoutValues,
+      balance: props.currentBalance,
+      hasBet: props.currentRoundBet.hasBet,
+    },
+  });
+
+  const startTime = Date.now();
 
   try {
     await algorithms.calculateUnifiedRecommendation(
       props.currentPayoutValues,
       props.currentBalance
     );
+
+    const calculationTime = Date.now() - startTime;
+
+    // ✨ NEW: Phase 7 - Emit algorithm calculation completed event
+    const results = {
+      kelly: algorithms.kellyCriterion.currentRecommendation,
+      monteCarlo: algorithms.monteCarlo.currentAnalysis,
+      unified: algorithms.currentRecommendation.value,
+      calculationTime,
+    };
+    emit('algorithm-calculation-completed', results);
+
+    // ✨ NEW: Phase 7 - Emit algorithm status change based on results
+    const currentStatus = algorithms.algorithmStatus.value;
+    // Fix TypeScript issue with emit overloads by explicit typing
+    const statusValue = currentStatus.status as
+      | 'inactive'
+      | 'calculating'
+      | 'high_confidence'
+      | 'low_confidence'
+      | 'warning'
+      | 'error';
+    const colorValue = currentStatus.color as
+      | 'gray'
+      | 'blue'
+      | 'green'
+      | 'yellow'
+      | 'orange'
+      | 'red';
+    emit('algorithm-status-changed', statusValue, colorValue);
+
+    // ✨ NEW: Phase 7 - Emit recommendation change event
+    const recommendation = algorithms.currentRecommendation.value;
+    if (recommendation && recommendation.recommendedBetType) {
+      const recommendationData = {
+        betType: recommendation.recommendedBetType,
+        betSize: recommendation.recommendedBetSize,
+        confidence: recommendation.confidence,
+        algorithms: algorithmsRequested,
+      };
+      emit('algorithm-recommendation-changed', recommendationData);
+
+      // ✨ NEW: Phase 7 - Emit expected payout for recommendation
+      // Note: Skip 'none' check as it's not a valid BetType
+      if (recommendation.recommendedBetType) {
+        emit(
+          'expected-payout-changed',
+          recommendation.recommendedBetType as BetType,
+          recommendation.recommendedBetSize,
+          0, // Would be calculated based on payout values
+          '1:1' // Would be calculated based on bet type
+        );
+      }
+    } else {
+      emit('algorithm-recommendation-changed', null);
+    }
+
+    console.log('[current-hand-section][algorithms] Algorithm calculation completed successfully', {
+      calculationTime,
+      hasRecommendation: !!recommendation?.recommendedBetType,
+    });
   } catch (error) {
     console.error('[current-hand-section][algorithms] Algorithm calculation failed', error);
+
+    // ✨ NEW: Phase 7 - Emit algorithm error events
+    emit('algorithm-status-changed', 'error', 'red');
+
+    emit('integration-error', {
+      component: 'CurrentHand',
+      operation: 'algorithm_calculation',
+      message: error instanceof Error ? error.message : 'Unknown algorithm calculation error',
+      context: {
+        payoutValues: props.currentPayoutValues,
+        balance: props.currentBalance,
+        calculationTime: Date.now() - startTime,
+      },
+    });
+
     toast.error('Failed to calculate professional recommendations');
   }
 };
@@ -588,15 +789,53 @@ const integrationHandlers = computed(() => ({
   onPayoutChange: (payoutValues: PayoutValues) => {
     console.log('[current-hand-section][payout-integration] Payout values changed', payoutValues);
     emit('payout-values-changed', payoutValues);
+
+    // ✨ NEW: Phase 7 - Enhanced payout event system
+    // Trigger algorithm recalculation when payout values change
+    if (props.currentRoundBet.hasBet && props.currentRoundBet.betType) {
+      emit(
+        'payout-calculation-requested',
+        props.currentRoundBet.betType,
+        props.currentRoundBet.betAmount
+      );
+    }
+
+    // Emit session sync request with updated payout values
+    emit('session-sync-requested', {
+      balance: props.currentBalance,
+      payoutValues,
+      currentBet: props.currentRoundBet,
+      handState: {
+        playerCards: store.shoe.currentHand.player.length,
+        bankerCards: store.shoe.currentHand.banker.length,
+      },
+    });
   },
 
-  // ✨ UPDATED: BettingInterface integration with balance management
+  // ✨ UPDATED: BettingInterface integration with enhanced event system
   onBalanceUpdate: (newBalance: number) => {
     console.log('[current-hand-section][betting-integration] Balance updated', newBalance);
 
     // Use balance manager for centralized balance tracking
     balanceManager.updateBalance(newBalance, 'round_completion');
     emit('balance-updated', newBalance);
+
+    // ✨ NEW: Phase 7 - Enhanced balance event system
+    // Emit session sync when balance changes
+    emit('session-sync-requested', {
+      balance: newBalance,
+      payoutValues: props.currentPayoutValues,
+      currentBet: props.currentRoundBet,
+      handState: {
+        playerCards: store.shoe.currentHand.player.length,
+        bankerCards: store.shoe.currentHand.banker.length,
+      },
+    });
+
+    // Trigger algorithm recalculation with new balance
+    if (newBalance > 0 && algorithms.needsRecalculation()) {
+      handleCalculateAlgorithms();
+    }
   },
 
   onBetSettlement: (betResult: BetResult) => {
@@ -605,7 +844,6 @@ const integrationHandlers = computed(() => ({
     });
 
     // ✨ NEW: Use balance manager for bet settlement
-    // We'll create a mock HandResult since the primitive will provide the actual one
     const mockHandResult: HandResult = {
       player: [],
       banker: [],
@@ -622,7 +860,25 @@ const integrationHandlers = computed(() => ({
     balanceManager.handleBetSettlement(betResult, mockHandResult);
     emit('bet-settled', betResult);
 
-    // Show enhanced toast notification with balance context
+    // ✨ NEW: Phase 7 - Enhanced bet settlement events
+    // Emit expected payout change event
+    if (betResult.won && props.currentRoundBet.betType) {
+      emit(
+        'expected-payout-changed',
+        props.currentRoundBet.betType,
+        props.currentRoundBet.betAmount,
+        betResult.payout,
+        `${(betResult.payout / props.currentRoundBet.betAmount).toFixed(2)}:1`
+      );
+    }
+
+    // Emit commission calculation for banker bets
+    if (props.currentRoundBet.betType === 'banker' && betResult.won) {
+      const commission = betResult.payout * 0.05; // 5% commission
+      emit('commission-calculated', 'banker', commission, betResult.payout - commission);
+    }
+
+    // Enhanced toast notification with balance context
     const profitLoss = balanceManager.sessionProfitLoss.value;
     const balanceStatusText =
       profitLoss >= 0
@@ -640,11 +896,11 @@ const integrationHandlers = computed(() => ({
     }
   },
 
-  // Session Control integration
+  // ✨ NEW: Phase 7 - Enhanced session integration
   onRoundCompletion: (handResult: HandResult) => {
     console.log('[current-hand-section][session-integration] Round completed', handResult);
 
-    // ✨ NEW: Update balance statistics in balance manager
+    // Update balance statistics in balance manager
     if (balanceManager.balanceStatistics.value.totalRounds > 0) {
       console.log('[current-hand-section][session-stats] Balance statistics updated', {
         totalRounds: balanceManager.balanceStatistics.value.totalRounds,
@@ -653,7 +909,75 @@ const integrationHandlers = computed(() => ({
       });
     }
 
-    // Additional session-level handling if needed
+    // ✨ NEW: Emit round state change
+    emit('round-state-changed', {
+      phase: 'completed',
+      playerCards: handResult.player.length,
+      bankerCards: handResult.banker.length,
+      canComplete: false,
+      hasBet: props.currentRoundBet.hasBet,
+    });
+
+    // Emit hand timing analytics
+    const currentTime = Date.now();
+    emit('hand-timing', {
+      dealingTime: 0, // Would be calculated by the primitive
+      calculationTime: 0, // Would be calculated by the primitive
+      completionTime: currentTime - handResult.timestamp,
+      totalTime: currentTime - handResult.timestamp,
+    });
+  },
+
+  // ✨ NEW: Phase 7 - Card-level event handlers
+  onCardDealt: (side: 'player' | 'banker', cardIndex: number, card: any, newTotal: number) => {
+    console.log('[current-hand-section][card-events] Card dealt', {
+      side,
+      cardIndex,
+      card,
+      newTotal,
+    });
+
+    emit('card-dealt', side, cardIndex, card, newTotal);
+
+    // Emit round state change
+    emit('round-state-changed', {
+      phase: 'dealing',
+      playerCards: side === 'player' ? cardIndex + 1 : store.shoe.currentHand.player.length,
+      bankerCards: side === 'banker' ? cardIndex + 1 : store.shoe.currentHand.banker.length,
+      canComplete: false, // Will be determined by game rules
+      hasBet: props.currentRoundBet.hasBet,
+    });
+  },
+
+  onHandValueChanged: (side: 'player' | 'banker', oldValue: number, newValue: number) => {
+    console.log('[current-hand-section][card-events] Hand value changed', {
+      side,
+      oldValue,
+      newValue,
+    });
+    emit('hand-value-changed', side, oldValue, newValue);
+  },
+
+  // ✨ NEW: Phase 7 - Auto-complete event handler
+  onAutoCompleteToggled: (enabled: boolean) => {
+    console.log('[current-hand-section][ui-events] Auto-complete toggled', enabled);
+    emit('auto-complete-toggled', enabled);
+
+    // Emit user interaction event
+    emit('user-interaction', {
+      type: 'auto_complete_toggle',
+      timestamp: Date.now(),
+      context: { enabled, sessionActive: props.sessionActive },
+    });
+  },
+
+  // ✨ NEW: Phase 7 - Completion readiness handler
+  onCompletionReadinessChanged: (canComplete: boolean, reason: string) => {
+    console.log('[current-hand-section][round-state] Completion readiness changed', {
+      canComplete,
+      reason,
+    });
+    emit('completion-readiness-changed', canComplete, reason);
   },
 }));
 
@@ -665,9 +989,15 @@ const handleHandCompleted = (event: any) => {
   console.log('[current-hand-section][event] Hand completed', event);
   emit('hand-completed', event.handResult, event.betResult);
 
-  // Store integration - update hand history
+  // ✨ Phase 8: Implement hand history integration
   if (event.handResult) {
-    // TODO: Add to hand history via store
+    // Add to hand history via store
+    store.handHistory.push(event.handResult);
+    console.log('[current-hand-section][history] Hand added to history', {
+      handNumber: event.handResult.handNumber,
+      winner: event.handResult.winner,
+      totalHands: store.handHistory.length,
+    });
   }
 };
 
@@ -735,6 +1065,20 @@ const handleCompleteOrClear = (
   state: CurrentHandSlotProps['state'],
   actions: CurrentHandSlotProps['actions']
 ) => {
+  // ✨ NEW: Phase 7 - Emit user interaction event
+  const interactionType = state.round.canCompleteRound ? 'manual_complete' : 'hand_clear';
+  emit('user-interaction', {
+    type: interactionType,
+    timestamp: Date.now(),
+    context: {
+      hasBet: state.round.hasBet,
+      betType: state.round.betType,
+      betAmount: state.round.betAmount,
+      playerCards: state.playerCards.length,
+      bankerCards: state.bankerCards.length,
+    },
+  });
+
   if (state.round.canCompleteRound) {
     actions.completeRound();
   } else if (state.round.canClearHand) {
@@ -818,14 +1162,45 @@ watch(
 );
 
 // =============================================================================
-// STRUCTURED LOGGING SETUP
+// COMPONENT LIFECYCLE AND INITIALIZATION
 // =============================================================================
 
-console.log('[current-hand-section][lifecycle] CurrentHandSection mounted', {
-  sessionActive: props.sessionActive,
-  canPerformActions: props.canPerformActions,
-  hasBet: props.currentRoundBet.hasBet,
-  betType: props.currentRoundBet.betType,
-  currentBalance: props.currentBalance,
+// ✨ NEW: Phase 7 - Component initialization and ready state
+onMounted(() => {
+  console.log(
+    '[current-hand-section][lifecycle] CurrentHandSection mounted - Phase 7 Event System',
+    {
+      sessionActive: props.sessionActive,
+      canPerformActions: props.canPerformActions,
+      hasBet: props.currentRoundBet.hasBet,
+      betType: props.currentRoundBet.betType,
+      currentBalance: props.currentBalance,
+      hasPayoutValues: !!props.currentPayoutValues,
+    }
+  );
+
+  // ✨ NEW: Phase 7 - Emit component ready event
+  emit('component-ready', 'CurrentHand');
+
+  // ✨ NEW: Phase 7 - Emit initial session sync
+  emit('session-sync-requested', {
+    balance: props.currentBalance,
+    payoutValues: props.currentPayoutValues,
+    currentBet: props.currentRoundBet,
+    handState: {
+      playerCards: store.shoe.currentHand.player.length,
+      bankerCards: store.shoe.currentHand.banker.length,
+    },
+  });
+
+  // Auto-calculate algorithms if we have the required data
+  if (props.currentPayoutValues && props.currentBalance > 0) {
+    handleCalculateAlgorithms();
+  }
+});
+
+onUnmounted(() => {
+  console.log('[current-hand-section][lifecycle] CurrentHandSection unmounting');
+  // Any cleanup would go here
 });
 </script>

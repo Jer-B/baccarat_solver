@@ -660,6 +660,37 @@ interface BurnAnalysisData {
 }
 
 // =============================================================================
+// ✨ PHASE 8: MAGIC NUMBERS CONFIGURATION
+// =============================================================================
+
+export const CURRENT_HAND_MAGIC_NUMBERS = {
+  // Auto-complete configuration
+  DEFAULT_AUTO_COMPLETE_CARD_COUNT: 6,
+  AUTO_COMPLETE_DELAY_MS: 1000,
+
+  // Card dealing timing
+  CARD_DEALING_DELAY_MS: 1000,
+
+  // Edge calculation defaults
+  DEFAULT_EDGE_PERCENTAGE: 0.01,
+
+  // Hand validation
+  MIN_CARDS_FOR_VALIDATION: 4,
+  MAX_CARDS_PER_HAND: 3,
+
+  // Natural detection
+  NATURAL_THRESHOLD: 8,
+
+  // Animation timing
+  TRANSITION_DURATION_MS: 300,
+
+  // Toast notification timeouts
+  SUCCESS_TOAST_TIMEOUT_MS: 4000,
+  WARNING_TOAST_TIMEOUT_MS: 3000,
+  ERROR_TOAST_TIMEOUT_MS: 5000,
+} as const;
+
+// =============================================================================
 // CONFIGURATION EXPORT
 // =============================================================================
 
@@ -675,4 +706,5 @@ export const CURRENT_HAND_SETTINGS = {
   PAYOUT_INTEGRATION: CURRENT_HAND_PAYOUT_INTEGRATION,
   BETTING_INTEGRATION: CURRENT_HAND_BETTING_INTEGRATION,
   UTILS: CURRENT_HAND_UTILS,
+  MAGIC_NUMBERS: CURRENT_HAND_MAGIC_NUMBERS,
 } as const;

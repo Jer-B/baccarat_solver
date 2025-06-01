@@ -33,6 +33,12 @@ import type {
 // Vue composition API
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 
+// External libraries
+import { useToast } from 'vue-toastification';
+
+// Store imports
+import { useBaccaratStore } from '@/stores/baccaratStore';
+
 // Configuration and utilities
 import {
   CURRENT_HAND_SETTINGS,
@@ -118,14 +124,16 @@ const balanceChange = ref<number | undefined>();
 // COMPUTED PROPERTIES
 // =============================================================================
 
-// Hand values
-const playerValue = computed((): number => {
-  return CURRENT_HAND_UTILS.calculateHandValue(playerCards.value);
-});
+// ✨ Enhanced hand value calculation with natural detection
+const playerValue = computed(() => CURRENT_HAND_UTILS.calculateHandValue(playerCards.value));
+const bankerValue = computed(() => CURRENT_HAND_UTILS.calculateHandValue(bankerCards.value));
 
-const bankerValue = computed((): number => {
-  return CURRENT_HAND_UTILS.calculateHandValue(bankerCards.value);
-});
+// Natural detection using configuration constant
+const hasNatural = computed(
+  () =>
+    playerValue.value >= config.MAGIC_NUMBERS.NATURAL_THRESHOLD ||
+    bankerValue.value >= config.MAGIC_NUMBERS.NATURAL_THRESHOLD
+);
 
 // Hand status
 const winner = computed((): 'player' | 'banker' | 'tie' | null => {
@@ -135,10 +143,6 @@ const winner = computed((): 'player' | 'banker' | 'tie' | null => {
   } // Not enough cards
 
   return CURRENT_HAND_UTILS.determineWinner(playerValue.value, bankerValue.value);
-});
-
-const hasNatural = computed((): boolean => {
-  return CURRENT_HAND_UTILS.hasNatural(playerValue.value, bankerValue.value);
 });
 
 const handStatus = computed((): 'incomplete' | 'ready' | 'natural' | 'complete' => {
@@ -443,13 +447,13 @@ const actions = computed(
           player: playerCards.value,
           banker: bankerCards.value,
           winner: winner.value || 'tie',
-          playerPair: false, // TODO: Implement pair detection
-          bankerPair: false, // TODO: Implement pair detection
+          playerPair: detectPairInHand(playerCards.value),
+          bankerPair: detectPairInHand(bankerCards.value),
           playerTotal: playerValue.value,
           bankerTotal: bankerValue.value,
           natural: hasNatural.value,
           timestamp: Date.now(),
-          handNumber: 1, // TODO: Get from session
+          handNumber: getSessionHandNumber(),
         };
 
         // Settle bet if exists
@@ -639,7 +643,11 @@ const actions = computed(
       }
 
       console.log('[current-hand][kelly] Requesting Kelly calculation');
-      emit('kelly-calculation-requested', props.currentRoundBet.betAmount, 0.01); // TODO: Calculate actual edge
+      emit(
+        'kelly-calculation-requested',
+        props.currentRoundBet.betAmount,
+        config.MAGIC_NUMBERS.DEFAULT_EDGE_PERCENTAGE
+      );
 
       if (props.handlers?.onKellyCalculation) {
         props.handlers.onKellyCalculation({ betAmount: props.currentRoundBet.betAmount });
@@ -848,6 +856,7 @@ const config = {
   LABELS: CURRENT_HAND_SETTINGS.LABELS,
   ICONS: CURRENT_HAND_SETTINGS.ICONS,
   DEFAULTS: CURRENT_HAND_SETTINGS.DEFAULTS,
+  MAGIC_NUMBERS: CURRENT_HAND_SETTINGS.MAGIC_NUMBERS,
 };
 
 // =============================================================================
@@ -927,4 +936,23 @@ onMounted(() => {
     emit('hand-started', [...playerCards.value, ...bankerCards.value]);
   }
 });
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function detectPairInHand(cards: Array<{ rank: string; suit: string }>): boolean {
+  if (cards.length < 2) return false;
+  // Check if first two cards have same rank
+  return cards[0].rank === cards[1].rank;
+}
+
+function getSessionHandNumber(): number {
+  // Get from store or default to 1
+  return store.handHistory.length + 1;
+}
+
+// ✨ Phase 8: Toast for user feedback and store for session data
+const toast = useToast();
+const store = useBaccaratStore();
 </script>
