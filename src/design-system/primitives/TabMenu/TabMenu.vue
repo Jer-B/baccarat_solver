@@ -12,7 +12,6 @@
             :aria-selected="isTabActive(tab)"
             :aria-controls="`tabpanel-${tab.id}`"
             role="tab"
-            @click="handleTabClick(tab, $event)"
           >
             <slot name="tab" :tab="tab" :isActive="isTabActive(tab)">
               {{ tab.name }}
@@ -25,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 // Types
@@ -60,7 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits interface
 interface Emits {
-  tabClick: [tab: Tab, event: Event];
+  tabClick: [tab: Tab];
   tabChange: [tab: Tab];
 }
 
@@ -77,6 +76,24 @@ const activeTab = computed(() => {
 const isTabActive = (tab: Tab): boolean => {
   return route.path === tab.path;
 };
+
+// Watch for route changes to emit events
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (newPath !== oldPath) {
+      const newTab = props.tabs.find(tab => tab.path === newPath);
+      const oldTab = props.tabs.find(tab => tab.path === oldPath);
+
+      if (newTab) {
+        emit('tabClick', newTab);
+        if (oldTab) {
+          emit('tabChange', newTab);
+        }
+      }
+    }
+  }
+);
 
 // Style computation (headless - can be overridden)
 const computedNavClasses = computed(() => {
@@ -137,21 +154,6 @@ const computedTabClasses = (tab: Tab) => {
   }
 
   return baseClasses.filter(Boolean).join(' ');
-};
-
-// Event handlers
-const handleTabClick = (tab: Tab, event: Event) => {
-  if (tab.disabled) {
-    event.preventDefault();
-    return;
-  }
-
-  emit('tabClick', tab, event);
-
-  // Only emit tabChange if it's actually changing
-  if (!isTabActive(tab)) {
-    emit('tabChange', tab);
-  }
 };
 </script>
 

@@ -672,6 +672,27 @@
                 {{ formatDuration(selectedSession.duration_seconds) }}
               </div>
             </div>
+
+            <div v-if="selectedSession.cards_remaining !== null" class="bg-gray-50 rounded-lg p-3">
+              <div class="text-sm font-medium text-gray-600">Cards Remaining</div>
+              <div class="text-lg font-semibold text-gray-900">
+                {{ selectedSession.cards_remaining }}
+              </div>
+            </div>
+
+            <div v-if="selectedSession.start_balance !== null" class="bg-green-50 rounded-lg p-3">
+              <div class="text-sm font-medium text-green-600">Start Balance</div>
+              <div class="text-lg font-semibold text-green-900">
+                ${{ selectedSession.start_balance.toFixed(2) }}
+              </div>
+            </div>
+
+            <div v-if="selectedSession.end_balance !== null" class="bg-blue-50 rounded-lg p-3">
+              <div class="text-sm font-medium text-blue-600">End Balance</div>
+              <div class="text-lg font-semibold text-blue-900">
+                ${{ selectedSession.end_balance.toFixed(2) }}
+              </div>
+            </div>
           </div>
 
           <!-- Session ID -->
@@ -741,6 +762,7 @@ import {
   type ImportSessionData,
 } from '../../services/sessionService';
 import { useSessionExport, type SessionExportData } from '../../composables/useSessionExport';
+import { usePagination } from '../../composables/usePagination';
 
 const sessions = ref<UserSession[]>([]);
 const selectedSessionId = ref<string | null>(null);
@@ -763,6 +785,14 @@ const editingSessionName = ref<string>('');
 
 // Notifications removed per user request
 const sessionExport = useSessionExport();
+
+// Pagination setup
+const pagination = usePagination(sessions, {
+  initialPage: 1,
+  initialItemsPerPage: 10,
+  itemsPerPageOptions: [10, 25, 50, 100],
+  persistKey: 'session-history',
+});
 
 const refreshSessions = async () => {
   console.log('[session-tracking][persistence] Refreshing sessions list');
@@ -1374,7 +1404,6 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
   if (missingHeaders.length > 0) {
     throw new Error(`CSV file missing required headers: ${missingHeaders.join(', ')}`);
   }
-
   // Find column indices
   const getColumnIndex = (headerName: string) => headers.findIndex(h => h === headerName);
 
@@ -1387,6 +1416,9 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
   const handsIndex = getColumnIndex('Total Hands');
   const createdIndex = getColumnIndex('Created At');
   const updatedIndex = getColumnIndex('Updated At');
+  const cardsRemainingIndex = getColumnIndex('Cards Remaining');
+  const startBalanceIndex = getColumnIndex('Start Balance');
+  const endBalanceIndex = getColumnIndex('End Balance');
 
   console.log('[session-tracking][import] CSV column indices', {
     idIndex,
@@ -1398,6 +1430,9 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
     handsIndex,
     createdIndex,
     updatedIndex,
+    cardsRemainingIndex,
+    startBalanceIndex,
+    endBalanceIndex,
   });
 
   // Parse data rows
@@ -1427,6 +1462,9 @@ const parseCSVContent = (csvContent: string): UserSession[] => {
         ended_at: values[endedIndex] || null,
         duration_seconds: values[durationIndex] ? parseInt(values[durationIndex]) : null,
         total_hands: values[handsIndex] ? parseInt(values[handsIndex]) : 0,
+        cards_remaining: values[cardsRemainingIndex] ? parseInt(values[cardsRemainingIndex]) : null,
+        start_balance: values[startBalanceIndex] ? parseFloat(values[startBalanceIndex]) : null,
+        end_balance: values[endBalanceIndex] ? parseFloat(values[endBalanceIndex]) : null,
         created_at: values[createdIndex] || new Date().toISOString(),
         updated_at: values[updatedIndex] || new Date().toISOString(),
       };

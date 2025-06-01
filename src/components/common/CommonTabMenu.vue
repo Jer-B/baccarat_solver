@@ -32,15 +32,15 @@ defineProps<Props>();
 
 // Emits interface
 interface Emits {
-  tabClick: [tab: Tab, event: Event];
+  tabClick: [tab: Tab];
   tabChange: [tab: Tab];
 }
 
 const emit = defineEmits<Emits>();
 
 // Event handlers
-const handleTabClick = (tab: Tab, event: Event) => {
-  emit('tabClick', tab, event);
+const handleTabClick = (tab: Tab) => {
+  emit('tabClick', tab);
 };
 
 const handleTabChange = (tab: Tab) => {
@@ -117,6 +117,7 @@ const activeTabClasses = computed(() => [
   color: var(--color-neutral-600, #4b5563);
   text-decoration: none !important;
   transition: all 0.2s ease-in-out;
+  outline: none; /* Remove default outline */
 }
 
 :deep(.tab-menu-styled-tab:hover:not(.tab-menu-styled-tab--active)) {
@@ -129,6 +130,7 @@ const activeTabClasses = computed(() => [
   background-color: var(--color-semantic-success-50, #ecfdf5);
   border-bottom: 2px solid var(--color-semantic-success-600, #059669);
   font-weight: 600;
+  outline: none; /* Remove outline for active tabs */
 }
 
 /* Remove default link styling */
@@ -140,9 +142,14 @@ const activeTabClasses = computed(() => [
   color: inherit;
 }
 
-/* Focus styles for accessibility */
-:deep(.tab-menu-styled-tab:focus) {
+/* Focus styles for accessibility - only show on keyboard focus */
+:deep(.tab-menu-styled-tab:focus-visible) {
   outline: 2px solid var(--color-primary-500, #3b82f6);
   outline-offset: 2px;
+}
+
+/* Remove focus outline on mouse click but keep for keyboard navigation */
+:deep(.tab-menu-styled-tab:focus:not(:focus-visible)) {
+  outline: none;
 }
 </style>

@@ -65,14 +65,18 @@ const isActionActive = (actionId: string): boolean => {
 
 const getActionLabel = (actionId: string): string => {
   const action = props.actions.find(a => a.id === actionId);
-  if (!action) {return '';}
+  if (!action) {
+    return '';
+  }
 
   return action.isActive && action.activeLabel ? action.activeLabel : action.label;
 };
 
 const getActionTitle = (actionId: string): string => {
   const action = props.actions.find(a => a.id === actionId);
-  if (!action) {return '';}
+  if (!action) {
+    return '';
+  }
 
   return action.isActive && action.activeTitle ? action.activeTitle : action.title || action.label;
 };

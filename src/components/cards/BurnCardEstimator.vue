@@ -167,13 +167,7 @@
         <h4 class="text-sm font-semibold text-yellow-800">
           💡 Professional Burn Card Intelligence
         </h4>
-        <InfoToggleButton
-          type="section"
-          section="burnCardEstimator"
-          subsection="burnIntelligence"
-          variant="warning"
-          size="xs"
-        />
+        <InfoSectionToggleButton section="burnCardEstimator" subsection="burnIntelligence" />
       </div>
       <div
         v-if="visibilityStore.isVisible('burnCardEstimator', 'burnIntelligence')"
@@ -209,7 +203,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import type { Card, Rank, Suit } from '@/types/cards';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
+import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();

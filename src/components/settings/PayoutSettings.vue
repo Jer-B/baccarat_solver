@@ -1,3 +1,15 @@
+<!--
+⚠️  DEPRECATED COMPONENT - DO NOT USE
+=====================================
+This component has been DEPRECATED and replaced by the new CDD (Component-Driven Development) architecture.
+
+REPLACEMENT: Use src/components/session/sections/PayoutSettingsSection.vue instead
+INTEGRATION: PayoutSettings is now integrated into SessionControl.vue
+
+This file will be removed in a future version.
+For more information, see: docs/CDD_MIGRATION.md
+-->
+
 <template>
   <div class="card bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200">
     <div class="flex items-center justify-between mb-4">
@@ -146,13 +158,7 @@
     <div class="mt-4 p-3 bg-white rounded-lg border">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">💰 Payout Examples (for $10 bet)</h4>
-        <InfoToggleButton
-          type="section"
-          section="payoutSettings"
-          subsection="payoutExamples"
-          variant="default"
-          size="xs"
-        />
+        <InfoSectionToggleButton section="payoutSettings" subsection="payoutExamples" />
       </div>
       <div
         v-if="visibilityStore.isVisible('payoutSettings', 'payoutExamples')"
@@ -190,13 +196,7 @@
     <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-blue-800">📋 Preset Information</h4>
-        <InfoToggleButton
-          type="section"
-          section="payoutSettings"
-          subsection="presetInfo"
-          variant="primary"
-          size="xs"
-        />
+        <InfoSectionToggleButton section="payoutSettings" subsection="presetInfo" />
       </div>
       <div
         v-if="visibilityStore.isVisible('payoutSettings', 'presetInfo')"
@@ -221,7 +221,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
+import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();

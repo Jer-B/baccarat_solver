@@ -2,18 +2,32 @@
   <div class="card">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl font-semibold">Current Hand</h2>
-      <button
-        @click="clearCurrentHand()"
-        :class="[
-          'px-3 py-1 rounded-md text-sm transition-colors',
-          canClearHand()
-            ? 'bg-red-500 text-white hover:bg-red-600'
-            : 'bg-gray-400 text-gray-200 cursor-not-allowed',
-        ]"
-        :disabled="!canClearHand()"
-      >
-        {{ currentRoundBet.hasBet ? 'Complete Round' : 'Clear Hand' }}
-      </button>
+      <div class="flex items-center space-x-3">
+        <!-- Auto-complete Checkbox -->
+        <label class="flex items-center space-x-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            v-model="gameSequence.state.autoCompleteEnabled"
+            @change="handleAutoCompleteToggle"
+            class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+          />
+          <span class="text-gray-700">Auto-complete at 6 cards</span>
+        </label>
+
+        <!-- Complete Round Button -->
+        <button
+          @click="clearCurrentHand()"
+          :class="[
+            'px-3 py-1 rounded-md text-sm transition-colors',
+            canClearHand()
+              ? 'bg-red-500 text-white hover:bg-red-600'
+              : 'bg-gray-400 text-gray-200 cursor-not-allowed',
+          ]"
+          :disabled="!canClearHand()"
+        >
+          {{ currentRoundBet.hasBet ? 'Complete Round' : 'Clear Hand' }}
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
@@ -257,13 +271,15 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue';
+import { inject, watch } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useGameLogic } from '@/composables/useGameLogic';
+import { useGameSequence } from '@/composables/useGameSequence';
 import PlayingCard from '@/components/cards/PlayingCard.vue';
 
 const store = useBaccaratStore();
 const { getCurrentWinner, getCurrentWinnerClass, getHandStatus, canClearHand } = useGameLogic();
+const gameSequence = useGameSequence();
 
 // Inject shared data from App.vue
 const currentRoundBet = inject('currentRoundBet') as {
@@ -276,6 +292,24 @@ const currentRoundBet = inject('currentRoundBet') as {
 const emit = defineEmits<{
   clearHand: [];
 }>();
+
+// Auto-complete handler
+const handleAutoCompleteToggle = () => {
+  gameSequence.setAutoComplete(gameSequence.state.autoCompleteEnabled);
+};
+
+// Watch for 6 cards and auto-complete if enabled
+watch(
+  () => store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length,
+  totalCards => {
+    if (totalCards === 6 && gameSequence.state.autoCompleteEnabled) {
+      // Auto-complete the round
+      setTimeout(() => {
+        clearCurrentHand();
+      }, 1000); // Give a short delay to see the 6th card
+    }
+  }
+);
 
 const clearCurrentHand = (): void => {
   emit('clearHand');

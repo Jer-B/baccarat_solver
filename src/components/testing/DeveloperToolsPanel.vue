@@ -7,77 +7,15 @@
     class="dev-panel"
     @close="handleClose"
     @section-action="handleSectionAction"
-  >
-    <template
-      #default="{
-        title,
-        subtitle,
-        sections,
-        isClosable,
-        onClose,
-        onSectionAction,
-        isSectionActionDisabled,
-        getSectionActionLabel,
-        getSectionActionTitle,
-      }"
-    >
-      <div class="panel-container">
-        <!-- Panel Header -->
-        <div class="panel-header">
-          <div class="panel-title-section">
-            <span class="panel-title">{{ title }}</span>
-            <span class="panel-subtitle">{{ subtitle }}</span>
-          </div>
-
-          <button
-            v-if="isClosable"
-            @click="onClose"
-            @keydown.enter="onClose"
-            @keydown.space.prevent="onClose"
-            class="panel-close"
-            type="button"
-            title="Close developer tools"
-            aria-label="Close developer tools"
-          >
-            ✕
-          </button>
-        </div>
-
-        <!-- Panel Sections -->
-        <div class="panel-sections">
-          <div v-for="section in sections" :key="section.sectionId" class="panel-section">
-            <h3 class="section-title">{{ section.title }}</h3>
-
-            <div class="section-actions">
-              <button
-                v-for="action in section.actions"
-                :key="action.actionId"
-                @click="onSectionAction(section.sectionId, action.actionId)"
-                @keydown.enter="onSectionAction(section.sectionId, action.actionId)"
-                @keydown.space.prevent="onSectionAction(section.sectionId, action.actionId)"
-                :class="['section-action', action.variant || 'secondary']"
-                :disabled="isSectionActionDisabled(section.sectionId, action.actionId)"
-                :title="getSectionActionTitle(section.sectionId, action.actionId)"
-                :aria-label="getSectionActionTitle(section.sectionId, action.actionId)"
-                type="button"
-              >
-                <span v-if="action.icon">{{ action.icon }}</span>
-                {{ getSectionActionLabel(section.sectionId, action.actionId) }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-  </Panel>
+  />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Panel, type PanelSection } from '@/design-system/primitives/Panel';
+import { Panel, type PanelAction } from '@/design-system/primitives/Panel';
 import { useBaccaratStore } from '@/stores/baccaratStore';
-import { useVisibilityStore } from '@/stores/visibilityStore';
-import { DeveloperToolsService } from '@/services/developerToolsService';
+import { getDeveloperToolsSections } from '@/config/developerTools';
+import { DeveloperToolsActionExecutor } from '@/services/developerToolsActionStrategy';
 
 // Emits for close action
 const emit = defineEmits<{
@@ -86,145 +24,203 @@ const emit = defineEmits<{
 
 // Stores
 const store = useBaccaratStore();
-const visibilityStore = useVisibilityStore();
 
-// Panel sections configuration
-const panelSections = computed((): PanelSection[] => [
-  {
-    sectionId: 'infoPanels',
-    title: 'Info Panels',
-    actions: [
-      {
-        actionId: 'toggleVisibility',
-        label: visibilityStore.globalToggleMode ? '👁️ Visible' : '👁️‍🗨️ Hidden',
-        title: visibilityStore.globalToggleMode ? 'Hide all info panels' : 'Show all info panels',
-        variant: visibilityStore.globalToggleMode ? 'success' : 'secondary',
-        icon: '',
-      },
-    ],
-  },
-  {
-    sectionId: 'sampleData',
-    title: 'Sample Data',
-    actions: [
-      {
-        actionId: 'addSampleHands',
-        label: 'Sample Hands',
-        title: 'Add predefined sample hands for testing',
-        variant: 'info',
-        icon: '📊',
-        disabled: !store.canPerformActions,
-      },
-      {
-        actionId: 'addRandomHand',
-        label: 'Random Hand',
-        title: 'Generate and add a random hand',
-        variant: 'primary',
-        icon: '🎲',
-        disabled: !store.canPerformActions,
-      },
-    ],
-  },
-  {
-    sectionId: 'demoScenarios',
-    title: 'Demo Scenarios',
-    actions: [
-      {
-        actionId: 'setupEdgeDemo',
-        label: 'Edge Demo',
-        title: 'Simulate high-card rich shoe for edge sorting advantage',
-        variant: 'warning',
-        icon: '🃏',
-        disabled: !store.canPerformActions,
-      },
-      {
-        actionId: 'setupPairDemo',
-        label: 'Pair Demo',
-        title: 'Simulate favorable conditions for pair betting',
-        variant: 'danger',
-        icon: '👥',
-        disabled: !store.canPerformActions,
-      },
-    ],
-  },
-]);
+// Configuration-driven panel sections - NO hardcoded values
+const panelSections = computed(() => {
+  return getDeveloperToolsSections(store.canPerformActions);
+});
 
-// Event handlers
+// Event handlers - Clean, compositional approach
 const handleClose = (): void => {
   emit('close');
   console.log('[user-interface][user-action] Developer tools closed from panel');
 };
 
-const handleSectionAction = (sectionId: string, actionId: string): void => {
-  console.log(`[testing][user-action] Section action: ${sectionId}.${actionId}`);
+const handleSectionAction = (sectionId: string, actionId: string, action: PanelAction): void => {
+  console.log(`[testing][user-action] Section action: ${sectionId}.${actionId}`, {
+    action: {
+      actionId: action.actionId,
+      label: action.label,
+      variant: action.variant,
+      disabled: action.disabled,
+      icon: action.icon,
+    },
+  });
 
-  switch (sectionId) {
-    case 'infoPanels':
-      handleInfoPanelAction(actionId);
-      break;
-    case 'sampleData':
-      handleSampleDataAction(actionId);
-      break;
-    case 'demoScenarios':
-      handleDemoScenarioAction(actionId);
-      break;
-    default:
-      console.warn(`[testing][warning] Unknown section: ${sectionId}`);
-  }
-};
-
-// Section-specific action handlers
-const handleInfoPanelAction = (actionId: string): void => {
-  switch (actionId) {
-    case 'toggleVisibility': {
-      visibilityStore.toggleGlobalVisibility();
-      console.log('[testing][visibility] Global visibility toggled');
-      break;
-    }
-    default:
-      console.warn(`[testing][warning] Unknown info panel action: ${actionId}`);
-  }
-};
-
-const handleSampleDataAction = (actionId: string): void => {
-  if (!DeveloperToolsService.validateActionPermission(store.canPerformActions, actionId)) {
-    return;
-  }
-
-  switch (actionId) {
-    case 'addSampleHands': {
-      const sampleHands = DeveloperToolsService.generateSampleHands();
-      sampleHands.forEach(hand => store.addHandResult(hand));
-      console.log('[testing][completion] Added sample hands', { count: sampleHands.length });
-      break;
-    }
-    case 'addRandomHand': {
-      const randomHand = DeveloperToolsService.generateRandomHand(store.handHistory.length + 1);
-      store.addHandResult(randomHand);
-      console.log('[testing][completion] Added random hand');
-      break;
-    }
-    default:
-      console.warn(`[testing][warning] Unknown sample data action: ${actionId}`);
-  }
-};
-
-const handleDemoScenarioAction = (actionId: string): void => {
-  if (!DeveloperToolsService.validateActionPermission(store.canPerformActions, actionId)) {
-    return;
-  }
-
-  switch (actionId) {
-    case 'setupEdgeDemo':
-      store.setupEdgeSortingDemo();
-      console.log('[testing][completion] Edge sorting demo setup');
-      break;
-    case 'setupPairDemo':
-      store.setupPairBettingDemo();
-      console.log('[testing][completion] Pair betting demo setup');
-      break;
-    default:
-      console.warn(`[testing][warning] Unknown demo scenario action: ${actionId}`);
-  }
+  // Strategy pattern - NO switch statements
+  DeveloperToolsActionExecutor.execute(sectionId, actionId, store);
 };
 </script>
+
+<style scoped>
+/* Developer Panel Component - EXACT UI PRESERVATION */
+.dev-panel {
+  background: linear-gradient(135deg, #374151, #4b5563);
+  border-top: 2px solid #6b7280;
+  color: white;
+}
+
+:deep(.panel-container) {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-4) var(--spacing-layout-panel);
+}
+
+:deep(.panel-header) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: var(--spacing-4);
+}
+
+:deep(.panel-title-section) {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+:deep(.panel-title) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+:deep(.panel-subtitle) {
+  font-size: 0.875rem;
+  margin: 0;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+:deep(.panel-sections) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  :deep(.panel-sections) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+:deep(.panel-section) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+:deep(.section-title) {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  color: #e5e7eb;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+:deep(.section-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+:deep(.section-action) {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--spacing-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  min-width: 120px;
+  text-align: center;
+}
+
+:deep(.section-action:focus-visible) {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+:deep(.section-action:disabled) {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
+  background-color: #6b7280 !important;
+  border-color: #9ca3af !important;
+  color: #d1d5db !important;
+}
+
+:deep(.section-action:not(:disabled):hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Action Button Variants - Enhanced for better visibility */
+:deep(.section-action.primary) {
+  background-color: #3b82f6;
+  border-color: #2563eb;
+}
+
+:deep(.section-action.primary:hover:not(:disabled)) {
+  background-color: #2563eb;
+  border-color: #1d4ed8;
+}
+
+:deep(.section-action.secondary) {
+  background-color: #64748b;
+  border-color: #475569;
+}
+
+:deep(.section-action.secondary:hover:not(:disabled)) {
+  background-color: #475569;
+  border-color: #334155;
+}
+
+:deep(.section-action.success) {
+  background-color: #10b981;
+  border-color: #059669;
+}
+
+:deep(.section-action.success:hover:not(:disabled)) {
+  background-color: #059669;
+  border-color: #047857;
+}
+
+:deep(.section-action.warning) {
+  background-color: #f59e0b;
+  border-color: #d97706;
+}
+
+:deep(.section-action.warning:hover:not(:disabled)) {
+  background-color: #d97706;
+  border-color: #b45309;
+}
+
+:deep(.section-action.danger) {
+  background-color: #ef4444;
+  border-color: #dc2626;
+}
+
+:deep(.section-action.danger:hover:not(:disabled)) {
+  background-color: #dc2626;
+  border-color: #b91c1c;
+}
+
+:deep(.section-action.info) {
+  background-color: #06b6d4;
+  border-color: #0891b2;
+}
+
+:deep(.section-action.info:hover:not(:disabled)) {
+  background-color: #0891b2;
+  border-color: #0e7490;
+}
+</style>

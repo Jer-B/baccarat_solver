@@ -1,128 +1,26 @@
 <template>
   <div class="card">
-    <h2 class="text-xl font-semibold mb-4">Shoe Composition</h2>
+    <!-- Updated header with inline status info -->
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold">Shoe Composition</h2>
 
-    <!-- Shoe Controls -->
-    <div class="bg-gray-50 p-4 rounded-lg mb-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <!-- Game Status -->
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold text-gray-700">Game Status</h3>
-          <div class="text-sm text-gray-600">
-            <div>Remaining: {{ store.totalCardsRemaining }} cards</div>
-            <div
-              class="flex items-center space-x-1"
-              title="Penetration shows how much of the shoe has been dealt. Higher penetration = more accurate card counting and edge calculations."
-            >
-              <span>Penetration: {{ (store.currentPenetration * 100).toFixed(1) }}%</span>
-              <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-            </div>
-            <!-- Cut Card Warning -->
-            <div
-              v-if="store.shouldShuffleWarning"
-              class="flex items-center space-x-1 mt-1 px-2 py-1 bg-yellow-100 border border-yellow-300 rounded text-yellow-800"
-            >
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              <span class="text-xs font-medium">CUT CARD REACHED - SHUFFLE REQUIRED</span>
-            </div>
-          </div>
+      <!-- Inline status indicators -->
+      <div class="flex items-center gap-4">
+        <!-- Remaining Cards -->
+        <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1">
+          <span class="text-sm font-semibold text-blue-800"
+            >Remaining: 🃏{{ store.totalCardsRemaining }} cards</span
+          >
         </div>
 
-        <!-- Deck Settings -->
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold text-gray-700">Deck Settings</h3>
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center space-x-2">
-              <label class="text-sm text-gray-600">Decks:</label>
-              <select
-                v-model="store.settings.numberOfDecks"
-                class="text-gray-900 rounded px-3 py-1 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-16"
-              >
-                <option :value="1">1</option>
-                <option :value="2">2</option>
-                <option :value="3">3</option>
-                <option :value="4">4</option>
-                <option :value="5">5</option>
-                <option :value="6">6</option>
-                <option :value="7">7</option>
-                <option :value="8">8</option>
-              </select>
-            </div>
-            <div class="flex items-center space-x-2">
-              <label
-                class="text-sm text-gray-600"
-                title="Cut card position: Number of cards from bottom of shoe when shuffle is required. Lower = more penetration (better for counting), Higher = less penetration (more secure for casino)"
-              >
-                Cut:
-              </label>
-              <input
-                v-model.number="store.settings.cutCardPosition"
-                type="number"
-                min="10"
-                max="104"
-                class="text-gray-900 rounded px-2 py-1 text-sm w-16 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                title="Cards remaining when shuffle warning appears"
-              />
-              <span class="text-xs text-gray-500">cards</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold text-gray-700">Actions</h3>
-          <div class="space-y-2">
-            <button
-              @click="store.initializeShoe()"
-              class="w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-              title="Initialize a new shoe with fresh cards. Can be done at any time."
-            >
-              New Shoe
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cut Card Information -->
-    <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
-      <div class="flex items-center justify-between mb-2">
-        <h4 class="text-sm font-semibold text-blue-800">🃏 Cut Card System</h4>
-        <InfoToggleButton
-          type="section"
-          section="shoeComposition"
-          subsection="cutCardInfo"
-          variant="primary"
-          size="xs"
-        />
-      </div>
-      <div
-        v-if="visibilityStore.isVisible('shoeComposition', 'cutCardInfo')"
-        class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-blue-700"
-      >
-        <div>
-          <div class="font-medium mb-1">How It Works:</div>
-          <div>• Cut card placed {{ store.settings.cutCardPosition }} cards from bottom</div>
-          <div>• When reached → finish current hand, then shuffle</div>
-          <div>• Prevents deep penetration for security</div>
-        </div>
-        <div>
-          <div class="font-medium mb-1">Settings Guide:</div>
-          <div>• <strong>Lower (10-30):</strong> More penetration, better for counting</div>
-          <div>• <strong>Higher (50-104):</strong> Less penetration, more secure</div>
-          <div>• <strong>Casino typical:</strong> 52-78 cards (1-1.5 decks)</div>
+        <!-- Penetration -->
+        <div
+          class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1 cursor-help"
+          title="Penetration shows how much of the shoe has been dealt. Higher penetration = more accurate card counting."
+        >
+          <span class="text-sm font-semibold text-green-800"
+            >Penetration: 📊{{ (store.currentPenetration * 100).toFixed(1) }}%</span
+          >
         </div>
       </div>
     </div>
@@ -130,8 +28,7 @@
     <!-- Debug info -->
     <div class="text-xs text-gray-500 mb-2">
       Total cards: {{ cardCounts.reduce((sum, count) => sum + count, 0) }} | Chart data:
-      {{ cardCounts.join(', ') }} | Store total: {{ store.totalCardsRemaining }} | Shoe size:
-      {{ store.shoe.remainingCards.size }}
+      {{ cardCounts.join(', ') }}
     </div>
 
     <!-- Chart Overview -->
@@ -163,37 +60,34 @@
                 <PlayingCard
                   v-for="(rank, index) in zeroValueRanks"
                   :key="rank"
-                  :rank="rank"
+                  :rank="rank as Rank"
                   suit="spades"
                   size="small"
                   clickable
-                  :disabled="
-                    getTotalZeroValueCount() === 0 ||
-                    !store.canAddMoreCards ||
-                    !currentRoundBet.hasBet
-                  "
+                  :disabled="isCardDisabled(rank)"
                   :style="{
                     position: 'absolute',
                     left: `${index * 8}px`,
                     zIndex: zeroValueRanks.length - index,
                   }"
                   @click="addZeroValueCardToHand"
+                  class="cursor-pointer hover:scale-105 transition-transform"
                 />
-                <!-- Count Badge for overlapped cards -->
-                <div class="overlapped-count-badge">
-                  {{ getTotalZeroValueCount() }}
-                </div>
               </div>
-              <!-- Single Combined Count -->
-              <input
-                type="number"
-                :value="getTotalZeroValueCount()"
-                @input="updateZeroValueCount($event)"
-                min="0"
-                :max="store.settings.numberOfDecks * 16"
-                class="card-input-small mt-5"
-              />
+              <!-- Count Badge for overlapped cards -->
+              <div class="overlapped-count-badge">
+                {{ getTotalZeroValueCount() }}
+              </div>
             </div>
+            <!-- Single Combined Count -->
+            <input
+              type="number"
+              :value="getTotalZeroValueCount()"
+              @input="updateZeroValueCount($event)"
+              min="0"
+              :max="store.settings.numberOfDecks * 16"
+              class="card-input-small mt-5"
+            />
           </div>
         </div>
 
@@ -212,9 +106,7 @@
                 clickable
                 show-count
                 :count="getCardCount('A')"
-                :disabled="
-                  getCardCount('A') === 0 || !store.canAddMoreCards || !currentRoundBet.hasBet
-                "
+                :disabled="isCardDisabled('A')"
                 @click="addCardToHand"
               />
               <input
@@ -238,16 +130,15 @@
           <div class="cards-in-column">
             <div class="card-item">
               <PlayingCard
-                :rank="rank"
+                :rank="rank as Rank"
                 suit="spades"
                 size="small"
                 clickable
                 show-count
                 :count="getCardCount(rank)"
-                :disabled="
-                  getCardCount(rank) === 0 || !store.canAddMoreCards || !currentRoundBet.hasBet
-                "
+                :disabled="isCardDisabled(rank)"
                 @click="addCardToHand"
+                class="cursor-pointer hover:scale-105 transition-transform"
               />
               <input
                 type="number"
@@ -291,18 +182,103 @@ import {
 } from 'chart.js';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
+import { useGameSequence } from '@/composables/useGameSequence';
+import { useNotifications } from '@/composables/useNotifications';
 import type { Card, Rank, Suit, CardValue } from '@/types/cards';
 import PlayingCard from '@/components/cards/PlayingCard.vue';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();
+const gameSequence = useGameSequence();
+const { warning, error } = useNotifications();
 
 // Inject the current round bet to check if bet is placed
-const currentRoundBet = inject('currentRoundBet') as { value: string } | undefined;
+const currentRoundBet = inject('currentRoundBet') as {
+  hasBet: boolean;
+  betType: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null;
+  betAmount: number;
+};
+
+// Enhanced card selection validation using game sequence state
+const hasActiveBet = computed(() => {
+  // Must have a bet placed AND be in the correct game state
+  const hasBet = currentRoundBet && currentRoundBet.hasBet === true;
+  const canDrawCards = gameSequence.canDrawCards.value;
+
+  console.log('[card-composition][state-check] Card selection validation', {
+    hasBet,
+    gameStep: gameSequence.state.currentStep,
+    canDrawCards,
+    hasActiveBet: hasBet && canDrawCards,
+    currentRoundBet: currentRoundBet
+      ? {
+          hasBet: currentRoundBet.hasBet,
+          betType: currentRoundBet.betType,
+          betAmount: currentRoundBet.betAmount,
+        }
+      : 'null',
+    gameSequenceState: {
+      currentStep: gameSequence.state.currentStep,
+      canBet: gameSequence.canBet.value,
+      canDrawCards: gameSequence.canDrawCards.value,
+      canCompleteRound: gameSequence.canCompleteRound.value,
+    },
+  });
+
+  return hasBet && canDrawCards;
+});
+
+// Function to check card selection validity and show appropriate toast
+const validateCardSelection = (): boolean => {
+  const currentStep = gameSequence.state.currentStep;
+  const hasBet = currentRoundBet && currentRoundBet.hasBet === true;
+  const canDrawCards = gameSequence.canDrawCards.value;
+
+  console.log('[card-composition][validation] Card selection validation', {
+    currentStep,
+    hasBet,
+    canDrawCards,
+    currentRoundBet: currentRoundBet
+      ? {
+          hasBet: currentRoundBet.hasBet,
+          betType: currentRoundBet.betType,
+          betAmount: currentRoundBet.betAmount,
+        }
+      : 'null',
+    gameSequenceCanDrawCards: gameSequence.canDrawCards.value,
+    isValid: hasBet && canDrawCards,
+  });
+
+  // Check session state first
+  if (currentStep === 'session_inactive') {
+    warning('🚫 Please start a session first before selecting cards');
+    return false;
+  }
+
+  // Check if user needs to place a bet first
+  if (currentStep === 'ready_to_bet' || !hasBet) {
+    warning('💰 Please place a bet first before selecting cards! Use P, B, or T keys to bet');
+    return false;
+  }
+
+  // Check if in wrong game state
+  if (currentStep === 'round_complete' || currentStep === 'round_result') {
+    warning('🏁 Round is complete. Clear the hand first to start a new round');
+    return false;
+  }
+
+  // Check if can draw cards according to game sequence
+  if (!canDrawCards) {
+    warning('🚫 Cannot select cards in current game state');
+    return false;
+  }
+
+  // All checks passed
+  return true;
+};
 
 // Card rank arrays
 const zeroValueRanks = ['10', 'J', 'Q', 'K'];
@@ -475,15 +451,8 @@ function updateZeroValueCount(event: Event) {
 
 // Add card to current hand
 function addCardToHand(cardData: { rank: string; suit: string }) {
-  // Check if there's a bet placed (prevent exploit)
-  if (!currentRoundBet.hasBet) {
-    alert('Please place a bet before dealing cards!');
-    return;
-  }
-
-  // Check if we can add more cards (max 6 total in baccarat)
-  if (!store.canAddMoreCards) {
-    alert('Maximum 6 cards allowed in a baccarat hand (3 per side)!');
+  // Validate card selection with proper toast notifications
+  if (!validateCardSelection()) {
     return;
   }
 
@@ -495,16 +464,85 @@ function addCardToHand(cardData: { rank: string; suit: string }) {
   });
 
   if (!availableSuit) {
-    alert(`No ${rank} cards remaining in the shoe!`);
+    warning('🃏 No cards of this rank available in the shoe');
     return;
   }
 
+  // Create the card with proper typing
+  const card = {
+    rank: rank as Rank,
+    suit: availableSuit as Suit,
+    value: store.getCardValue(rank as Rank),
+  };
+
+  // Remove card from shoe
+  const cardKey = `${rank}-${availableSuit}`;
+  const currentCount = store.shoe.remainingCards.get(cardKey) || 0;
+  if (currentCount > 0) {
+    store.shoe.remainingCards.set(cardKey, currentCount - 1);
+  }
+
+  // Add to player side first, then banker
+  if (store.shoe.currentHand.player.length <= store.shoe.currentHand.banker.length) {
+    store.shoe.currentHand.player.push(card);
+  } else {
+    store.shoe.currentHand.banker.push(card);
+  }
+
+  // Trigger game sequence card drawn event
+  gameSequence.onCardDrawn();
+
+  console.log('[card-selection][hand-update] Card added to current hand', {
+    card,
+    totalCards: store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length,
+    playerCards: store.shoe.currentHand.player.length,
+    bankerCards: store.shoe.currentHand.banker.length,
+  });
+}
+
+// Add a zero-value card to the hand (randomly select from available 10, J, Q, K)
+function addZeroValueCardToHand() {
+  // Validate card selection with proper toast notifications
+  if (!validateCardSelection()) {
+    return;
+  }
+
+  // Find available zero-value cards
+  const availableZeroValueCards = [];
+  for (const rank of zeroValueRanks) {
+    for (const suit of suits) {
+      const count = store.shoe.remainingCards.get(`${rank}-${suit}`) || 0;
+      if (count > 0) {
+        availableZeroValueCards.push({ rank, suit });
+      }
+    }
+  }
+
+  if (availableZeroValueCards.length === 0) {
+    warning('🃏 No zero-value cards available in the shoe');
+    return;
+  }
+
+  // Randomly select one available zero-value card
+  const randomIndex = Math.floor(Math.random() * availableZeroValueCards.length);
+  const selectedCard = availableZeroValueCards[randomIndex];
+
   // Create the card
   const card: Card = {
-    rank: rank as Rank,
-    suit: availableSuit,
-    value: getCardValue(rank),
+    rank: selectedCard.rank as Rank,
+    suit: selectedCard.suit,
+    value: store.getCardValue(selectedCard.rank as Rank),
   };
+
+  console.log('[card-composition][user-action] Zero-value card selected from composition', {
+    card: `${card.rank}-${card.suit}`,
+    remainingCardsTotal: store.totalCardsRemaining,
+  });
+
+  // Update the count by removing one card of this specific suit and rank
+  const currentCount =
+    store.shoe.remainingCards.get(`${selectedCard.rank}-${selectedCard.suit}`) || 0;
+  store.shoe.remainingCards.set(`${selectedCard.rank}-${selectedCard.suit}`, currentCount - 1);
 
   // Determine which hand to add to (alternate between player and banker)
   const playerCards = store.shoe.currentHand.player.length;
@@ -516,42 +554,11 @@ function addCardToHand(cardData: { rank: string; suit: string }) {
     store.shoe.currentHand.banker.push(card);
   }
 
-  // Decrease the count in the shoe
-  const currentCount = store.shoe.remainingCards.get(`${rank}-${availableSuit}`) || 0;
-  store.shoe.remainingCards.set(`${rank}-${availableSuit}`, Math.max(0, currentCount - 1));
-
   // Update cards dealt counter
   store.shoe.cardsDealt++;
-}
 
-// Add zero-value card to current hand (picks first available)
-function addZeroValueCardToHand() {
-  // Check if there's a bet placed (prevent exploit)
-  if (!currentRoundBet.hasBet) {
-    alert('Please place a bet before dealing cards!');
-    return;
-  }
-
-  // Check if we can add more cards (max 6 total in baccarat)
-  if (!store.canAddMoreCards) {
-    alert('Maximum 6 cards allowed in a baccarat hand (3 per side)!');
-    return;
-  }
-
-  // Find the first available zero-value card
-  for (const rank of zeroValueRanks) {
-    const availableSuit = suits.find(suit => {
-      const count = store.shoe.remainingCards.get(`${rank}-${suit}`) || 0;
-      return count > 0;
-    });
-
-    if (availableSuit) {
-      addCardToHand({ rank, suit: availableSuit });
-      return;
-    }
-  }
-
-  alert('No zero-value cards remaining in the shoe!');
+  // Trigger game sequence card drawn event
+  gameSequence.onCardDrawn();
 }
 
 // Get card value for baccarat
@@ -564,6 +571,50 @@ function getCardValue(rank: string): CardValue {
   }
   return parseInt(rank) as CardValue;
 }
+
+// Helper function for keyboard controls to select cards by rank
+function selectCardByRank(rank: Rank) {
+  console.log('[card-composition][keyboard] Keyboard card selection attempt', {
+    rank,
+    currentStep: gameSequence.state.currentStep,
+  });
+
+  // Validate card selection with proper toast notifications
+  if (!validateCardSelection()) {
+    return;
+  }
+
+  // For zero-value cards (10, J, Q, K), use the special handler
+  if (zeroValueRanks.includes(rank)) {
+    addZeroValueCardToHand();
+    return;
+  }
+
+  // For other cards, use the regular handler
+  addCardToHand({ rank, suit: 'spades' }); // suit will be auto-selected from available
+}
+
+// Enhanced disabled check for cards - only disable for card availability, not game state
+const isCardDisabled = computed(() => (rank: string) => {
+  // Card not available in shoe
+  const cardCount = getCardCount(rank);
+  if (cardCount === 0) {
+    return true;
+  }
+
+  // Can't add more cards to hand (max 6 total)
+  if (!store.canAddMoreCards) {
+    return true;
+  }
+
+  // Don't disable for game state - let click handlers show toast notifications
+  return false;
+});
+
+// Expose the method to parent components
+defineExpose({
+  selectCardByRank,
+});
 </script>
 
 <style scoped>

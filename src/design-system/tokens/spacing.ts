@@ -122,7 +122,9 @@ export const getSemanticSpacing = (
 ): string => {
   const spacingGroup = (semanticSpacing as any)[category];
 
-  if (!spacingGroup) {return spacing[4];} // fallback to 16px
+  if (!spacingGroup) {
+    return spacing[4];
+  } // fallback to 16px
 
   if (subcategory && variant) {
     return spacingGroup[subcategory]?.[variant] || spacing[4];

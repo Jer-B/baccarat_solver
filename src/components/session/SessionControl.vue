@@ -1,339 +1,689 @@
+<!-- Styled Session Control Component with CDD Sections -->
 <template>
-  <div class="card bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-4">
-        <h2 class="text-xl font-semibold text-indigo-800">Session Control</h2>
+  <div :class="config.STYLING.MAIN_CONTAINER">
+    <!-- Session Header -->
+    <div :class="config.STYLING.HEADER_CONTAINER">
+      <div :class="config.STYLING.HEADER_LEFT">
+        <h2 :class="config.STYLING.TITLE">{{ config.LABELS.TITLE }}</h2>
 
         <!-- Session Status Indicator -->
-        <div class="flex items-center space-x-2">
+        <div :class="config.STYLING.STATUS_CONTAINER">
           <div
-            class="w-3 h-3 rounded-full"
-            :class="store.ui.sessionActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'"
+            :class="[
+              config.STYLING.STATUS_INDICATOR_BASE,
+              gameStore.ui.sessionActive
+                ? config.STYLING.STATUS_ACTIVE
+                : config.STYLING.STATUS_INACTIVE,
+            ]"
           ></div>
           <span
-            class="text-sm font-medium"
-            :class="store.ui.sessionActive ? 'text-green-700' : 'text-red-700'"
+            :class="[
+              config.STYLING.STATUS_TEXT_BASE,
+              gameStore.ui.sessionActive
+                ? config.STYLING.STATUS_TEXT_ACTIVE
+                : config.STYLING.STATUS_TEXT_INACTIVE,
+            ]"
           >
-            {{ store.ui.sessionActive ? 'Session Active' : 'Session Inactive' }}
+            {{
+              gameStore.ui.sessionActive
+                ? config.LABELS.STATUS_ACTIVE
+                : config.LABELS.STATUS_INACTIVE
+            }}
           </span>
         </div>
 
         <!-- Session Duration (if active) -->
         <div
-          v-if="store.ui.sessionActive && store.ui.sessionStartTime"
-          class="text-sm text-gray-600"
+          v-if="gameStore.ui.sessionActive && sessionDurationDisplay"
+          :class="config.STYLING.DURATION_TEXT"
         >
-          Duration: {{ sessionDuration }}
+          {{ config.LABELS.DURATION_PREFIX }} {{ sessionDurationDisplay }}
         </div>
       </div>
 
       <!-- Session Control Buttons -->
-      <div class="flex items-center space-x-3">
+      <div :class="config.STYLING.BUTTON_CONTAINER">
         <button
-          v-if="!store.ui.sessionActive"
-          @click="startSession"
-          class="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+          v-if="!gameStore.ui.sessionActive"
+          @click="handleSessionStart"
+          :disabled="!canStartSession"
+          :class="config.STYLING.START_BUTTON"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z"
-            ></path>
-          </svg>
-          <span>Start Session</span>
-        </button>
-
-        <button
-          v-if="store.ui.sessionActive"
-          @click="endSession"
-          class="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 10h6v4H9z"
-            ></path>
-          </svg>
-          <span>End Session</span>
-        </button>
-
-        <!-- Session Info -->
-        <div v-if="!store.ui.sessionActive" class="text-sm text-gray-600 max-w-xs">
-          <div class="font-medium text-indigo-700">Ready to Start</div>
-          <div class="text-xs">Start a session to begin betting and playing</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Burn Card Settings (Always Visible) -->
-    <div class="mt-4 p-4 bg-white bg-opacity-60 border border-orange-100 rounded-lg">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold text-orange-800">🔥 Burn Card Settings</h3>
-        <div class="text-xs text-orange-600">Professional burn card tracking</div>
-      </div>
-
-      <!-- Auto Burn Settings -->
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center space-x-3">
-          <label class="flex items-center space-x-2 cursor-pointer">
-            <input
-              v-model="autoBurnEnabled"
-              type="checkbox"
-              class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
-            />
-            <span class="text-sm font-medium text-gray-700">Auto Burn at Session Start</span>
-          </label>
-
-          <div class="flex items-center space-x-2">
-            <input
-              v-model.number="autoBurnCount"
-              type="number"
-              min="0"
-              max="10"
-              :disabled="!autoBurnEnabled"
-              class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-md disabled:bg-gray-100 disabled:text-gray-400"
-              placeholder="3"
-            />
-            <span class="text-xs text-gray-600">cards</span>
-          </div>
-        </div>
-
-        <div class="text-xs text-gray-500 max-w-xs">
-          {{
-            autoBurnEnabled && autoBurnCount > 0
-              ? `Will burn ${autoBurnCount} cards when session starts`
-              : autoBurnEnabled && autoBurnCount === 0
-                ? 'No cards will be burned automatically'
-                : 'Manual burn only'
-          }}
-        </div>
-      </div>
-
-      <!-- Manual Burn Controls -->
-      <div class="flex items-center justify-between pt-2 border-t border-orange-100">
-        <div class="flex items-center space-x-3">
-          <label class="text-sm text-gray-700">Manual Burn:</label>
-          <input
-            v-model.number="manualBurnCount"
-            type="number"
-            min="1"
-            max="10"
-            class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-md"
-            placeholder="3"
-          />
-          <button
-            @click="performManualBurn()"
-            :disabled="!store.canPerformActions || !manualBurnCount || manualBurnCount <= 0"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              store.canPerformActions && manualBurnCount > 0
-                ? 'bg-orange-600 text-white hover:bg-orange-700'
-                : 'bg-gray-400 text-gray-200 cursor-not-allowed',
-            ]"
-            :title="'Burn cards manually at any time'"
+          <svg
+            :class="config.STYLING.BUTTON_ICON"
+            fill="none"
+            stroke="currentColor"
+            :viewBox="config.ICONS.START_SESSION.VIEWBOX"
           >
-            🔥 Burn Now
-          </button>
-        </div>
+            <path
+              v-for="(path, index) in config.ICONS.START_SESSION.PATHS"
+              :key="index"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              :d="path"
+            ></path>
+          </svg>
+          <span>{{ config.LABELS.START_BUTTON }}</span>
+        </button>
 
-        <div class="text-xs text-gray-500">{{ store.totalCardsRemaining }} cards remaining</div>
-      </div>
-
-      <!-- Burn Info Toggle Section -->
-      <div class="mt-3 pt-2 border-t border-orange-100">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-sm font-semibold text-orange-800">💡 Burn Card Information</h4>
-          <InfoToggleButton
-            type="section"
-            section="sessionControl"
-            subsection="burnInfo"
-            variant="warning"
-            size="xs"
-          />
-        </div>
-        <div
-          v-if="visibilityStore.isVisible('sessionControl', 'burnInfo')"
-          class="text-xs text-gray-600 bg-gray-50 p-2 rounded"
+        <button
+          v-if="gameStore.ui.sessionActive"
+          @click="handleSessionEnd"
+          :class="config.STYLING.END_BUTTON"
         >
-          <div>• Auto burn simulates casino burn procedures at session start</div>
-          <div>• Manual burn can be used anytime during play</div>
-          <div>• Set to 0 for no automatic burning</div>
-          <div>• Burned cards are tracked professionally without revealing content</div>
-        </div>
+          <svg
+            :class="config.STYLING.BUTTON_ICON"
+            fill="none"
+            stroke="currentColor"
+            :viewBox="config.ICONS.END_SESSION.VIEWBOX"
+          >
+            <path
+              v-for="(path, index) in config.ICONS.END_SESSION.PATHS"
+              :key="index"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              :d="path"
+            ></path>
+          </svg>
+          <span>{{ config.LABELS.END_BUTTON }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Session Warning (when inactive) -->
-    <div
-      v-if="!store.ui.sessionActive"
-      class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-    >
-      <div class="flex items-center space-x-2">
-        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-          ></path>
-        </svg>
-        <div>
-          <div class="text-sm font-medium text-yellow-800">Session Required</div>
-          <div class="text-xs text-yellow-700">
-            Betting, demo hands, and hand clearing are disabled until you start a session.
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- CDD Balance Settings Section -->
+    <BalanceSettingsSection
+      :initial-starting-balance="gameStore.ui.currentBalance"
+      :initial-use-previous-balance="usePreviousEndBalance"
+      :initial-previous-balance="previousEndBalance"
+      :can-modify-balance="!gameStore.ui.sessionActive"
+      :previous-balance-loader="loadPreviousBalance"
+      @update:starting-balance="handleUpdateStartingBalance"
+      @update:use-previous-balance="handleUpdateUsePreviousBalance"
+      @balance-change="handleBalanceChange"
+    />
+
+    <!-- CDD Deck Settings Section -->
+    <DeckSettingsSection
+      :initial-number-of-decks="gameStore.settings.numberOfDecks"
+      :initial-cut-card-position="gameStore.settings.cutCardPosition"
+      :can-modify-settings="!gameStore.ui.sessionActive"
+      :shoe-initializer="handleInitializeShoe"
+      @update:number-of-decks="handleUpdateNumberOfDecks"
+      @update:cut-card-position="handleUpdateCutCardPosition"
+      @deck-change="handleDeckChange"
+      @initialize-shoe="handleInitializeShoe"
+    />
+
+    <!-- CDD Burn Settings Section -->
+    <BurnSettingsSection
+      :initial-auto-burn-enabled="autoBurnEnabled"
+      :initial-auto-burn-count="autoBurnCount"
+      :initial-manual-burn-count="manualBurnCount"
+      :can-perform-actions="gameStore.ui.sessionActive"
+      :total-cards-remaining="totalCardsRemaining"
+      :manual-burn-executor="executeManualBurn"
+      :auto-burn-executor="executeAutoBurn"
+      @update:auto-burn-enabled="handleUpdateAutoBurnEnabled"
+      @update:auto-burn-count="handleUpdateAutoBurnCount"
+      @update:manual-burn-count="handleUpdateManualBurnCount"
+      @manual-burn="handleManualBurn"
+      @auto-burn="handleAutoBurn"
+      @burn-change="handleBurnChange"
+    />
+
+    <!-- CDD Payout Settings Section -->
+    <PayoutSettingsSection
+      :initial-payout-values="initialPayoutValues"
+      :selected-preset-id="selectedPayoutPresetId"
+      :enable-preset-management="true"
+      :enable-manual-editing="!gameStore.ui.sessionActive"
+      :show-payout-examples="true"
+      :show-preset-info="true"
+      :example-bet-amount="exampleBetAmount"
+      :presets-loading="payoutPresetsLoading"
+      :saving-preset="savingPayoutPreset"
+      :validation-errors="payoutValidationErrors"
+      :preset-error="payoutPresetError"
+      @payout-change="handlePayoutChange"
+      @manual-value-change="handlePayoutManualValueChange"
+      @preset-selected="handlePayoutPresetSelected"
+      @preset-created="handlePayoutPresetCreated"
+      @preset-updated="handlePayoutPresetUpdated"
+      @preset-deleted="handlePayoutPresetDeleted"
+      @default-preset-changed="handlePayoutDefaultPresetChanged"
+      @reset-to-defaults="handlePayoutResetToDefaults"
+      @validation-error="handlePayoutValidationError"
+      @validation-success="handlePayoutValidationSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onUnmounted, watch } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
-import { useVisibilityStore } from '@/stores/visibilityStore';
-import { useNotifications } from '../../composables/useNotifications';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
+import { useNotifications } from '@/composables/useNotifications';
+import { SESSION_CONTROL, SESSION_CONTROL_DEFAULTS } from '@/config/sessionControlSettings';
+import { PAYOUT_SETTINGS_DEFAULTS } from '@/config/payoutSettings';
 
-const store = useBaccaratStore();
-const visibilityStore = useVisibilityStore();
-const { info, success, warning } = useNotifications();
+// Session Control Sections
+import BalanceSettingsSection from './sections/BalanceSettingsSection.vue';
+import DeckSettingsSection from './sections/DeckSettingsSection.vue';
+import BurnSettingsSection from './sections/BurnSettingsSection.vue';
+import PayoutSettingsSection from './sections/PayoutSettingsSection.vue';
 
-const sessionDuration = ref('00:00:00');
-let durationInterval: NodeJS.Timeout | null = null;
+// Design System Types
+import type { BalanceState } from '@/design-system/primitives/BalanceSettings';
+import type { DeckState } from '@/design-system/primitives/DeckSettings';
+import type { BurnState } from '@/design-system/primitives/BurnSettings';
+import type { PayoutValues, PayoutChangeEvent, ValidationError } from '@/config/payoutSettings';
+import type { PayoutPreset } from '@/services/payoutPresetService';
 
-// Burn card settings
-const autoBurnEnabled = ref(true);
-const autoBurnCount = ref(3);
-const manualBurnCount = ref(3);
+// =============================================================================
+// EMITS INTERFACE
+// =============================================================================
 
-const startSession = () => {
-  console.log('[session-control][initialization] Starting session with burn settings', {
+interface Emits {
+  'session-start': [];
+  'session-end': [];
+  'auto-burn': [burnCount: number, cardsRemaining: number];
+  'manual-burn': [burnCount: number, cardsRemaining: number];
+  'settings-change': [settings: SessionSettings];
+  'balance-change': [balanceState: BalanceState];
+  'payout-change': [event: PayoutChangeEvent];
+}
+
+interface SessionSettings {
+  numberOfDecks: number;
+  cutCardPosition: number;
+  autoBurnEnabled: boolean;
+  autoBurnCount: number;
+  startingBalance: number;
+  usePreviousEndBalance: boolean;
+  // Add payout settings to the session settings
+  payoutValues: PayoutValues;
+  selectedPayoutPresetId?: string | null;
+}
+
+// =============================================================================
+// COMPONENT SETUP
+// =============================================================================
+
+const emit = defineEmits<Emits>();
+
+// =============================================================================
+// STORES & COMPOSABLES
+// =============================================================================
+
+const gameStore = useBaccaratStore();
+const { success, error: showError } = useNotifications();
+
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+
+const config = SESSION_CONTROL;
+const defaults = SESSION_CONTROL_DEFAULTS;
+
+// =============================================================================
+// LOCAL STATE FOR SESSION SETTINGS (NOW CONFIGURATION-DRIVEN)
+// =============================================================================
+
+// These properties don't exist in the store, so we manage them locally with configuration defaults
+const usePreviousEndBalance = ref(defaults.SESSION_STATE.USE_PREVIOUS_END_BALANCE);
+const previousEndBalance = ref(defaults.SESSION_STATE.PREVIOUS_END_BALANCE);
+const autoBurnEnabled = ref(defaults.SESSION_STATE.AUTO_BURN_ENABLED);
+const autoBurnCount = ref(defaults.SESSION_STATE.AUTO_BURN_COUNT);
+const manualBurnCount = ref(defaults.SESSION_STATE.MANUAL_BURN_COUNT);
+
+// Payout Settings State
+const initialPayoutValues = ref<Partial<PayoutValues>>({});
+const selectedPayoutPresetId = ref<string | null>(null);
+const exampleBetAmount = ref(PAYOUT_SETTINGS_DEFAULTS.EXAMPLE_BET_AMOUNT);
+const payoutPresetsLoading = ref(false);
+const savingPayoutPreset = ref(false);
+const payoutValidationErrors = ref<ValidationError[]>([]);
+const payoutPresetError = ref<string | null>(null);
+const currentPayoutValues = ref<PayoutValues>({
+  player_payout: PAYOUT_SETTINGS_DEFAULTS.PLAYER_PAYOUT,
+  banker_payout: PAYOUT_SETTINGS_DEFAULTS.BANKER_PAYOUT,
+  banker_commission: PAYOUT_SETTINGS_DEFAULTS.BANKER_COMMISSION,
+  tie_payout: PAYOUT_SETTINGS_DEFAULTS.TIE_PAYOUT,
+  player_pair_payout: PAYOUT_SETTINGS_DEFAULTS.PLAYER_PAIR_PAYOUT,
+  banker_pair_payout: PAYOUT_SETTINGS_DEFAULTS.BANKER_PAIR_PAYOUT,
+});
+
+// =============================================================================
+// COMPUTED PROPERTIES
+// =============================================================================
+
+const canStartSession = computed(() => {
+  return (
+    !gameStore.ui.sessionActive &&
+    gameStore.ui.currentBalance > defaults.VALIDATION.MIN_BALANCE_FOR_START
+  );
+});
+
+// Real-time session duration
+const sessionDurationDisplay = ref('0:00');
+let sessionTimer: ReturnType<typeof setInterval> | null = null;
+
+const totalCardsRemaining = computed(() => {
+  return gameStore.shoe.totalCards - gameStore.shoe.cardsDealt;
+});
+
+// =============================================================================
+// SESSION MANAGEMENT HANDLERS
+// =============================================================================
+
+const handleSessionStart = () => {
+  console.log('[session-control][action] Starting session', {
+    numberOfDecks: gameStore.settings.numberOfDecks,
+    cutCardPosition: gameStore.settings.cutCardPosition,
+    startingBalance: gameStore.ui.currentBalance,
     autoBurnEnabled: autoBurnEnabled.value,
     autoBurnCount: autoBurnCount.value,
+    payoutValues: currentPayoutValues.value,
+    selectedPayoutPresetId: selectedPayoutPresetId.value,
   });
 
-  store.startSession();
-  startDurationTimer();
+  try {
+    gameStore.startSession();
 
-  // Auto burn if enabled and count > 0
-  if (autoBurnEnabled.value && autoBurnCount.value > 0) {
-    performAutoBurn();
-  } else if (autoBurnEnabled.value && autoBurnCount.value === 0) {
-    info('🔥 Session started with no auto burn (count set to 0)');
-  } else {
-    info('🎯 Session started • Manual burn only');
+    // Perform auto burn if enabled
+    if (autoBurnEnabled.value && autoBurnCount.value > 0) {
+      handleAutoBurn(autoBurnCount.value, totalCardsRemaining.value - autoBurnCount.value);
+    }
+
+    // Timer will start automatically via watcher
+    emit('session-start');
+    success('Session started successfully!');
+
+    console.log('[session-control][success] Session started successfully', {
+      sessionId: gameStore.ui.currentSessionId,
+      isActive: gameStore.ui.sessionActive,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to start session';
+    console.error('[session-control][error] Session start failed', { error: errorMessage });
+    showError(`Failed to start session: ${errorMessage}`);
   }
 };
 
-const endSession = () => {
-  console.log('[session-control][cleanup] Ending session');
-  store.endSession();
-  stopDurationTimer();
-};
-
-const performAutoBurn = () => {
-  if (!autoBurnEnabled.value || autoBurnCount.value <= 0) {
-    return;
-  }
-
-  if (autoBurnCount.value > store.totalCardsRemaining) {
-    warning(
-      `Cannot auto burn ${autoBurnCount.value} cards • Only ${store.totalCardsRemaining} remaining`
-    );
-    return;
-  }
-
-  console.log('[session-control][auto-burn] Performing automatic burn at session start', {
-    burnCount: autoBurnCount.value,
-    cardsRemaining: store.totalCardsRemaining,
+const handleSessionEnd = () => {
+  console.log('[session-control][action] Ending session', {
+    sessionId: gameStore.ui.currentSessionId,
+    duration: gameStore.ui.sessionStartTime ? Date.now() - gameStore.ui.sessionStartTime : 0,
   });
 
-  store.burnUnknownCards(autoBurnCount.value);
-  success(
-    `🔥 Auto burned ${autoBurnCount.value} cards at session start • ${store.totalCardsRemaining} remaining`
-  );
+  try {
+    gameStore.endSession();
+
+    // Timer will stop automatically via watcher
+    emit('session-end');
+    success('Session ended successfully!');
+
+    console.log('[session-control][success] Session ended successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to end session';
+    console.error('[session-control][error] Session end failed', { error: errorMessage });
+    showError(`Failed to end session: ${errorMessage}`);
+  }
 };
 
-const performManualBurn = () => {
-  if (!store.canPerformActions || !manualBurnCount.value || manualBurnCount.value <= 0) {
-    return;
-  }
+// =============================================================================
+// BALANCE HANDLERS
+// =============================================================================
 
-  if (manualBurnCount.value > store.totalCardsRemaining) {
-    warning(
-      `Cannot burn ${manualBurnCount.value} cards • Only ${store.totalCardsRemaining} remaining`
-    );
-    return;
-  }
-
-  console.log('[session-control][manual-burn] Performing manual burn', {
-    burnCount: manualBurnCount.value,
-    cardsRemaining: store.totalCardsRemaining,
+const handleUpdateStartingBalance = (balance: number) => {
+  console.log('[session-control][update] Updating starting balance', {
+    previousBalance: gameStore.ui.currentBalance,
+    newBalance: balance,
   });
 
-  store.burnUnknownCards(manualBurnCount.value);
-  info(
-    `🔥 Burned ${manualBurnCount.value} cards manually • ${store.totalCardsRemaining} remaining`
-  );
-
-  // Reset manual burn count for next use
-  manualBurnCount.value = 3;
+  // Update the store's current balance
+  gameStore.ui.currentBalance = balance;
+  emitSettingsChange();
 };
 
-const formatSessionDuration = (): string => {
-  if (!store.ui.sessionStartTime) {
-    return '00:00:00';
+const handleUpdateUsePreviousBalance = (usePrevious: boolean) => {
+  console.log('[session-control][update] Updating use previous balance', {
+    previousUsePrevious: usePreviousEndBalance.value,
+    newUsePrevious: usePrevious,
+  });
+
+  usePreviousEndBalance.value = usePrevious;
+  emitSettingsChange();
+};
+
+const handleBalanceChange = (balanceState: BalanceState) => {
+  console.log('[session-control][change] Balance state changed', balanceState);
+  emit('balance-change', balanceState);
+  emitSettingsChange();
+};
+
+const loadPreviousBalance = async (): Promise<number> => {
+  console.log('[session-control][loader] Loading previous balance');
+
+  // This is a placeholder implementation
+  // In a real application, this would fetch the balance from the last session
+
+  // For now, return the stored previous balance or fallback
+  return previousEndBalance.value || config.FALLBACKS.BALANCE;
+};
+
+// =============================================================================
+// DECK HANDLERS
+// =============================================================================
+
+const handleUpdateNumberOfDecks = (numberOfDecks: number) => {
+  console.log('[session-control][update] Updating number of decks', {
+    previousDecks: gameStore.settings.numberOfDecks,
+    newDecks: numberOfDecks,
+  });
+
+  gameStore.updateSettings({ numberOfDecks });
+  emitSettingsChange();
+};
+
+const handleUpdateCutCardPosition = (cutCardPosition: number) => {
+  console.log('[session-control][update] Updating cut card position', {
+    previousPosition: gameStore.settings.cutCardPosition,
+    newPosition: cutCardPosition,
+  });
+
+  gameStore.updateSettings({ cutCardPosition });
+  emitSettingsChange();
+};
+
+const handleDeckChange = (deckState: DeckState) => {
+  console.log('[session-control][change] Deck state changed', deckState);
+  emitSettingsChange();
+};
+
+const handleInitializeShoe = () => {
+  console.log('[session-control][action] Initializing new shoe');
+
+  try {
+    gameStore.initializeShoe();
+    success('New shoe initialized successfully!');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to initialize shoe';
+    console.error('[session-control][error] Shoe initialization failed', { error: errorMessage });
+    showError(`Failed to initialize shoe: ${errorMessage}`);
+  }
+};
+
+// =============================================================================
+// BURN HANDLERS
+// =============================================================================
+
+const handleUpdateAutoBurnEnabled = (enabled: boolean) => {
+  console.log('[session-control][update] Updating auto burn enabled', {
+    previousEnabled: autoBurnEnabled.value,
+    newEnabled: enabled,
+  });
+
+  autoBurnEnabled.value = enabled;
+  emitSettingsChange();
+};
+
+const handleUpdateAutoBurnCount = (count: number) => {
+  console.log('[session-control][update] Updating auto burn count', {
+    previousCount: autoBurnCount.value,
+    newCount: count,
+  });
+
+  autoBurnCount.value = count;
+  emitSettingsChange();
+};
+
+const handleUpdateManualBurnCount = (count: number) => {
+  console.log('[session-control][update] Updating manual burn count', {
+    previousCount: manualBurnCount.value,
+    newCount: count,
+  });
+
+  manualBurnCount.value = count;
+};
+
+const handleManualBurn = (burnCount: number, cardsRemaining: number) => {
+  console.log('[session-control][action] Manual burn completed', {
+    burnCount,
+    cardsRemaining,
+  });
+
+  emit('manual-burn', burnCount, cardsRemaining);
+  success(`Manually burned ${burnCount} cards. ${cardsRemaining} cards remaining.`);
+};
+
+const handleAutoBurn = (burnCount: number, cardsRemaining: number) => {
+  console.log('[session-control][action] Auto burn completed', {
+    burnCount,
+    cardsRemaining,
+  });
+
+  emit('auto-burn', burnCount, cardsRemaining);
+  success(`Auto burned ${burnCount} cards at session start.`);
+};
+
+const handleBurnChange = (burnState: BurnState) => {
+  console.log('[session-control][change] Burn state changed', burnState);
+  emitSettingsChange();
+};
+
+const executeManualBurn = async (count: number): Promise<void> => {
+  console.log('[session-control][execution] Executing manual burn', { count });
+
+  // Execute the actual burn using the store's method
+  gameStore.burnUnknownCards(count);
+};
+
+const executeAutoBurn = async (count: number): Promise<void> => {
+  console.log('[session-control][execution] Executing auto burn', { count });
+
+  // Execute the actual burn using the store's method
+  gameStore.burnUnknownCards(count);
+};
+
+// =============================================================================
+// PAYOUT SETTINGS HANDLERS
+// =============================================================================
+
+const handlePayoutChange = (event: PayoutChangeEvent) => {
+  console.log('[session-control][change] Payout values changed', {
+    source: event.source,
+    presetId: event.presetId,
+    presetName: event.presetName,
+    values: event.values,
+  });
+
+  // Update local payout values
+  currentPayoutValues.value = { ...event.values };
+
+  // If preset was selected, update the selected preset ID
+  if (event.source === 'preset' && event.presetId) {
+    selectedPayoutPresetId.value = event.presetId;
+  } else if (event.source === 'manual' || event.source === 'reset') {
+    // Clear preset selection when manually editing or resetting
+    selectedPayoutPresetId.value = null;
+  }
+
+  emit('payout-change', event);
+  emitSettingsChange();
+  success('Payout settings updated!');
+};
+
+const handlePayoutManualValueChange = (field: keyof PayoutValues, value: number) => {
+  console.log('[session-control][update] Payout manual value changed', {
+    field,
+    value,
+  });
+
+  // Update the current payout values
+  currentPayoutValues.value[field] = value;
+
+  // Clear preset selection since we're manually editing
+  selectedPayoutPresetId.value = null;
+
+  emitSettingsChange();
+};
+
+const handlePayoutPresetSelected = (preset: PayoutPreset) => {
+  console.log('[session-control][action] Payout preset selected', {
+    presetId: preset.id,
+    presetName: preset.name,
+  });
+
+  selectedPayoutPresetId.value = preset.id;
+  emitSettingsChange();
+  success(`Selected ${preset.name} payout preset!`);
+};
+
+const handlePayoutPresetCreated = (presetData: { name: string; values: PayoutValues }) => {
+  console.log('[session-control][action] Payout preset created', {
+    name: presetData.name,
+  });
+
+  success(`Created custom preset: ${presetData.name}!`);
+};
+
+const handlePayoutPresetUpdated = (presetId: string, updates: Partial<PayoutValues>) => {
+  console.log('[session-control][action] Payout preset updated', {
+    presetId,
+    updates,
+  });
+
+  success('Payout preset updated successfully!');
+};
+
+const handlePayoutPresetDeleted = (presetId: string) => {
+  console.log('[session-control][action] Payout preset deleted', {
+    presetId,
+  });
+
+  // If the deleted preset was selected, clear the selection
+  if (selectedPayoutPresetId.value === presetId) {
+    selectedPayoutPresetId.value = null;
+  }
+
+  success('Custom preset deleted successfully!');
+};
+
+const handlePayoutDefaultPresetChanged = (presetId: string) => {
+  console.log('[session-control][action] Payout default preset changed', {
+    presetId,
+  });
+
+  success('Default preset updated successfully!');
+};
+
+const handlePayoutResetToDefaults = () => {
+  console.log('[session-control][action] Payout settings reset to defaults');
+
+  selectedPayoutPresetId.value = null;
+  emitSettingsChange();
+  success('Payout settings reset to defaults!');
+};
+
+const handlePayoutValidationError = (errors: ValidationError[]) => {
+  console.log('[session-control][error] Payout validation errors', {
+    errorCount: errors.length,
+    fields: errors.map(e => e.field),
+  });
+
+  payoutValidationErrors.value = errors;
+
+  const errorMessages = errors.map(e => `${e.field}: ${e.message}`);
+  showError(`Payout validation errors: ${errorMessages.join(', ')}`);
+};
+
+const handlePayoutValidationSuccess = () => {
+  console.log('[session-control][success] Payout validation success');
+
+  payoutValidationErrors.value = [];
+};
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+const emitSettingsChange = () => {
+  const settings: SessionSettings = {
+    numberOfDecks: gameStore.settings.numberOfDecks,
+    cutCardPosition: gameStore.settings.cutCardPosition,
+    autoBurnEnabled: autoBurnEnabled.value,
+    autoBurnCount: autoBurnCount.value,
+    startingBalance: gameStore.ui.currentBalance,
+    usePreviousEndBalance: usePreviousEndBalance.value,
+    payoutValues: currentPayoutValues.value,
+    selectedPayoutPresetId: selectedPayoutPresetId.value,
+  };
+
+  console.log('[session-control][change] Settings changed', settings);
+  emit('settings-change', settings);
+};
+
+// =============================================================================
+// REAL-TIME TIMER FUNCTIONS
+// =============================================================================
+
+const updateSessionDuration = () => {
+  if (!gameStore.ui.sessionActive || !gameStore.ui.sessionStartTime) {
+    sessionDurationDisplay.value = '0:00';
+    return;
   }
 
   const now = Date.now();
-  const elapsed = now - store.ui.sessionStartTime;
+  const elapsed = now - gameStore.ui.sessionStartTime;
+  const totalSeconds = Math.floor(elapsed / config.TIMING.MILLISECONDS_PER_SECOND);
+  const minutes = Math.floor(totalSeconds / config.TIMING.SECONDS_PER_MINUTE);
+  const seconds = totalSeconds % config.TIMING.SECONDS_PER_MINUTE;
 
-  const hours = Math.floor(elapsed / (1000 * 60 * 60));
-  const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
-
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  sessionDurationDisplay.value = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-const startDurationTimer = () => {
-  if (durationInterval) {
-    clearInterval(durationInterval);
+const startSessionTimer = () => {
+  if (gameStore.ui.sessionActive && !sessionTimer) {
+    updateSessionDuration(); // Initial update
+    sessionTimer = setInterval(updateSessionDuration, 1000);
   }
-
-  // Update immediately
-  sessionDuration.value = formatSessionDuration();
-
-  durationInterval = setInterval(() => {
-    sessionDuration.value = formatSessionDuration();
-  }, 1000);
 };
 
-const stopDurationTimer = () => {
-  if (durationInterval) {
-    clearInterval(durationInterval);
-    durationInterval = null;
+const stopSessionTimer = () => {
+  if (sessionTimer) {
+    clearInterval(sessionTimer);
+    sessionTimer = null;
   }
-  sessionDuration.value = '00:00:00';
 };
 
-onMounted(() => {
-  if (store.ui.sessionActive && store.ui.sessionStartTime) {
-    startDurationTimer();
-  }
-});
+// =============================================================================
+// LIFECYCLE AND WATCHERS
+// =============================================================================
+
+// Watch session state to manage timer
+watch(
+  () => gameStore.ui.sessionActive,
+  isActive => {
+    if (isActive) {
+      startSessionTimer();
+    } else {
+      stopSessionTimer();
+      sessionDurationDisplay.value = '0:00';
+    }
+  },
+  { immediate: true }
+);
 
 onUnmounted(() => {
-  stopDurationTimer();
+  stopSessionTimer();
 });
 </script>
+
+<style scoped>
+/* Session Control styling using configuration-driven classes */
+.session-control {
+  /* All styling comes from SESSION_CONTROL configuration */
+}
+</style>

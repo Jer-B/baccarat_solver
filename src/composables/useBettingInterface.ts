@@ -1,12 +1,14 @@
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useNotifications } from '@/composables/useNotifications';
 import { BettingService } from '@/services/bettingService';
 import type { HandResult } from '@/types/cards';
 import type { BetResult } from '@/services/bettingService';
+import type { PayoutValues } from '@/config/payoutSettings';
+import type { ComputedRef } from 'vue';
 
 // Types
 interface BettingPreset {
-  balance: number;
   betAmount: number;
   selectedBet: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair';
 }
@@ -17,12 +19,12 @@ interface CurrentRoundBet {
   betAmount: number;
 }
 
-export function useBettingInterface() {
+export function useBettingInterface(currentPayoutValues?: ComputedRef<PayoutValues>) {
   const store = useBaccaratStore();
+  const { success, error, warning } = useNotifications();
 
-  // Betting Interface State
+  // Betting Interface State (removed balance - now comes from store)
   const bettingInterface = reactive({
-    balance: 1000,
     betAmount: 10,
     selectedBet: null as 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null,
     currentPreset: null as BettingPreset | null,
@@ -50,13 +52,13 @@ export function useBettingInterface() {
     const validation = BettingService.validateBet(
       bettingInterface.selectedBet,
       bettingInterface.betAmount,
-      bettingInterface.balance,
+      store.ui.currentBalance, // Use store balance
       isBettingAllowed(),
       currentRoundBet.hasBet
     );
 
     if (!validation.isValid) {
-      alert(validation.errorMessage);
+      error(`❌ ${validation.errorMessage}`);
       return;
     }
 
@@ -68,12 +70,12 @@ export function useBettingInterface() {
     currentRoundBet.betType = selectedBet;
     currentRoundBet.betAmount = bettingInterface.betAmount;
 
-    // Deduct bet amount from balance immediately
-    bettingInterface.balance -= bettingInterface.betAmount;
+    // Deduct bet amount from store balance
+    store.ui.currentBalance -= bettingInterface.betAmount;
 
     // Show placement message
     const message = BettingService.formatBetPlacement(bettingInterface.betAmount, selectedBet);
-    alert(message);
+    success(`✅ ${message}`);
 
     // Clear selection for next round
     bettingInterface.selectedBet = null;
@@ -85,23 +87,36 @@ export function useBettingInterface() {
       return { won: false, payout: 0, netResult: 0 };
     }
 
+    // Use provided payout values or fallback to store values
+    const payoutSettings = currentPayoutValues
+      ? {
+          player: currentPayoutValues.value.player_payout,
+          banker: currentPayoutValues.value.banker_payout,
+          bankerCommission: currentPayoutValues.value.banker_commission,
+          tie: currentPayoutValues.value.tie_payout,
+          playerPair: currentPayoutValues.value.player_pair_payout,
+          bankerPair: currentPayoutValues.value.banker_pair_payout,
+        }
+      : store.settings.payouts;
+
     // Calculate payout using service
     const betResult = BettingService.calculatePayout(
       currentRoundBet.betType,
       currentRoundBet.betAmount,
       handResult,
-      store.settings.payouts
+      payoutSettings
     );
 
-    // Add payout to balance
-    bettingInterface.balance += betResult.payout;
+    // Add payout to store balance
+    store.ui.currentBalance += betResult.payout;
 
     // Record the bet in statistics
     store.recordBet(currentRoundBet.betType, currentRoundBet.betAmount, handResult);
 
     // Show result message
-    const message = BettingService.formatBetResult(betResult, bettingInterface.balance);
-    alert(message);
+    const message = BettingService.formatBetResult(betResult, store.ui.currentBalance);
+    const emoji = betResult.won ? '🎉' : '💸';
+    success(`${emoji} ${message}`);
 
     // Reset bet for next round
     resetCurrentBet();
@@ -111,9 +126,13 @@ export function useBettingInterface() {
 
   // Reset bet for new round
   const resetCurrentBet = (): void => {
+    console.log('[betting-interface] Resetting current bet state');
     currentRoundBet.hasBet = false;
     currentRoundBet.betType = null;
     currentRoundBet.betAmount = 0;
+
+    // Also reset the betting interface selection for clarity
+    bettingInterface.selectedBet = null;
   };
 
   // Start new round

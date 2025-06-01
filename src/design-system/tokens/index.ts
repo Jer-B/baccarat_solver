@@ -86,7 +86,9 @@ export const validateColorToken = (token: string): boolean => {
   const [category, subcategory, shade] = token.split('.');
   const colorGroup = (colors as any)[category];
 
-  if (!colorGroup) {return false;}
+  if (!colorGroup) {
+    return false;
+  }
 
   if (subcategory && shade) {
     return Boolean(colorGroup[subcategory]?.[shade]);

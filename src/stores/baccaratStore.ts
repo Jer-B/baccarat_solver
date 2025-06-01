@@ -107,8 +107,10 @@ interface BaccaratState {
     sessionActive: boolean; // Track if a gaming session is active
     sessionStartTime: number | null; // Timestamp when session started
     currentSessionId: string | null; // Current session ID from Supabase
+    currentBalance: number; // Starting balance for the session
   };
   lastPenetrationCheck: number;
+  lastShuffleWarningShown: 'twenty' | 'six' | 'cutCard' | null;
 }
 
 export const useBaccaratStore = defineStore('baccarat', {
@@ -180,7 +182,7 @@ export const useBaccaratStore = defineStore('baccarat', {
     },
     settings: {
       numberOfDecks: 8,
-      cutCardPosition: 16, // cards from bottom
+      cutCardPosition: 56, // cards from bottom
       showConfidenceLevels: true,
       trackBurnedCards: true, // Always enabled
       showPatternAnalysis: true, // Always enabled
@@ -243,8 +245,10 @@ export const useBaccaratStore = defineStore('baccarat', {
       sessionActive: false, // Session starts inactive
       sessionStartTime: null, // No session started yet
       currentSessionId: null, // Current session ID from Supabase
+      currentBalance: 500, // Starting balance for the session
     },
     lastPenetrationCheck: 0,
+    lastShuffleWarningShown: null as 'twenty' | 'six' | 'cutCard' | null,
   }),
 
   getters: {
@@ -270,7 +274,8 @@ export const useBaccaratStore = defineStore('baccarat', {
         (sum, count) => sum + count,
         0
       );
-      return state.shoe.cutCardPosition !== null && remainingCards <= state.shoe.cutCardPosition;
+      // Don't warn if cut card is disabled (set to 0)
+      return state.settings.cutCardPosition > 0 && remainingCards <= state.settings.cutCardPosition;
     },
 
     totalCardsRemaining: state => {
@@ -491,7 +496,11 @@ export const useBaccaratStore = defineStore('baccarat', {
 
   actions: {
     initializeShoe() {
-      console.log('Initializing shoe with', this.settings.numberOfDecks, 'decks');
+      console.log('[shoe-management][reset] Resetting shoe composition', {
+        currentTotal: this.totalCardsRemaining,
+        numberOfDecks: this.settings.numberOfDecks,
+      });
+
       const newShoe = new Map<string, number>();
       const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
       const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -513,19 +522,30 @@ export const useBaccaratStore = defineStore('baccarat', {
       this.history.currentHandNumber = 0;
       this.resetAnalysis();
 
-      console.log(
-        'Shoe initialized with',
-        newShoe.size,
-        'card types and',
-        this.shoe.totalCards,
-        'total cards'
-      );
-      console.log('Sample card counts:', Array.from(newShoe.entries()).slice(0, 5));
+      const totalAfterReset = Array.from(newShoe.values()).reduce((sum, count) => sum + count, 0);
+      console.log('[shoe-management][reset] Shoe reset complete', {
+        totalCardsAfterReset: totalAfterReset,
+        expectedTotal: this.settings.numberOfDecks * 52,
+        cardsDealt: this.shoe.cardsDealt,
+        burnedCards: this.shoe.burnedCards.length,
+      });
 
       // Recalculate edges for fresh shoe
       if (this.settings.calculationTriggers.autoCalculateEdges) {
         this.recalculateEdges();
       }
+
+      // Reset shuffle warning tracking
+      this.lastShuffleWarningShown = null;
+
+      console.log('[baccarat-engine][initialization] Shoe initialized', {
+        totalCards: this.shoe.totalCards,
+        numberOfDecks: this.settings.numberOfDecks,
+        cutCardPosition: this.shoe.cutCardPosition,
+      });
+
+      // Recalculate everything after initialization
+      this.recalculateEdges();
     },
 
     trackBurnedCard(card: Card) {
@@ -593,6 +613,9 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       // Track as burned card
       this.trackBurnedCard(card);
+
+      // Check for shuffle warnings after hand completion
+      this.checkAndShowShuffleWarnings();
     },
 
     // Professional burn card tracking - tracks unknown burns
@@ -674,6 +697,9 @@ export const useBaccaratStore = defineStore('baccarat', {
       } catch (error) {
         console.error('[burn-analysis][error] Error burning unknown cards:', error);
       }
+
+      // Check for shuffle warnings after hand completion
+      this.checkAndShowShuffleWarnings();
     },
 
     // Apply suspected burn card with confidence weighting
@@ -703,6 +729,9 @@ export const useBaccaratStore = defineStore('baccarat', {
       if (this.settings.calculationTriggers.autoCalculateEdges) {
         this.recalculateEdges();
       }
+
+      // Check for shuffle warnings after hand completion
+      this.checkAndShowShuffleWarnings();
     },
 
     // Helper method to get card value for baccarat
@@ -994,6 +1023,21 @@ export const useBaccaratStore = defineStore('baccarat', {
 
       // Clear current hand
       this.shoe.currentHand = { player: [], banker: [] };
+
+      // Update analysis
+      this.recalculateEdges();
+      this.updatePatternAnalysis(result.winner);
+      this.checkShoeCompositionTrigger();
+
+      console.log('[baccarat-engine][hand-completion] Hand result recorded', {
+        handNumber: result.handNumber,
+        winner: result.winner,
+        totalCards: result.player.length + result.banker.length,
+        runningTotal: this.history.hands.length,
+      });
+
+      // Check for shuffle warnings after hand completion
+      this.checkAndShowShuffleWarnings();
     },
 
     updatePatternAnalysis(winner: 'player' | 'banker' | 'tie') {
@@ -1212,6 +1256,9 @@ export const useBaccaratStore = defineStore('baccarat', {
             : (this.bettingStats.pairBetAccuracy * (pairBetCount - 1)) / pairBetCount;
         }
       }
+
+      // Check for shuffle warnings after hand completion
+      this.checkAndShowShuffleWarnings();
     },
 
     // Calculate payout for a given bet type and amount
@@ -1318,19 +1365,25 @@ export const useBaccaratStore = defineStore('baccarat', {
       // Initialize a fresh shoe when starting a session
       this.initializeShoe();
 
-      // Record session to Supabase
+      // Record session to Supabase with lifecycle flag
       try {
         const { sessionService } = await import('../services/sessionService');
         const session = await sessionService.createSession({
+          session_name: `Session ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
           started_at: new Date().toISOString(),
+          start_balance: this.ui.currentBalance, // Save starting balance
         });
 
         // Store the session ID for later updates
         this.ui.currentSessionId = session.id;
 
-        console.log('[session-tracking][initialization] Session recorded to database', {
-          sessionId: session.id,
-        });
+        console.log(
+          '[session-tracking][initialization] Session recorded to database with lifecycle flag',
+          {
+            sessionId: session.id,
+            lifecycleFlag: session.session_lifecycle_flag,
+          }
+        );
       } catch (error) {
         console.error('[session-tracking][error] Failed to record session to database', { error });
         // Continue with local session even if database fails
@@ -1346,6 +1399,7 @@ export const useBaccaratStore = defineStore('baccarat', {
       let handsPlayed = 0;
       let durationSeconds = 0;
       const sessionId = this.ui.currentSessionId;
+      const cardsRemainingAtEnd = this.totalCardsRemaining;
 
       if (this.ui.sessionStartTime) {
         const elapsed = Date.now() - this.ui.sessionStartTime;
@@ -1369,13 +1423,19 @@ export const useBaccaratStore = defineStore('baccarat', {
             ended_at: new Date().toISOString(),
             duration_seconds: durationSeconds,
             total_hands: handsPlayed,
+            cards_remaining: cardsRemainingAtEnd, // Save remaining cards count
+            end_balance: this.ui.currentBalance, // Save ending balance
             status: 'completed',
+            session_lifecycle_flag: 2, // 2 = properly completed
           });
 
-          console.log('[session-tracking][cleanup] Session updated in database', {
+          console.log('[session-tracking][cleanup] Session properly completed in database', {
             sessionId,
             duration: durationSeconds,
             hands: handsPlayed,
+            cardsRemaining: cardsRemainingAtEnd,
+            endBalance: this.ui.currentBalance,
+            lifecycleFlag: 2,
           });
         } catch (error) {
           console.error('[session-tracking][error] Failed to update session in database', {
@@ -1390,7 +1450,34 @@ export const useBaccaratStore = defineStore('baccarat', {
       this.shoe.currentHand = { player: [], banker: [] };
       this.resetBettingStats();
 
+      // Initialize fresh shoe for next session
+      this.initializeShoe();
+
       // Session ended
+    },
+
+    async handlePageRefresh() {
+      // Handle ghost sessions on page load - this is called from App.vue on mount
+      // Any sessions with lifecycle_flag=1 will be marked as interrupted
+      try {
+        const { sessionService } = await import('../services/sessionService');
+        const cleanedUpCount = await sessionService.handleGhostSessions();
+
+        if (cleanedUpCount > 0) {
+          console.log('[session-tracking][cleanup] Cleaned up ghost sessions on page load', {
+            cleanedUpSessions: cleanedUpCount,
+          });
+        }
+      } catch (error) {
+        console.error('[session-tracking][error] Failed to clean up ghost sessions', { error });
+      }
+
+      // Reset local session state regardless
+      this.ui.sessionActive = false;
+      this.ui.sessionStartTime = null;
+      this.ui.currentSessionId = null;
+
+      console.log('[session-tracking][cleanup] Local session state reset after page load');
     },
 
     setupEdgeSortingDemo() {
@@ -1549,6 +1636,64 @@ export const useBaccaratStore = defineStore('baccarat', {
         }
       } catch (error) {
         console.error('Error triggering professional burn analysis:', error);
+      }
+    },
+
+    async checkAndShowShuffleWarnings() {
+      // Import notifications dynamically to avoid circular dependencies
+      const { useNotifications } = await import('../composables/useNotifications');
+      const { warning } = useNotifications();
+
+      const remainingCards = this.totalCardsRemaining;
+      const cutCardPosition = this.settings.cutCardPosition;
+
+      // Don't show warnings if cut card is disabled (set to 0)
+      if (!cutCardPosition || cutCardPosition === 0) {
+        console.log('[shuffle-warning][skip] Cut card disabled, no warnings will be shown', {
+          cutCardPosition,
+          remainingCards,
+        });
+        return;
+      }
+
+      // Determine which warning should be shown
+      let currentWarningLevel: 'twenty' | 'six' | 'cutCard' | null = null;
+
+      if (remainingCards <= cutCardPosition) {
+        currentWarningLevel = 'cutCard';
+      } else if (remainingCards <= cutCardPosition + 6) {
+        currentWarningLevel = 'six';
+      } else if (remainingCards <= cutCardPosition + 20) {
+        currentWarningLevel = 'twenty';
+      }
+
+      // Only show warning if it's different from the last one shown (progressive warnings)
+      if (currentWarningLevel && currentWarningLevel !== this.lastShuffleWarningShown) {
+        switch (currentWarningLevel) {
+          case 'twenty':
+            warning('⚠️ 20 cards left before shuffle', { timeout: 6000 });
+            console.log('[shuffle-warning][alert] 20 cards remaining before cut card', {
+              remainingCards,
+              cutCardPosition,
+            });
+            break;
+          case 'six':
+            warning('⚠️ 6 cards left before shuffle', { timeout: 7000 });
+            console.log('[shuffle-warning][alert] 6 cards remaining before cut card', {
+              remainingCards,
+              cutCardPosition,
+            });
+            break;
+          case 'cutCard':
+            warning('🚨 CUT CARD REACHED - SHUFFLE REQUIRED', { timeout: 8000 });
+            console.log('[shuffle-warning][critical] Cut card reached, shuffle required', {
+              remainingCards,
+              cutCardPosition,
+            });
+            break;
+        }
+
+        this.lastShuffleWarningShown = currentWarningLevel;
       }
     },
   },

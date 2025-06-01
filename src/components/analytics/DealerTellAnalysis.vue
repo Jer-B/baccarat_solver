@@ -302,13 +302,7 @@
     <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">💡 Professional Tell Recognition Tips</h4>
-        <InfoToggleButton
-          type="section"
-          section="dealerTellAnalysis"
-          subsection="professionalTips"
-          variant="default"
-          size="xs"
-        />
+        <InfoSectionToggleButton section="dealerTellAnalysis" subsection="professionalTips" />
       </div>
       <div
         v-if="visibilityStore.isVisible('dealerTellAnalysis', 'professionalTips')"
@@ -349,7 +343,7 @@ import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useProfessionalBurnEstimation } from '../../composables/useProfessionalBurnEstimation';
 import type { Rank, Suit } from '../../types/cards';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
+import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();

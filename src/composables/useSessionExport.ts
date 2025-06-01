@@ -70,6 +70,9 @@ export function useSessionExport() {
         'Ended At',
         'Duration (seconds)',
         'Total Hands',
+        'Cards Remaining',
+        'Start Balance',
+        'End Balance',
         'Created At',
         'Updated At',
       ];
@@ -86,6 +89,9 @@ export function useSessionExport() {
             session.ended_at || '',
             session.duration_seconds || '',
             session.total_hands,
+            session.cards_remaining || '',
+            session.start_balance || '',
+            session.end_balance || '',
             session.created_at,
             session.updated_at,
           ].join(',')

@@ -204,12 +204,9 @@
     <div class="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
       <div class="flex items-center justify-between mb-2">
         <h4 class="text-sm font-semibold text-gray-800">📚 Professional Notes</h4>
-        <InfoToggleButton
-          type="section"
+        <InfoSectionToggleButton
           section="professionalBurnAnalysis"
           subsection="professionalNotes"
-          variant="default"
-          size="xs"
         />
       </div>
       <div
@@ -246,7 +243,7 @@ import { computed, onMounted } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useProfessionalBurnEstimation } from '@/composables/useProfessionalBurnEstimation';
-import InfoToggleButton from '@/components/common/button/InfoToggleButton.vue';
+import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();

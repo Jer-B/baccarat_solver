@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design System Imports */
+@import './design-system/tokens/connection.css';
+
 /* Design System - CSS Custom Properties */
 :root {
   /* Color Tokens */
@@ -15,6 +18,8 @@
   --color-primary-700: #1d4ed8;
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
+
+  --color-white: #ffffff;
 
   --color-neutral-50: #f9fafb;
   --color-neutral-100: #f3f4f6;
@@ -44,6 +49,12 @@
   --color-semantic-danger-500: #ef4444;
   --color-semantic-danger-600: #dc2626;
   --color-semantic-danger-700: #b91c1c;
+
+  --color-semantic-error-50: #fef2f2;
+  --color-semantic-error-100: #fee2e2;
+  --color-semantic-error-500: #ef4444;
+  --color-semantic-error-600: #dc2626;
+  --color-semantic-error-700: #b91c1c;
 
   /* Spacing Tokens */
   --spacing-0: 0;
@@ -82,6 +93,25 @@
   --spacing-layout-panel: var(--spacing-8);
   --spacing-layout-card: var(--spacing-6);
   --spacing-layout-grid: var(--spacing-6);
+
+  /* Typography Tokens */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* Container Tokens */
+  --container-max-width: 1200px;
 }
 
 /* Custom styles for baccarat application */
@@ -261,7 +291,8 @@ a:hover {
 
 /* App Header Component */
 .app-header {
-  background: linear-gradient(135deg, #1e40af, #1d4ed8);
+  /* background: linear-gradient(135deg, #1e40af, #1d4ed8); */
+  background: #1e40af; /* Unified blue, no gradient */
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -342,177 +373,6 @@ a:hover {
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Developer Panel Component */
-.dev-panel {
-  background: linear-gradient(135deg, #374151, #4b5563);
-  border-top: 2px solid #6b7280;
-  color: white;
-}
-
-.dev-panel .panel-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-4) var(--spacing-layout-panel);
-}
-
-.dev-panel .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-bottom: var(--spacing-4);
-}
-
-.dev-panel .panel-title-section {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-}
-
-.dev-panel .panel-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.dev-panel .panel-subtitle {
-  font-size: 0.875rem;
-  margin: 0;
-  color: #d1d5db;
-  font-weight: 500;
-}
-
-.dev-panel .panel-sections {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-6);
-}
-
-@media (min-width: 768px) {
-  .dev-panel .panel-sections {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.dev-panel .panel-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-}
-
-.dev-panel .section-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
-  color: #e5e7eb;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.dev-panel .section-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-3);
-}
-
-.dev-panel .section-action {
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--spacing-2);
-  font-size: 0.875rem;
-  font-weight: 600;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  outline: none;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  min-width: 120px;
-  text-align: center;
-}
-
-.dev-panel .section-action:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-.dev-panel .section-action:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none;
-  background-color: #6b7280 !important;
-  border-color: #9ca3af !important;
-  color: #d1d5db !important;
-}
-
-.dev-panel .section-action:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Action Button Variants - Enhanced for better visibility */
-.dev-panel .section-action.primary {
-  background-color: #3b82f6;
-  border-color: #2563eb;
-}
-
-.dev-panel .section-action.primary:hover:not(:disabled) {
-  background-color: #2563eb;
-  border-color: #1d4ed8;
-}
-
-.dev-panel .section-action.secondary {
-  background-color: #64748b;
-  border-color: #475569;
-}
-
-.dev-panel .section-action.secondary:hover:not(:disabled) {
-  background-color: #475569;
-  border-color: #334155;
-}
-
-.dev-panel .section-action.success {
-  background-color: #10b981;
-  border-color: #059669;
-}
-
-.dev-panel .section-action.success:hover:not(:disabled) {
-  background-color: #059669;
-  border-color: #047857;
-}
-
-.dev-panel .section-action.warning {
-  background-color: #f59e0b;
-  border-color: #d97706;
-}
-
-.dev-panel .section-action.warning:hover:not(:disabled) {
-  background-color: #d97706;
-  border-color: #b45309;
-}
-
-.dev-panel .section-action.danger {
-  background-color: #ef4444;
-  border-color: #dc2626;
-}
-
-.dev-panel .section-action.danger:hover:not(:disabled) {
-  background-color: #dc2626;
-  border-color: #b91c1c;
-}
-
-.dev-panel .section-action.info {
-  background-color: #06b6d4;
-  border-color: #0891b2;
-}
-
-.dev-panel .section-action.info:hover:not(:disabled) {
-  background-color: #0891b2;
-  border-color: #0e7490;
 }
 
 /* Form Elements */

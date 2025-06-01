@@ -63,6 +63,22 @@ CREATE TABLE api.edge_calculations (
     cards_remaining INTEGER NOT NULL
 );
 
+-- User sessions table - tracks gaming sessions
+CREATE TABLE api.user_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    started_at TIMESTAMPTZ NOT NULL,
+    ended_at TIMESTAMPTZ,
+    duration_seconds INTEGER,
+    total_hands INTEGER DEFAULT 0,
+    cards_remaining INTEGER,
+    start_balance DECIMAL(10,2),
+    end_balance DECIMAL(10,2),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
+    session_name TEXT NOT NULL
+);
+
 -- Indexes for performance
 CREATE INDEX idx_games_status ON api.games(status);
 CREATE INDEX idx_games_created_at ON api.games(created_at);
@@ -71,6 +87,11 @@ CREATE INDEX idx_hands_created_at ON api.hands(created_at);
 CREATE INDEX idx_burned_cards_game_id ON api.burned_cards(game_id);
 CREATE INDEX idx_edge_calculations_game_id ON api.edge_calculations(game_id);
 CREATE INDEX idx_edge_calculations_hand_id ON api.edge_calculations(hand_id);
+CREATE INDEX idx_user_sessions_status ON api.user_sessions(status);
+CREATE INDEX idx_user_sessions_created_at ON api.user_sessions(created_at);
+CREATE INDEX idx_user_sessions_started_at ON api.user_sessions(started_at);
+CREATE INDEX idx_user_sessions_ended_at ON api.user_sessions(ended_at);
+CREATE INDEX idx_user_sessions_balances ON api.user_sessions(start_balance, end_balance);
 
 -- Function to increment game hands count
 CREATE OR REPLACE FUNCTION api.increment_game_hands(game_id UUID)
@@ -88,12 +109,14 @@ ALTER TABLE api.games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api.hands ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api.burned_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api.edge_calculations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api.user_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations for now (you can restrict this later)
 CREATE POLICY "Allow all operations on games" ON api.games FOR ALL USING (true);
 CREATE POLICY "Allow all operations on hands" ON api.hands FOR ALL USING (true);
 CREATE POLICY "Allow all operations on burned_cards" ON api.burned_cards FOR ALL USING (true);
 CREATE POLICY "Allow all operations on edge_calculations" ON api.edge_calculations FOR ALL USING (true);
+CREATE POLICY "Allow all operations on user_sessions" ON api.user_sessions FOR ALL USING (true);
 
 -- Grant permissions to authenticated and anon roles
 GRANT USAGE ON SCHEMA api TO anon, authenticated;

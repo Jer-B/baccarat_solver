@@ -100,7 +100,9 @@ export const getColor = (token: string, shade: string | number = 500): string =>
   const [category, subcategory] = token.split('.');
   const colorGroup = (colors as any)[category];
 
-  if (!colorGroup) {return '#000000';}
+  if (!colorGroup) {
+    return '#000000';
+  }
 
   if (subcategory) {
     const subGroup = colorGroup[subcategory];

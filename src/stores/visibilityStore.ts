@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { TOGGLE_SETTINGS } from '@/config/gameSettings';
 
 interface VisibilityState {
   globalToggleMode: boolean; // When true, shows sections by default; when false, hides by default
@@ -34,13 +35,37 @@ interface VisibilityState {
     };
     sessionControl: {
       burnInfo: boolean | null;
+      deckSettings: boolean | null; // Allow null to use global default
+      deckInfo: boolean | null; // Allow null to use global default
+      balanceInfo: boolean | null;
+    };
+    dealerTells: {
+      analysis: boolean;
+      trends: boolean;
+      recommendations: boolean;
+    };
+    keyboardControls: {
+      guide: boolean;
     };
   };
 }
 
+// Helper function to get initial global toggle mode
+const getInitialGlobalToggleMode = (): boolean => {
+  // Check localStorage if persistence is enabled
+  if (TOGGLE_SETTINGS.PERSIST_TOGGLE_STATES) {
+    const stored = localStorage.getItem('visibility-global-toggle-mode');
+    if (stored !== null) {
+      return JSON.parse(stored);
+    }
+  }
+  // Fall back to default from settings
+  return TOGGLE_SETTINGS.INFO_PANELS_DEFAULT_VISIBLE;
+};
+
 export const useVisibilityStore = defineStore('visibility', {
   state: (): VisibilityState => ({
-    globalToggleMode: true, // Default to showing all sections
+    globalToggleMode: getInitialGlobalToggleMode(), // Use settings + localStorage
     visibility: {
       shoeComposition: {
         cutCardInfo: null, // Use global default
@@ -73,6 +98,17 @@ export const useVisibilityStore = defineStore('visibility', {
       },
       sessionControl: {
         burnInfo: null, // Use global default
+        deckSettings: null, // Use global default (was: true)
+        deckInfo: null, // Use global default (was: true) - this is the Cut Card System
+        balanceInfo: null,
+      },
+      dealerTells: {
+        analysis: true,
+        trends: true,
+        recommendations: true,
+      },
+      keyboardControls: {
+        guide: true,
       },
     },
   }),
@@ -114,9 +150,9 @@ export const useVisibilityStore = defineStore('visibility', {
       return isVisible ? '👁️ Hide' : '👁️‍🗨️ Show';
     },
 
-    // Individual toggles always work
+    // Individual toggles enabled based on settings
     isToggleEnabled: () => () => {
-      return true;
+      return TOGGLE_SETTINGS.INDIVIDUAL_TOGGLES_WHEN_GLOBAL_OFF;
     },
 
     // Get global toggle button text
@@ -160,6 +196,14 @@ export const useVisibilityStore = defineStore('visibility', {
 
       // Now toggle the global state
       this.globalToggleMode = !this.globalToggleMode;
+
+      // Persist to localStorage if enabled
+      if (TOGGLE_SETTINGS.PERSIST_TOGGLE_STATES) {
+        localStorage.setItem(
+          'visibility-global-toggle-mode',
+          JSON.stringify(this.globalToggleMode)
+        );
+      }
     },
 
     setGlobalVisibility(visible: boolean) {
@@ -169,6 +213,14 @@ export const useVisibilityStore = defineStore('visibility', {
       });
 
       this.globalToggleMode = visible;
+
+      // Persist to localStorage if enabled
+      if (TOGGLE_SETTINGS.PERSIST_TOGGLE_STATES) {
+        localStorage.setItem(
+          'visibility-global-toggle-mode',
+          JSON.stringify(this.globalToggleMode)
+        );
+      }
     },
 
     // Toggle individual section visibility - always works
