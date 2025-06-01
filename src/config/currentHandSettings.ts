@@ -431,9 +431,12 @@ export const CURRENT_HAND_UTILS = {
   calculateHandValue: (cards: Card[]): number => {
     const total = cards.reduce((sum, card) => {
       const rank = card.rank.toUpperCase();
-      if (rank === 'A') return sum + CURRENT_HAND_SETTINGS.MAGIC_NUMBERS.CARD_VALUES.ACE;
-      if (['K', 'Q', 'J'].includes(rank))
+      if (rank === 'A') {
+        return sum + CURRENT_HAND_SETTINGS.MAGIC_NUMBERS.CARD_VALUES.ACE;
+      }
+      if (['K', 'Q', 'J'].includes(rank)) {
         return sum + CURRENT_HAND_SETTINGS.MAGIC_NUMBERS.CARD_VALUES.FACE_CARD_VALUE;
+      }
       return (
         sum +
         parseInt(rank) * CURRENT_HAND_SETTINGS.MAGIC_NUMBERS.CARD_VALUES.NUMBER_CARD_MULTIPLIER
@@ -444,7 +447,9 @@ export const CURRENT_HAND_UTILS = {
 
   // Winner determination
   determineWinner: (playerValue: number, bankerValue: number): 'player' | 'banker' | 'tie' => {
-    if (playerValue === bankerValue) return 'tie';
+    if (playerValue === bankerValue) {
+      return 'tie';
+    }
     return playerValue > bankerValue ? 'player' : 'banker';
   },
 

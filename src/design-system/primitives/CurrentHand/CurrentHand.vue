@@ -942,7 +942,9 @@ onMounted(() => {
 // =============================================================================
 
 function detectPairInHand(cards: Array<{ rank: string; suit: string }>): boolean {
-  if (cards.length < 2) return false;
+  if (cards.length < 2) {
+    return false;
+  }
   // Check if first two cards have same rank
   return cards[0].rank === cards[1].rank;
 }

@@ -218,8 +218,12 @@ export function useCurrentHand(
 
   // Round state computations
   const canCompleteRound = computed((): boolean => {
-    if (!props.sessionActive) return false;
-    if (isProcessingCompletion.value) return false;
+    if (!props.sessionActive) {
+      return false;
+    }
+    if (isProcessingCompletion.value) {
+      return false;
+    }
 
     const totalCards = playerCards.value.length + bankerCards.value.length;
     const hasBet = props.currentRoundBet?.hasBet || false;
@@ -244,8 +248,12 @@ export function useCurrentHand(
 
   // Auto-complete state
   const canAutoComplete = computed((): boolean => {
-    if (!autoCompleteEnabled.value) return false;
-    if (autoCompleteTriggered.value) return false;
+    if (!autoCompleteEnabled.value) {
+      return false;
+    }
+    if (autoCompleteTriggered.value) {
+      return false;
+    }
 
     const totalCards = playerCards.value.length + bankerCards.value.length;
     const cardCount =
@@ -458,7 +466,9 @@ export function useCurrentHand(
     },
 
     triggerAutoComplete: (): void => {
-      if (!canAutoComplete.value) return;
+      if (!canAutoComplete.value) {
+        return;
+      }
 
       console.log('[use-current-hand][auto-complete] Triggering auto-complete', {
         currentCards: playerCards.value.length + bankerCards.value.length,
@@ -678,7 +688,9 @@ export function useCurrentHand(
 
     // Professional algorithm actions
     requestKellyCalculation: (): void => {
-      if (!props.currentRoundBet?.betAmount) return;
+      if (!props.currentRoundBet?.betAmount) {
+        return;
+      }
 
       console.log('[use-current-hand][kelly] Requesting Kelly calculation');
       emit(
@@ -937,7 +949,9 @@ export function useCurrentHand(
   // =============================================================================
 
   function detectPairInHand(cards: Array<{ rank: string; suit: string }>): boolean {
-    if (cards.length < 2) return false;
+    if (cards.length < 2) {
+      return false;
+    }
     // Check if first two cards have same rank
     return cards[0].rank === cards[1].rank;
   }
