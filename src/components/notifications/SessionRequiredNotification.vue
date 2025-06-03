@@ -45,7 +45,7 @@
               <!-- Dynamic Title Prefix Based on Type -->
               <span v-if="type === 'warning'" class="mr-1">⚠️</span>
               <span v-else-if="type === 'info'" class="mr-1">ℹ️</span>
-              <span v-else-if="type === 'session'" class="mr-1">🎯</span>
+              <span v-else-if="type === 'session'" class="mr-1"></span>
               <span v-else class="mr-1">📢</span>
               {{ title }}
             </div>
@@ -58,9 +58,6 @@
               </span>
               <span v-else-if="type === 'info'" class="block mt-1 text-blue-600">
                 💡 Information
-              </span>
-              <span v-else-if="type === 'session'" class="block mt-1 text-purple-600">
-                🎮 Session Management
               </span>
             </div>
           </div>
@@ -103,18 +100,6 @@
           >
             ✕
           </button>
-        </div>
-
-        <!-- Dynamic Type-Based Progress Indicator for Session Type -->
-        <div
-          v-if="type === 'session'"
-          class="mt-2 w-full bg-gray-200 rounded-full h-1"
-          title="Session activation progress"
-        >
-          <div
-            class="bg-purple-500 h-1 rounded-full transition-all duration-300"
-            :style="{ width: isVisible ? '25%' : '100%' }"
-          ></div>
         </div>
 
         <!-- Dynamic Type-Based Urgency Indicator for Warning Type -->

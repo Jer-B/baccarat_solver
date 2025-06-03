@@ -216,14 +216,14 @@ export const DECK_SETTINGS = {
   /** Deck constraints */
   CONSTRAINTS: {
     MIN_CUT_CARD: 10,
-    MAX_CUT_CARD: 104,
+    MAX_CUT_CARD: 50,
     DECK_OPTIONS: [1, 2, 3, 4, 5, 6, 7, 8] as const,
   },
 
   /** Default values */
   DEFAULTS: {
     NUMBER_OF_DECKS: 8,
-    CUT_CARD_POSITION: 56,
+    CUT_CARD_POSITION: 45,
   },
 
   /** Labels and text */

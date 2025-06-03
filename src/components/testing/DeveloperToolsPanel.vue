@@ -1,7 +1,6 @@
 <template>
   <Panel
     title="🛠️ Developer Tools"
-    subtitle="Testing & Development Options"
     :sections="panelSections"
     :is-closable="false"
     class="dev-panel"

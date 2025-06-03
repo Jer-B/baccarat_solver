@@ -49,6 +49,13 @@ export interface Database {
           is_natural: boolean;
           cards_remaining: number;
           penetration: number;
+          bet_type?: string | null;
+          bet_amount?: number | null;
+          bet_won?: boolean | null;
+          bet_payout?: number | null;
+          bet_net_result?: number | null;
+          balance_before?: number | null;
+          balance_after?: number | null;
         };
         Insert: {
           id?: string;
@@ -65,6 +72,13 @@ export interface Database {
           is_natural: boolean;
           cards_remaining: number;
           penetration: number;
+          bet_type?: string | null;
+          bet_amount?: number | null;
+          bet_won?: boolean | null;
+          bet_payout?: number | null;
+          bet_net_result?: number | null;
+          balance_before?: number | null;
+          balance_after?: number | null;
         };
         Update: {
           id?: string;
@@ -81,6 +95,13 @@ export interface Database {
           is_natural?: boolean;
           cards_remaining?: number;
           penetration?: number;
+          bet_type?: string | null;
+          bet_amount?: number | null;
+          bet_won?: boolean | null;
+          bet_payout?: number | null;
+          bet_net_result?: number | null;
+          balance_before?: number | null;
+          balance_after?: number | null;
         };
       };
       burned_cards: {

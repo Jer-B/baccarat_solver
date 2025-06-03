@@ -14,17 +14,17 @@ export const SESSION_DEFAULTS = {
   AUTO_BURN_ENABLED: true,
   AUTO_BURN_COUNT: 3,
   MANUAL_BURN_COUNT: 3,
-  STARTING_BALANCE: 500,
+  STARTING_BALANCE: 10000,
 
   // Session constraints
   MIN_BURN_COUNT: 0,
   MAX_BURN_COUNT: 10,
   MIN_STARTING_BALANCE: 1,
-  MAX_STARTING_BALANCE: 1000000000000,
+  MAX_STARTING_BALANCE: 999999999999,
 
   // Balance settings
   USE_PREVIOUS_END_BALANCE: false,
-  FALLBACK_BALANCE: 500,
+  FALLBACK_BALANCE: 10000,
 
   // Time calculation constants
   MILLISECONDS_PER_SECOND: 1000,
@@ -100,13 +100,20 @@ export const BETTING_DEFAULTS = {
   DEFAULT_BET_AMOUNT: 10,
 
   /** Minimum bet amount */
-  MIN_BET_AMOUNT: 0.01,
+  MIN_BET_AMOUNT: 0.5,
 
   /** Maximum bet amount */
-  MAX_BET_AMOUNT: 10000,
+  MAX_BET_AMOUNT: 125000,
 
   /** Default bet step increment */
-  BET_STEP: 0.01,
+  BET_STEP: 0.5,
+
+  /** Quick bet amounts */
+  QUICK_BET_AMOUNTS: [5, 10, 25, 50, 100, 250],
+
+  /** UI state defaults */
+  LAST_BET_TYPE: null,
+  SHOW_PAYOUT_REFERENCE: true,
 } as const;
 
 // =============================================================================

@@ -58,13 +58,14 @@
           <!-- Current Selection Info -->
           <div class="mb-4 text-sm text-gray-600">
             <strong>Selected:</strong>
-            <span v-if="state.selectedPreset" class="text-yellow-800">
+            <span v-if="useManualConfig" class="text-purple-800"> Manual Configuration </span>
+            <span v-else-if="state.selectedPreset" class="text-yellow-800">
               {{ state.selectedPreset.name }}
               <span v-if="hasUnsavedChanges" class="text-orange-600 ml-2">
                 ⚠️ You have unsaved changes - editing manually
               </span>
             </span>
-            <span v-else class="text-gray-500"> Manual Configuration </span>
+            <span v-else class="text-gray-500"> No preset selected </span>
           </div>
 
           <!-- Info Text about Setting Flexibility -->
@@ -139,36 +140,79 @@
               </button>
             </div>
 
-            <!-- Preset Actions for Custom Presets -->
-            <div v-if="state.selectedPreset && !hasUnsavedChanges" class="flex space-x-2">
-              <!-- Set as Default - Always visible for any preset -->
+            <!-- Preset Actions - Always Visible -->
+            <div class="flex space-x-2">
+              <!-- Set as Default - Always visible, disabled when no preset selected -->
               <button
-                v-if="canSetAsDefault"
                 :class="[
                   config.STYLING.BUTTON_BASE,
-                  'bg-blue-500 text-white hover:bg-blue-600',
+                  state.selectedPreset && !hasUnsavedChanges && !state.selectedPreset.is_default
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed',
                   'text-xs px-3 py-1',
                 ]"
-                @click="actions.setDefaultPreset(state.selectedPreset.id)"
-                :title="'Set as default preset'"
+                @click="handleSetDefaultPreset(state, actions, hasUnsavedChanges)"
+                :disabled="
+                  !state.selectedPreset ||
+                  hasUnsavedChanges ||
+                  (state.selectedPreset?.is_default ?? false)
+                "
+                :title="
+                  !state.selectedPreset
+                    ? 'Select a preset to set as default'
+                    : hasUnsavedChanges
+                      ? 'Save changes before setting as default'
+                      : (state.selectedPreset?.is_default ?? false)
+                        ? 'This preset is already the default'
+                        : 'Set as default preset'
+                "
               >
                 ⭐ Set as Default
               </button>
 
-              <!-- Delete - Only for custom presets -->
+              <!-- Delete - Always visible, disabled when no custom preset selected -->
               <button
-                v-if="canDeleteSelectedPreset"
                 :class="[
                   config.STYLING.BUTTON_BASE,
-                  'bg-red-500 text-white hover:bg-red-600',
+                  state.selectedPreset && !state.selectedPreset.is_system_preset
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed',
                   'text-xs px-3 py-1',
                 ]"
-                @click="actions.deletePreset(state.selectedPreset.id)"
-                :title="'Delete this custom preset'"
+                @click="handleDeletePreset(state, actions)"
+                :disabled="
+                  !state.selectedPreset || (state.selectedPreset?.is_system_preset ?? true)
+                "
+                :title="
+                  !state.selectedPreset
+                    ? 'Select a custom preset to delete'
+                    : (state.selectedPreset?.is_system_preset ?? true)
+                      ? 'System presets cannot be deleted'
+                      : 'Delete this custom preset'
+                "
               >
                 🗑️ Delete
               </button>
             </div>
+          </div>
+
+          <!-- Manual Configuration Mode -->
+          <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <input
+                id="manual-config-checkbox"
+                type="checkbox"
+                v-model="useManualConfig"
+                class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              />
+              <label for="manual-config-checkbox" class="text-sm font-medium text-gray-700">
+                Use manual configuration
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mt-1 ml-7">
+              When enabled, changes to ratios below will be saved as manual settings instead of
+              updating presets
+            </p>
           </div>
 
           <!-- Manual Settings Section -->
@@ -192,7 +236,7 @@
                     :step="payoutFormFields.player_payout.step"
                     :value="state.currentValues.player_payout"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'player_payout',
                         parseFloat(($event.target as HTMLInputElement).value)
                       )
@@ -219,7 +263,7 @@
                     :step="payoutFormFields.banker_payout.step"
                     :value="state.currentValues.banker_payout"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'banker_payout',
                         parseFloat(($event.target as HTMLInputElement).value)
                       )
@@ -241,12 +285,12 @@
                   <input
                     :class="config.STYLING.FORM_FIELD_INPUT"
                     type="number"
-                    :min="payoutFormFields.banker_commission.min"
-                    :max="payoutFormFields.banker_commission.max"
-                    :step="payoutFormFields.banker_commission.step"
+                    :min="payoutFormFields.banker_commission.min * 100"
+                    :max="payoutFormFields.banker_commission.max * 100"
+                    :step="payoutFormFields.banker_commission.step * 100"
                     :value="(state.currentValues.banker_commission * 100).toFixed(1)"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'banker_commission',
                         parseFloat(($event.target as HTMLInputElement).value) / 100
                       )
@@ -281,7 +325,7 @@
                     :step="payoutFormFields.tie_payout.step"
                     :value="state.currentValues.tie_payout"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'tie_payout',
                         parseFloat(($event.target as HTMLInputElement).value)
                       )
@@ -308,7 +352,7 @@
                     :step="payoutFormFields.player_pair_payout.step"
                     :value="state.currentValues.player_pair_payout"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'player_pair_payout',
                         parseFloat(($event.target as HTMLInputElement).value)
                       )
@@ -335,7 +379,7 @@
                     :step="payoutFormFields.banker_pair_payout.step"
                     :value="state.currentValues.banker_pair_payout"
                     @input="
-                      handleManualEdit(
+                      actions.updatePayoutValue(
                         'banker_pair_payout',
                         parseFloat(($event.target as HTMLInputElement).value)
                       )
@@ -350,6 +394,33 @@
             </div>
           </div>
 
+          <!-- Save Button - Always Visible (Below ratios) -->
+          <div class="mt-4">
+            <button
+              :class="[
+                config.STYLING.BUTTON_BASE,
+                state.selectedPreset && !state.selectedPreset.is_system_preset && hasUnsavedChanges
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed',
+                'px-4 py-2 text-sm',
+              ]"
+              @click="handleSavePreset(state, actions, hasUnsavedChanges)"
+              :disabled="
+                !(
+                  state.selectedPreset &&
+                  !state.selectedPreset.is_system_preset &&
+                  hasUnsavedChanges
+                )
+              "
+              :title="getSaveButtonTooltip(state, hasUnsavedChanges)"
+            >
+              💾 Save Changes to {{ state.selectedPreset?.name || 'Preset' }}
+            </button>
+            <div class="mt-1 text-xs text-gray-500">
+              {{ getSaveButtonHelpText(state, hasUnsavedChanges) }}
+            </div>
+          </div>
+
           <!-- Information Panels -->
           <div class="mt-6 space-y-3">
             <!-- Collapsible Payout Examples Panel -->
@@ -357,7 +428,7 @@
               class="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg"
             >
               <button
-                @click="showExamples = !showExamples"
+                @click="handleShowExamplesToggle"
                 class="w-full flex items-center justify-between p-4 text-left hover:bg-white/50 transition-colors rounded-lg"
               >
                 <div class="flex items-center space-x-3">
@@ -627,7 +698,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useNotifications } from '@/composables/useNotifications';
 import { PayoutSettings } from '@/design-system/primitives/PayoutSettings';
 import {
   PAYOUT_SETTINGS,
@@ -676,6 +748,9 @@ interface PayoutSettingsSectionEmits {
   'payout-change': [event: PayoutChangeEvent];
   'manual-value-change': [field: keyof PayoutValues, value: number];
 
+  // Manual config mode changes
+  'manual-config-changed': [useManualConfig: boolean];
+
   // Preset management events
   'preset-selected': [preset: PayoutPreset];
   'preset-created': [presetData: { name: string; values: PayoutValues }];
@@ -706,12 +781,63 @@ const props = withDefaults(defineProps<PayoutSettingsSectionProps>(), {
 const emit = defineEmits<PayoutSettingsSectionEmits>();
 
 // =============================================================================
+// STORES & COMPOSABLES
+// =============================================================================
+
+const { success, error: showError } = useNotifications();
+
+// =============================================================================
 // LOCAL STATE
 // =============================================================================
 
 // Controls visibility of the collapsible panels
 const showExamples = ref(false);
 const showPresetInfo = ref(false);
+
+// Manual configuration mode
+const useManualConfig = ref(false);
+
+// Simple initialization flag for watcher
+const isInitialized = ref(false);
+
+// =============================================================================
+// COMPUTED PROPERTIES
+// =============================================================================
+
+// Determines if the save button should be enabled
+const canSaveCustomPreset = computed(() => {
+  // For now, return false since we need access to state from the template
+  // This will be properly computed in the template where we have access to state and hasUnsavedChanges
+  return false;
+});
+
+// Returns tooltip text for save button based on current state
+const getSaveButtonTooltip = (state: any, hasUnsavedChanges: boolean): string => {
+  if (!state.selectedPreset) {
+    return 'Select a custom preset to save changes';
+  }
+  if (state.selectedPreset.is_system_preset) {
+    return 'System presets cannot be modified - create a custom preset instead';
+  }
+  if (!hasUnsavedChanges) {
+    return 'No changes to save';
+  }
+  return 'Save changes to the selected custom preset';
+};
+
+// Returns help text below save button
+const getSaveButtonHelpText = (state: any, hasUnsavedChanges: boolean): string => {
+  if (!state.selectedPreset) {
+    return 'Select a custom preset to save changes • For custom presets only';
+  }
+  if (state.selectedPreset.is_system_preset) {
+    return 'System presets cannot be modified • For custom presets only';
+  }
+  if (!hasUnsavedChanges) {
+    return 'No unsaved changes • For custom presets only';
+  }
+  return `Click to save changes to "${state.selectedPreset.name}" • For custom presets only`;
+};
 
 // =============================================================================
 // CONFIGURATION AND UTILITY ACCESS
@@ -733,13 +859,66 @@ const formatPercentage = (decimal: number): string => {
   return PAYOUT_UTILS.formatPercentage(decimal);
 };
 
+// Safe handler for setting default preset
+const handleSetDefaultPreset = (state: any, actions: any, hasUnsavedChanges: boolean): void => {
+  if (state.selectedPreset && !hasUnsavedChanges && !state.selectedPreset.is_default) {
+    actions.setDefaultPreset(state.selectedPreset.id);
+  }
+};
+
+// Safe handler for deleting preset
+const handleDeletePreset = (state: any, actions: any): void => {
+  if (state.selectedPreset && !state.selectedPreset.is_system_preset) {
+    actions.deletePreset(state.selectedPreset.id);
+  }
+};
+
+// Safe handler for saving preset changes
+const handleSavePreset = async (
+  state: any,
+  actions: any,
+  hasUnsavedChanges: boolean
+): Promise<void> => {
+  if (state.selectedPreset && !state.selectedPreset.is_system_preset && hasUnsavedChanges) {
+    try {
+      // Update the existing custom preset with current values
+      await actions.updatePreset(state.selectedPreset.id, state.currentValues);
+
+      // Show success toast
+      success(`Saved changes to ${state.selectedPreset.name}!`);
+
+      // Emit success event that will trigger additional handling in parent if needed
+      emit('preset-updated', state.selectedPreset.id, state.currentValues);
+
+      console.log('[payout-settings-section][save] Custom preset updated successfully', {
+        presetId: state.selectedPreset.id,
+        presetName: state.selectedPreset.name,
+      });
+    } catch (error) {
+      console.error('[payout-settings-section][error] Failed to save preset', { error });
+
+      // Show error toast
+      showError(
+        `Failed to save preset: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+};
+
 // =============================================================================
 // MANUAL EDITING HANDLER
 // =============================================================================
 
 const handleManualEdit = (field: keyof PayoutValues, value: number): void => {
-  // This will automatically clear the preset selection and switch to manual mode
-  handleManualValueChange(field, value);
+  // Emit the value change to the PayoutSettings primitive
+  emit('manual-value-change', field, value);
+
+  console.log('[payout-settings-section][manual-edit] Value changed', {
+    field,
+    value,
+    mode: useManualConfig.value ? 'Manual Configuration' : 'Preset Mode',
+    preservingMode: true,
+  });
 };
 
 // =============================================================================
@@ -848,21 +1027,35 @@ const handleValidationSuccess = (): void => {
 
 console.log('[payout-settings-section][initialization] PayoutSettingsSection initialized');
 
-// Betting Interface - handlers connect payout changes to betting decisions
-// Statistics Display - formatPercentage shows professional-grade percentage formatting
-// Algorithm Coordination - props provide data for Kelly Criterion, edge calculations, etc.
-// The refactor is now complete and professional-grade, ready for integration with the advanced gambling analysis algorithms. All variables have their intended purpose and the "Set as Default" button works as requested!
-// 📊 Statistics Display Integration (formatPercentage)
-// Target Locations for Professional Percentage Formatting:
-// Edge Calculations Display → Real-time edge percentages with payout impact
-// Current Hand Statistics → Commission impact on expected value
-// Kelly Criterion Calculator → Risk-adjusted bet sizing with payout ratios
-// Burn Card Analysis → Payout-adjusted edge calculations
-// Session Statistics → Win rate analysis with commission effects
-// 🎰 Betting Interface Integration (handlers)
-// Target Integration Points:
-// Real-time Bet Recommendations → Payout changes trigger new Kelly calculations
-// Edge-Based Betting → Commission changes affect optimal bet sizes
-// Risk Management → Payout ratios influence bankroll allocation
-// Professional Algorithms → Live payout integration with Jacobson/Griffin methods
+// Add a watch for useManualConfig to emit the manual-config-changed event
+watch(useManualConfig, (newValue: boolean) => {
+  // Only emit if component is initialized to prevent initial load loops
+  if (!isInitialized.value) {
+    console.log(
+      '[payout-settings-section][watch] Skipping manual config emit during initialization',
+      {
+        newValue,
+      }
+    );
+    return;
+  }
+
+  console.log('[payout-settings-section][watch] Manual config mode changed', {
+    newValue,
+    mode: newValue ? 'Manual Configuration' : 'Preset Mode',
+  });
+  emit('manual-config-changed', newValue);
+});
+
+// Mark as initialized after a short delay to allow all initial props to settle
+setTimeout(() => {
+  isInitialized.value = true;
+  console.log('[payout-settings-section][lifecycle] Component initialization complete');
+}, 500);
+
+// New function to handle examples toggle
+const handleShowExamplesToggle = () => {
+  console.log('[payout-settings-section][event] Payout examples toggle clicked');
+  showExamples.value = !showExamples.value;
+};
 </script>

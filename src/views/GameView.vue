@@ -9,10 +9,12 @@
     />
 
     <!-- Session Control -->
-    <SessionControl />
+    <SessionControl @payout-change="handlePayoutChange" />
 
-    <!-- Game Sequence Indicator -->
-    <GameSequenceIndicator ref="gameSequenceRef" :showDebug="false" />
+    <!-- Game Sequence Indicator - Fixed Position Left Side -->
+    <div class="fixed left-1 top-[90%] transform -translate-y-1/2 z-50">
+      <GameSequenceIndicator ref="gameSequenceRef" :showDebug="false" />
+    </div>
 
     <!-- Card Composition Chart -->
     <CardCompositionChart ref="cardCompositionChartRef" />
@@ -138,156 +140,23 @@
 
     <!-- Game Interface Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Betting Interface -->
+      <!-- NEW CDD/HEADLESS BETTING INTERFACE - MOVED FROM SESSION CONTROL TO HERE -->
       <div class="lg:col-span-3">
-        <div class="card bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200">
-          <h2 class="text-xl font-semibold mb-4 text-green-800">Betting Interface & Statistics</h2>
-
-          <!-- Betting Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-6">
-            <!-- Balance Display (Read-only) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Current Balance</label>
-              <div
-                class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 font-medium"
-              >
-                ${{ store.ui.currentBalance.toFixed(2) }}
-              </div>
-              <div class="text-xs text-gray-500 mt-1">Set in Session Control</div>
-            </div>
-
-            <!-- Bet Amount -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bet Amount</label>
-              <input
-                v-model.number="bettingInterface.betAmount"
-                type="number"
-                min="0"
-                step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="10.00"
-              />
-            </div>
-
-            <!-- Bet Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bet On</label>
-              <div class="grid grid-cols-3 gap-1">
-                <button
-                  @click="bettingInterface.selectedBet = 'player'"
-                  :class="[
-                    'px-2 py-2 rounded-md font-medium transition-colors text-xs',
-                    bettingInterface.selectedBet === 'player'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                  ]"
-                >
-                  Player
-                </button>
-                <button
-                  @click="bettingInterface.selectedBet = 'banker'"
-                  :class="[
-                    'px-2 py-2 rounded-md font-medium transition-colors text-xs',
-                    bettingInterface.selectedBet === 'banker'
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                  ]"
-                >
-                  Banker
-                </button>
-                <button
-                  @click="bettingInterface.selectedBet = 'tie'"
-                  :class="[
-                    'px-2 py-2 rounded-md font-medium transition-colors text-xs',
-                    bettingInterface.selectedBet === 'tie'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                  ]"
-                >
-                  Tie
-                </button>
-              </div>
-            </div>
-
-            <!-- Pair Bets -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Pair Bets</label>
-              <div class="grid grid-cols-2 gap-1">
-                <button
-                  @click="bettingInterface.selectedBet = 'playerPair'"
-                  :class="[
-                    'px-2 py-2 rounded-md font-medium transition-colors text-xs',
-                    bettingInterface.selectedBet === 'playerPair'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                  ]"
-                >
-                  P Pair
-                </button>
-                <button
-                  @click="bettingInterface.selectedBet = 'bankerPair'"
-                  :class="[
-                    'px-2 py-2 rounded-md font-medium transition-colors text-xs',
-                    bettingInterface.selectedBet === 'bankerPair'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                  ]"
-                >
-                  B Pair
-                </button>
-              </div>
-            </div>
-
-            <!-- Place Bet Button -->
-            <div>
-              <button
-                @click="placeBet"
-                :disabled="
-                  !isBettingAllowed() ||
-                  !bettingInterface.selectedBet ||
-                  !bettingInterface.betAmount
-                "
-                class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                Place Bet
-              </button>
-            </div>
-          </div>
-
-          <!-- Payout Information -->
-          <div class="p-3 bg-white rounded-lg border mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <div class="text-sm font-medium text-gray-700">Payout Information:</div>
-              <InfoSectionToggleButton section="bettingInterface" subsection="payoutInfo" />
-            </div>
-            <div
-              v-if="visibilityStore.isVisible('bettingInterface', 'payoutInfo')"
-              class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-600"
-            >
-              <div>Player: {{ currentPayoutValues.player_payout }}:1</div>
-              <div>
-                Banker: {{ currentPayoutValues.banker_payout }}:1 ({{
-                  (currentPayoutValues.banker_commission * 100).toFixed(1)
-                }}% commission)
-              </div>
-              <div>Tie: {{ currentPayoutValues.tie_payout }}:1</div>
-              <div>Player Pair: {{ currentPayoutValues.player_pair_payout }}:1</div>
-              <div>Banker Pair: {{ currentPayoutValues.banker_pair_payout }}:1</div>
-            </div>
-          </div>
-
-          <!-- Current Round Status -->
-          <div
-            v-if="currentRoundBet.hasBet"
-            class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-          >
-            <div class="text-sm font-medium text-yellow-800">
-              Current Bet: ${{ currentRoundBet.betAmount }} on
-              {{ currentRoundBet.betType?.toUpperCase() }}
-            </div>
-            <div class="text-xs text-yellow-600 mt-1">Waiting for hand to complete...</div>
-          </div>
-        </div>
+        <BettingInterfaceSection
+          :current-balance="store.ui.currentBalance"
+          :current-payout-values="currentPayoutValues"
+          :session-active="store.ui.sessionActive"
+          :can-perform-actions="store.canPerformActions"
+          :selected-preset-name="configurationStatus.name"
+          :use-manual-config="configurationStatus.type === 'manual'"
+          @bet-amount-changed="handleBettingInterfaceBetAmountChanged"
+          @bet-type-selected="handleBettingInterfaceBetTypeSelected"
+          @bet-placed="handleBettingInterfaceBetPlaced"
+          @bet-cleared="handleBettingInterfaceBetCleared"
+          @validation-error="handleBettingInterfaceValidationError"
+          @validation-success="handleBettingInterfaceValidationSuccess"
+          @payout-settings-requested="handleBettingInterfacePayoutSettingsRequested"
+        />
       </div>
     </div>
 
@@ -307,6 +176,7 @@
           :session-active="store.ui.sessionActive"
           :can-perform-actions="store.canPerformActions"
           :auto-complete-enabled="false"
+          @round-completed="handleRoundCompleted"
           @hand-completed="handleHandCompleted"
           @hand-cleared="handleHandCleared"
           @balance-updated="handleBalanceUpdated"
@@ -438,7 +308,6 @@ import { inject, ref, nextTick, computed } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useGameLogic } from '@/composables/useGameLogic';
-import { useBettingInterface } from '@/composables/useBettingInterface';
 import { useKeyboardControls } from '@/composables/useKeyboardControls';
 import { useNotifications } from '@/composables/useNotifications';
 import { GAME_SETTINGS } from '@/config/gameSettings';
@@ -459,22 +328,54 @@ import ProfessionalBurnCardAnalysis from '@/components/game/ProfessionalBurnCard
 import GameSequenceIndicator from '@/components/game/GameSequenceIndicator.vue';
 import SessionRequiredNotification from '@/components/notifications/SessionRequiredNotification.vue';
 import { useSessionNotifications } from '@/composables/useSessionNotifications';
-import { usePayoutSettings } from '@/composables/usePayoutSettings';
 
 // ✨ NEW: Import CurrentHandSection (CDD Architecture)
 import { CurrentHandSection } from '@/components/session/sections';
+import BettingInterfaceSection from '@/components/session/sections/BettingInterfaceSection.vue';
 
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();
 const { createHandResult } = useGameLogic();
 
-// ✨ NEW: Live PayoutSettings integration (replaces hardcoded store.settings.payouts)
-const { currentPayoutValues, payoutReference } = usePayoutSettings();
+// ✨ UPDATED: Use SessionControl payout values directly (remove independent usePayoutSettings)
+// These will be populated by handlePayoutChange from SessionControl
+const currentPayoutValues = ref({
+  player_payout: 1.0,
+  banker_payout: 1.0,
+  banker_commission: 0.05,
+  tie_payout: 8.0,
+  player_pair_payout: 11.0,
+  banker_pair_payout: 11.0,
+});
 
-// ✨ UPDATED: Pass live payout values to betting interface for real-time calculations
-const { settleCurrentBet, startNewRound } = useBettingInterface(
-  computed(() => currentPayoutValues.value)
-);
+const selectedPresetName = ref<string | null>(null);
+const useManualConfig = ref<boolean>(false);
+
+// Configuration status computed from SessionControl state
+const configurationStatus = computed(() => {
+  if (useManualConfig.value) {
+    return {
+      type: 'manual' as const,
+      name: 'Manual Configuration',
+      isDefault: false,
+      isSystem: false,
+    };
+  } else if (selectedPresetName.value) {
+    return {
+      type: 'preset' as const,
+      name: selectedPresetName.value,
+      isDefault: false, // We'll update this if needed
+      isSystem: false,
+    };
+  } else {
+    return {
+      type: 'manual' as const,
+      name: 'No Selection',
+      isDefault: false,
+      isSystem: false,
+    };
+  }
+});
 
 const { warning, error, success } = useNotifications();
 const sessionNotifications = useSessionNotifications();
@@ -716,7 +617,8 @@ const handleClearHand = (): void => {
 
     // If there was a bet placed, settle it and add betting info
     if (currentRoundBet.hasBet) {
-      const betResult = settleCurrentBet(handResult);
+      // Calculate bet settlement directly
+      const betResult = calculateBetResult(handResult, currentRoundBet);
 
       // Add betting information to hand result
       handResult.betInfo = {
@@ -730,30 +632,17 @@ const handleClearHand = (): void => {
       // Show round result via game sequence
       const resultText = `${handResult.winner} ${betResult.won ? '(Won)' : '(Lost)'} - Net: ${betResult.netResult >= 0 ? '+' : ''}$${betResult.netResult.toFixed(2)}`;
       gameSequenceRef.value?.gameSequence?.showRoundResult(resultText);
+
+      // Update balance
+      store.ui.currentBalance += betResult.netResult;
     }
 
     // Add the hand result to update pattern analysis and history
     store.addHandResult(handResult);
   }
 
-  // Start new round - this clears the betting state
-  startNewRound();
-
-  // Force game sequence to update to ready_to_bet state after betting state is cleared
-  // Use nextTick to ensure reactive state has updated first
-  nextTick(() => {
-    console.log('[game-view][clear-hand] Forcing game sequence to ready_to_bet state', {
-      currentRoundBetState: {
-        hasBet: currentRoundBet.hasBet,
-        betType: currentRoundBet.betType,
-        betAmount: currentRoundBet.betAmount,
-      },
-    });
-
-    if (gameSequenceRef.value?.gameSequence?.updateStep) {
-      gameSequenceRef.value.gameSequence.updateStep('ready_to_bet');
-    }
-  });
+  // Reset betting state for new round
+  resetBettingState();
 };
 
 const handleSessionNotifyDismiss = (configKey: string): void => {
@@ -780,20 +669,113 @@ const handleSessionNotifyAction = (configKey: string, actionLabel: string): void
 };
 
 // =============================================================================
+// BET SETTLEMENT FUNCTIONS (Replacing useBettingInterface functions)
+// =============================================================================
+
+const calculateBetResult = (handResult: any, currentBet: any) => {
+  const betType = currentBet.betType;
+  const betAmount = currentBet.betAmount;
+  const winner = handResult.winner;
+
+  let won = false;
+  let payout = 0;
+
+  // Determine if bet won based on winner and bet type
+  switch (betType) {
+    case 'player':
+      won = winner === 'player';
+      payout = won ? betAmount * 1.0 : 0; // 1:1 payout
+      break;
+    case 'banker':
+      won = winner === 'banker';
+      if (won) {
+        const commission = betAmount * 0.05; // 5% commission
+        payout = betAmount * 1.0 - commission; // 1:1 minus commission
+      }
+      break;
+    case 'tie':
+      won = winner === 'tie';
+      payout = won ? betAmount * 8.0 : 0; // 8:1 payout
+      break;
+    case 'playerPair':
+      won = handResult.playerPair || false;
+      payout = won ? betAmount * 11.0 : 0; // 11:1 payout
+      break;
+    case 'bankerPair':
+      won = handResult.bankerPair || false;
+      payout = won ? betAmount * 11.0 : 0; // 11:1 payout
+      break;
+  }
+
+  const netResult = won ? payout : -betAmount;
+
+  return {
+    won,
+    payout,
+    netResult,
+  };
+};
+
+const resetBettingState = () => {
+  // Reset betting state for new round
+  currentRoundBet.hasBet = false;
+  currentRoundBet.betType = null;
+  currentRoundBet.betAmount = 0;
+
+  // Force game sequence to update to ready_to_bet state after betting state is cleared
+  nextTick(() => {
+    console.log('[game-view][clear-hand] Forcing game sequence to ready_to_bet state', {
+      currentRoundBetState: {
+        hasBet: currentRoundBet.hasBet,
+        betType: currentRoundBet.betType,
+        betAmount: currentRoundBet.betAmount,
+      },
+    });
+
+    if (gameSequenceRef.value?.gameSequence?.updateStep) {
+      gameSequenceRef.value.gameSequence.updateStep('ready_to_bet');
+    }
+  });
+};
+
+// =============================================================================
 // BALANCE INTEGRATION EVENT HANDLERS (Phase 5)
 // =============================================================================
 
+const handleRoundCompleted = (handResult: any): void => {
+  console.log('[game-view][round-completion] Round completed', {
+    handResult,
+    previousBetState: {
+      hasBet: currentRoundBet.hasBet,
+      betType: currentRoundBet.betType,
+      betAmount: currentRoundBet.betAmount,
+    },
+  });
+
+  // CRITICAL: Reset betting state to prevent "already placed bet" error
+  currentRoundBet.hasBet = false;
+  currentRoundBet.betType = null;
+  currentRoundBet.betAmount = 0;
+
+  console.log('[game-view][round-completion] Betting state reset after round completion', {
+    newBetState: {
+      hasBet: currentRoundBet.hasBet,
+      betType: currentRoundBet.betType,
+      betAmount: currentRoundBet.betAmount,
+    },
+  });
+
+  // Process any bet results in the hand result
+  if (handResult.betInfo) {
+    handleBetSettled(handResult.betInfo);
+  }
+
+  // Continue with existing hand completion logic
+  handleHandCompleted(handResult);
+};
+
 const handleHandCompleted = (handResult: any, betResult?: any): void => {
   console.log('[game-view][balance-integration] Hand completed', { handResult, betResult });
-
-  if (betResult) {
-    // Balance has already been updated by the CurrentHandSection/BettingInterface
-    console.log('[game-view][balance-integration] Balance updated via bet settlement', {
-      previousBalance: store.ui.currentBalance - betResult.netResult,
-      newBalance: store.ui.currentBalance,
-      netResult: betResult.netResult,
-    });
-  }
 
   // Continue with existing hand completion logic
   handleClearHand();
@@ -802,7 +784,7 @@ const handleHandCompleted = (handResult: any, betResult?: any): void => {
 const handleHandCleared = (): void => {
   console.log('[game-view][balance-integration] Hand cleared');
   // Reset any UI state if needed
-  startNewRound();
+  resetBettingState();
 };
 
 const handleBalanceUpdated = (newBalance: number): void => {
@@ -812,22 +794,42 @@ const handleBalanceUpdated = (newBalance: number): void => {
     change: newBalance - store.ui.currentBalance,
   });
 
-  // Update store balance
+  // Calculate change before updating store
+  const change = newBalance - store.ui.currentBalance;
+
+  // CRITICAL: Update store balance immediately
   store.ui.currentBalance = newBalance;
 
-  success(`💰 Balance updated: $${newBalance.toFixed(2)}`);
+  // Show balance update notification
+  if (Math.abs(change) > 0.01) {
+    const changeText = change > 0 ? `+$${change.toFixed(2)}` : `-$${Math.abs(change).toFixed(2)}`;
+    success(`💰 Balance updated: ${changeText} (Total: $${newBalance.toFixed(2)})`);
+  }
 };
 
 const handleBetSettled = (betResult: any): void => {
   console.log('[game-view][balance-integration] Bet settled', { betResult });
 
-  // Balance update is handled via handleBalanceUpdated
-  // This is just for additional bet settlement logic if needed
-  const message = betResult.won
-    ? `🎉 Won $${betResult.payout.toFixed(2)}!`
-    : `💸 Lost $${Math.abs(betResult.netResult).toFixed(2)}`;
+  // CRITICAL: Calculate and update the new balance
+  const oldBalance = store.ui.currentBalance;
+  const newBalance = oldBalance + (betResult.netResult || 0);
 
-  success(message);
+  console.log('[game-view][balance-calculation] Calculating new balance', {
+    oldBalance,
+    netResult: betResult.netResult,
+    newBalance,
+    won: betResult.won,
+  });
+
+  // Update the balance immediately
+  store.ui.currentBalance = newBalance;
+
+  // Show appropriate win/loss message
+  const message = betResult.won
+    ? `🎉 Won $${(betResult.payout || 0).toFixed(2)}! Net: +$${(betResult.netResult || 0).toFixed(2)}`
+    : `💸 Lost $${Math.abs(betResult.netResult || 0).toFixed(2)}`;
+
+  success(`${message} (Balance: $${newBalance.toFixed(2)})`);
 };
 
 const handlePayoutValuesChanged = (payoutValues: any): void => {
@@ -855,6 +857,76 @@ const handleValidationError = (errors: string[]): void => {
   errors.forEach(errorMessage => {
     error(`❌ ${errorMessage}`);
   });
+};
+
+// ✨ NEW: Listen for payout changes from SessionControl and update the state
+const handlePayoutChange = (event: any) => {
+  console.log('[game-view][payout] Payout change received from SessionControl', {
+    source: event.source,
+    values: event.values,
+    presetId: event.presetId,
+    presetName: event.presetName,
+  });
+
+  // Update the payout values
+  currentPayoutValues.value = event.values;
+
+  // Update preset information
+  if (event.presetName) {
+    selectedPresetName.value = event.presetName;
+    useManualConfig.value = false;
+  } else if (event.source === 'manual') {
+    // Manual configuration mode
+    useManualConfig.value = true;
+    selectedPresetName.value = null;
+  } else {
+    // Reset or other sources
+    selectedPresetName.value = null;
+    useManualConfig.value = false;
+  }
+};
+
+const handleBettingInterfaceBetAmountChanged = (newBetAmount: number) => {
+  console.log('[game-view][betting-interface] Bet amount changed', { newBetAmount });
+  bettingInterface.betAmount = newBetAmount;
+};
+
+const handleBettingInterfaceBetTypeSelected = (
+  newBetType: 'player' | 'banker' | 'tie' | 'playerPair' | 'bankerPair' | null
+) => {
+  console.log('[game-view][betting-interface] Bet type selected', { newBetType });
+  bettingInterface.selectedBet = newBetType;
+};
+
+const handleBettingInterfaceBetPlaced = () => {
+  console.log('[game-view][betting-interface] Bet placed');
+  placeBet();
+};
+
+const handleBettingInterfaceBetCleared = () => {
+  console.log('[game-view][betting-interface] Bet cleared');
+  handleClearHand();
+};
+
+const handleBettingInterfaceValidationError = (result: any) => {
+  console.error('[game-view][betting-interface] Validation error', { result });
+  if (result.errors && Array.isArray(result.errors)) {
+    result.errors.forEach((errorMessage: string) => {
+      error(`❌ ${errorMessage}`);
+    });
+  } else {
+    error(`❌ Validation failed`);
+  }
+};
+
+const handleBettingInterfaceValidationSuccess = (result: any) => {
+  console.log('[game-view][betting-interface] Validation success', { result });
+  // REMOVED: success('✅ Bet validation successful'); - User requested this toast be removed
+};
+
+const handleBettingInterfacePayoutSettingsRequested = () => {
+  console.log('[game-view][betting-interface] Payout settings requested');
+  // Implement the logic to open the payout settings dialog
 };
 </script>
 

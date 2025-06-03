@@ -124,6 +124,7 @@ export interface PayoutSettingsSlotProps {
     // Preset management
     selectPreset: (preset: PayoutPreset) => void;
     createPreset: (name: string) => Promise<void>;
+    updatePreset: (presetId: string, updates: Partial<PayoutValues>) => Promise<void>;
     deletePreset: (presetId: string) => Promise<void>;
     setDefaultPreset: (presetId: string) => Promise<void>;
 

@@ -107,6 +107,7 @@ interface BaccaratState {
     sessionActive: boolean; // Track if a gaming session is active
     sessionStartTime: number | null; // Timestamp when session started
     currentSessionId: string | null; // Current session ID from Supabase
+    currentGameId: string | null; // Current game ID for database operations
     currentBalance: number; // Starting balance for the session
   };
   lastPenetrationCheck: number;
@@ -245,7 +246,8 @@ export const useBaccaratStore = defineStore('baccarat', {
       sessionActive: false, // Session starts inactive
       sessionStartTime: null, // No session started yet
       currentSessionId: null, // Current session ID from Supabase
-      currentBalance: 500, // Starting balance for the session
+      currentGameId: null, // Current game ID for database operations
+      currentBalance: 10000, // Starting balance for the session - updated to match gameSettings
     },
     lastPenetrationCheck: 0,
     lastShuffleWarningShown: null as 'twenty' | 'six' | 'cutCard' | null,
@@ -1401,6 +1403,12 @@ export const useBaccaratStore = defineStore('baccarat', {
       const sessionId = this.ui.currentSessionId;
       const cardsRemainingAtEnd = this.totalCardsRemaining;
 
+      console.log('[session-tracking][ending] Starting session end process', {
+        sessionId,
+        currentBalance: this.ui.currentBalance,
+        cardsRemaining: cardsRemainingAtEnd,
+      });
+
       if (this.ui.sessionStartTime) {
         const elapsed = Date.now() - this.ui.sessionStartTime;
         durationSeconds = Math.floor(elapsed / 1000);
@@ -1409,6 +1417,32 @@ export const useBaccaratStore = defineStore('baccarat', {
         const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
         duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         handsPlayed = this.history.hands.length;
+      }
+
+      // CRITICAL: Cancel any pending bets and restore balance
+      // Access betting interface from App.vue injection
+      const bettingInterfaceElement = document.querySelector('[data-betting-interface]');
+      if (bettingInterfaceElement) {
+        // Check if there's a pending bet that needs to be cancelled
+        const pendingBetData = (bettingInterfaceElement as any).__vue__?.ctx?.currentRoundBet;
+        if (pendingBetData?.hasBet) {
+          console.log('[session-tracking][pending-bet] Cancelling pending bet on session end', {
+            betType: pendingBetData.betType,
+            betAmount: pendingBetData.betAmount,
+            currentBalance: this.ui.currentBalance,
+          });
+
+          // Restore the bet amount to balance
+          this.ui.currentBalance += pendingBetData.betAmount;
+
+          console.log(
+            '[session-tracking][pending-bet] Balance restored after pending bet cancellation',
+            {
+              restoredAmount: pendingBetData.betAmount,
+              newBalance: this.ui.currentBalance,
+            }
+          );
+        }
       }
 
       this.ui.sessionActive = false;

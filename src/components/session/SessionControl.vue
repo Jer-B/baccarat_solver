@@ -138,7 +138,7 @@
       :initial-payout-values="initialPayoutValues"
       :selected-preset-id="selectedPayoutPresetId"
       :enable-preset-management="true"
-      :enable-manual-editing="!gameStore.ui.sessionActive"
+      :enable-manual-editing="true"
       :show-payout-examples="true"
       :show-preset-info="true"
       :example-bet-amount="exampleBetAmount"
@@ -148,6 +148,7 @@
       :preset-error="payoutPresetError"
       @payout-change="handlePayoutChange"
       @manual-value-change="handlePayoutManualValueChange"
+      @manual-config-changed="handlePayoutManualConfigChanged"
       @preset-selected="handlePayoutPresetSelected"
       @preset-created="handlePayoutPresetCreated"
       @preset-updated="handlePayoutPresetUpdated"
@@ -161,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted, watch } from 'vue';
+import { computed, ref, onUnmounted, watch, onMounted } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useNotifications } from '@/composables/useNotifications';
 import { SESSION_CONTROL, SESSION_CONTROL_DEFAULTS } from '@/config/sessionControlSettings';
@@ -237,9 +238,11 @@ const autoBurnEnabled = ref(defaults.SESSION_STATE.AUTO_BURN_ENABLED);
 const autoBurnCount = ref(defaults.SESSION_STATE.AUTO_BURN_COUNT);
 const manualBurnCount = ref(defaults.SESSION_STATE.MANUAL_BURN_COUNT);
 
-// Payout Settings State
+// Payout Settings State - SINGLE SOURCE OF TRUTH
 const initialPayoutValues = ref<Partial<PayoutValues>>({});
 const selectedPayoutPresetId = ref<string | null>(null);
+const selectedPayoutPresetName = ref<string | null>(null);
+const useManualConfigMode = ref<boolean>(false);
 const exampleBetAmount = ref(PAYOUT_SETTINGS_DEFAULTS.EXAMPLE_BET_AMOUNT);
 const payoutPresetsLoading = ref(false);
 const savingPayoutPreset = ref(false);
@@ -364,13 +367,51 @@ const handleBalanceChange = (balanceState: BalanceState) => {
 };
 
 const loadPreviousBalance = async (): Promise<number> => {
-  console.log('[session-control][loader] Loading previous balance');
+  console.log('[session-control][loader] Loading previous balance from database');
 
-  // This is a placeholder implementation
-  // In a real application, this would fetch the balance from the last session
+  try {
+    // Import sessionService to fetch latest session
+    const { sessionService } = await import('@/services/sessionService');
 
-  // For now, return the stored previous balance or fallback
-  return previousEndBalance.value || config.FALLBACKS.BALANCE;
+    // Fetch the latest session
+    const sessions = await sessionService.getAllSessions();
+
+    // Find the most recent completed session with an end balance
+    const latestCompletedSession = sessions.find(
+      session =>
+        session.status === 'completed' &&
+        session.end_balance !== null &&
+        session.end_balance !== undefined
+    );
+
+    if (latestCompletedSession && latestCompletedSession.end_balance !== null) {
+      console.log('[session-control][loader] Previous balance loaded from database', {
+        sessionId: latestCompletedSession.id,
+        sessionName: latestCompletedSession.session_name,
+        endBalance: latestCompletedSession.end_balance,
+        endedAt: latestCompletedSession.ended_at,
+      });
+
+      previousEndBalance.value = latestCompletedSession.end_balance;
+      return latestCompletedSession.end_balance;
+    } else {
+      console.log(
+        '[session-control][loader] No previous session with end balance found, using fallback'
+      );
+      const fallbackBalance = config.FALLBACKS.BALANCE;
+      previousEndBalance.value = fallbackBalance;
+      return fallbackBalance;
+    }
+  } catch (error) {
+    console.error('[session-control][loader] Failed to load previous balance', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    // Return fallback balance if loading fails
+    const fallbackBalance = config.FALLBACKS.BALANCE;
+    previousEndBalance.value = fallbackBalance;
+    return fallbackBalance;
+  }
 };
 
 // =============================================================================
@@ -464,6 +505,9 @@ const handleAutoBurn = (burnCount: number, cardsRemaining: number) => {
     cardsRemaining,
   });
 
+  // Actually burn the cards using the store's method
+  gameStore.burnUnknownCards(burnCount);
+
   emit('auto-burn', burnCount, cardsRemaining);
   success(`Auto burned ${burnCount} cards at session start.`);
 };
@@ -502,31 +546,45 @@ const handlePayoutChange = (event: PayoutChangeEvent) => {
   // Update local payout values
   currentPayoutValues.value = { ...event.values };
 
-  // If preset was selected, update the selected preset ID
-  if (event.source === 'preset' && event.presetId) {
+  // Update preset selection info from the event (includes manual edits with preset preserved)
+  if (event.presetId && event.presetName) {
     selectedPayoutPresetId.value = event.presetId;
-  } else if (event.source === 'manual' || event.source === 'reset') {
-    // Clear preset selection when manually editing or resetting
+    selectedPayoutPresetName.value = event.presetName;
+  } else if (event.source === 'reset' || (event.source === 'manual' && !event.presetId)) {
+    // Only clear preset selection for reset or manual edits without preset
     selectedPayoutPresetId.value = null;
+    selectedPayoutPresetName.value = null;
   }
 
   emit('payout-change', event);
   emitSettingsChange();
-  success('Payout settings updated!');
 };
 
 const handlePayoutManualValueChange = (field: keyof PayoutValues, value: number) => {
   console.log('[session-control][update] Payout manual value changed', {
     field,
     value,
+    selectedPresetId: selectedPayoutPresetId.value,
+    useManualConfig: useManualConfigMode.value,
+    mode: useManualConfigMode.value
+      ? 'Manual Configuration'
+      : selectedPayoutPresetId.value
+        ? 'Preset Mode'
+        : 'No Selection',
   });
 
   // Update the current payout values
   currentPayoutValues.value[field] = value;
 
-  // Clear preset selection since we're manually editing
-  selectedPayoutPresetId.value = null;
+  // ✨ FIX: Emit payout change event to notify GameView about manual value changes
+  const payoutChangeEvent: PayoutChangeEvent = {
+    source: useManualConfigMode.value ? 'manual' : 'preset',
+    values: currentPayoutValues.value,
+    presetId: useManualConfigMode.value ? undefined : selectedPayoutPresetId.value || undefined,
+    presetName: useManualConfigMode.value ? undefined : selectedPayoutPresetName.value || undefined,
+  };
 
+  emit('payout-change', payoutChangeEvent);
   emitSettingsChange();
 };
 
@@ -537,16 +595,24 @@ const handlePayoutPresetSelected = (preset: PayoutPreset) => {
   });
 
   selectedPayoutPresetId.value = preset.id;
+  selectedPayoutPresetName.value = preset.name;
+
+  // ✨ FIX: Emit payout change event to notify GameView about preset selection
+  const payoutChangeEvent: PayoutChangeEvent = {
+    source: 'preset',
+    values: currentPayoutValues.value,
+    presetId: preset.id,
+    presetName: preset.name,
+  };
+
+  emit('payout-change', payoutChangeEvent);
   emitSettingsChange();
-  success(`Selected ${preset.name} payout preset!`);
 };
 
 const handlePayoutPresetCreated = (presetData: { name: string; values: PayoutValues }) => {
   console.log('[session-control][action] Payout preset created', {
     name: presetData.name,
   });
-
-  success(`Created custom preset: ${presetData.name}!`);
 };
 
 const handlePayoutPresetUpdated = (presetId: string, updates: Partial<PayoutValues>) => {
@@ -554,8 +620,6 @@ const handlePayoutPresetUpdated = (presetId: string, updates: Partial<PayoutValu
     presetId,
     updates,
   });
-
-  success('Payout preset updated successfully!');
 };
 
 const handlePayoutPresetDeleted = (presetId: string) => {
@@ -566,6 +630,7 @@ const handlePayoutPresetDeleted = (presetId: string) => {
   // If the deleted preset was selected, clear the selection
   if (selectedPayoutPresetId.value === presetId) {
     selectedPayoutPresetId.value = null;
+    selectedPayoutPresetName.value = null;
   }
 
   success('Custom preset deleted successfully!');
@@ -575,16 +640,14 @@ const handlePayoutDefaultPresetChanged = (presetId: string) => {
   console.log('[session-control][action] Payout default preset changed', {
     presetId,
   });
-
-  success('Default preset updated successfully!');
 };
 
 const handlePayoutResetToDefaults = () => {
   console.log('[session-control][action] Payout settings reset to defaults');
 
   selectedPayoutPresetId.value = null;
+  selectedPayoutPresetName.value = null;
   emitSettingsChange();
-  success('Payout settings reset to defaults!');
 };
 
 const handlePayoutValidationError = (errors: ValidationError[]) => {
@@ -603,6 +666,27 @@ const handlePayoutValidationSuccess = () => {
   console.log('[session-control][success] Payout validation success');
 
   payoutValidationErrors.value = [];
+};
+
+const handlePayoutManualConfigChanged = (useManualConfig: boolean) => {
+  console.log('[session-control][action] Payout manual config changed', {
+    previousMode: useManualConfigMode.value ? 'Manual' : 'Preset',
+    newMode: useManualConfig ? 'Manual' : 'Preset',
+    useManualConfig,
+  });
+
+  useManualConfigMode.value = useManualConfig;
+
+  // Emit payout change event to notify GameView about manual config change
+  const payoutChangeEvent: PayoutChangeEvent = {
+    source: useManualConfig ? 'manual' : 'preset',
+    values: currentPayoutValues.value,
+    presetId: useManualConfig ? undefined : selectedPayoutPresetId.value || undefined,
+    presetName: useManualConfig ? undefined : selectedPayoutPresetName.value || undefined,
+  };
+
+  emit('payout-change', payoutChangeEvent);
+  emitSettingsChange();
 };
 
 // =============================================================================
@@ -678,6 +762,66 @@ watch(
 
 onUnmounted(() => {
   stopSessionTimer();
+});
+
+// ✨ CRITICAL: Initialize with default preset on component mount
+// This ensures SessionControl coordinates with the preset system instead of working independently
+import { payoutPresetService } from '@/services/payoutPresetService';
+
+onMounted(async () => {
+  console.log('[session-control][initialization] Loading default preset on mount');
+
+  try {
+    // Load available presets
+    const presets = await payoutPresetService.getAllPresets();
+
+    // Find the default preset
+    const defaultPreset = presets.find(p => p.is_default);
+
+    if (defaultPreset) {
+      console.log('[session-control][initialization] Found default preset', {
+        presetId: defaultPreset.id,
+        presetName: defaultPreset.name,
+      });
+
+      // Set the default preset as selected
+      selectedPayoutPresetId.value = defaultPreset.id;
+      selectedPayoutPresetName.value = defaultPreset.name;
+
+      // Update payout values to match default preset
+      currentPayoutValues.value = {
+        player_payout: defaultPreset.player_payout,
+        banker_payout: defaultPreset.banker_payout,
+        banker_commission: defaultPreset.banker_commission,
+        tie_payout: defaultPreset.tie_payout,
+        player_pair_payout: defaultPreset.player_pair_payout,
+        banker_pair_payout: defaultPreset.banker_pair_payout,
+      };
+
+      // Clear manual config mode
+      useManualConfigMode.value = false;
+
+      // Emit the initial payout change to notify GameView
+      const payoutChangeEvent: PayoutChangeEvent = {
+        source: 'preset',
+        values: currentPayoutValues.value,
+        presetId: defaultPreset.id,
+        presetName: defaultPreset.name,
+      };
+
+      emit('payout-change', payoutChangeEvent);
+
+      console.log('[session-control][initialization] Default preset applied successfully');
+    } else {
+      console.log(
+        '[session-control][initialization] No default preset found, using default values'
+      );
+      useManualConfigMode.value = true; // Fallback to manual mode
+    }
+  } catch (error) {
+    console.error('[session-control][error] Failed to load default preset', { error });
+    useManualConfigMode.value = true; // Fallback to manual mode on error
+  }
 });
 </script>
 

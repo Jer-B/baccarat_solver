@@ -35,21 +35,6 @@
       <div :class="config.styling.SECTION_CONTAINER">
         <div :class="config.styling.HEADER">
           <h3 :class="config.styling.TITLE">{{ config.labels.SECTION_TITLE }}</h3>
-
-          <!-- Auto Burn Trigger Button -->
-          <button
-            v-if="burnState.autoBurnEnabled && actions.canPerformActions"
-            @click="onAutoBurn"
-            :disabled="!burnState.canAutoBurn || actions.isExecutingAutoBurn"
-            :class="BURN_SETTINGS.BUTTONS.AUTO_BURN_NOW"
-            title="Manually trigger auto burn"
-          >
-            {{
-              actions.isExecutingAutoBurn
-                ? BURN_SETTINGS.BUTTONS.AUTO_BURN_TEXT_EXECUTING
-                : BURN_SETTINGS.BUTTONS.AUTO_BURN_TEXT_DEFAULT
-            }}
-          </button>
         </div>
         <p :class="config.styling.SUBTITLE">{{ config.labels.SECTION_SUBTITLE }}</p>
 
@@ -79,8 +64,8 @@
               />
               <span :class="config.styling.UNIT_LABEL">{{ config.labels.CARDS_UNIT }}</span>
             </div>
+            <div :class="config.styling.STATUS_TEXT">{{ statusMessage }}</div>
           </div>
-          <div :class="config.styling.STATUS_TEXT">{{ statusMessage }}</div>
           <div v-if="validation.autoBurnCountError" :class="config.styling.VALIDATION_ERROR">
             {{ validation.autoBurnCountError }}
           </div>

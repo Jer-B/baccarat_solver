@@ -196,7 +196,7 @@ export function usePayoutSettings() {
         values: currentPayoutValues.value,
       });
 
-      toast.success(`Applied payout preset: ${preset.name}`, { timeout: 3000 });
+      // Toast removed per user request - no "Applied payout preset" toast needed
     } catch (error) {
       const errorMessage = `Failed to apply preset: ${(error as Error).message}`;
       console.error('[use-payout-settings][error] Failed to apply preset', { error, presetId });
@@ -210,20 +210,41 @@ export function usePayoutSettings() {
   /**
    * Update payout values manually (switches to manual mode)
    */
-  const updatePayoutValues = (newValues: Partial<PayoutValues>): void => {
-    console.log('[use-payout-settings][action] Updating payout values manually', { newValues });
+  const updatePayoutValues = (
+    newValues: Partial<PayoutValues>,
+    preservePreset: boolean = false
+  ): void => {
+    console.log('[use-payout-settings][action] Updating payout values', {
+      newValues,
+      preservePreset,
+      currentPreset: currentPreset.value?.name || 'none',
+    });
 
     currentPayoutValues.value = {
       ...currentPayoutValues.value,
       ...newValues,
     };
 
-    // Clear current preset since we're in manual mode
-    currentPreset.value = null;
+    // Only clear current preset if not preserving preset selection
+    if (!preservePreset) {
+      currentPreset.value = null;
+      console.log('[use-payout-settings][success] Updated to manual configuration', {
+        values: currentPayoutValues.value,
+      });
+    } else {
+      console.log('[use-payout-settings][success] Updated values while preserving preset context', {
+        values: currentPayoutValues.value,
+        presetName: currentPreset.value?.name || 'none',
+      });
+    }
+  };
 
-    console.log('[use-payout-settings][success] Updated to manual configuration', {
-      values: currentPayoutValues.value,
-    });
+  /**
+   * Update payout values while preserving current preset selection
+   * This allows users to modify presets without switching to manual mode
+   */
+  const updatePayoutValuesPreservePreset = (newValues: Partial<PayoutValues>): void => {
+    updatePayoutValues(newValues, true);
   };
 
   /**
@@ -347,6 +368,7 @@ export function usePayoutSettings() {
     loadDefaultPreset,
     applyPreset,
     updatePayoutValues,
+    updatePayoutValuesPreservePreset,
     setAsDefault,
     calculatePotentialPayout,
   };

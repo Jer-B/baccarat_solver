@@ -8,11 +8,16 @@
   <BettingInterface
     :current-balance="currentBalance"
     :current-payout-values="currentPayoutValues"
+    :selected-preset-name="selectedPresetName"
+    :use-manual-config="useManualConfig"
     :session-active="sessionActive"
     :can-perform-actions="canPerformActions"
     :current-round-bet="currentRoundBet"
     :enable-validation="enableValidation"
     :enable-risk-warnings="enableRiskWarnings"
+    :kelly-recommendation="kellyRecommendation"
+    :monte-carlo-results="monteCarloResults"
+    :burn-analysis-data="burnAnalysisData"
     :handlers="integrationHandlers"
     @bet-amount-changed="handleBetAmountChanged"
     @bet-type-selected="handleBetTypeSelected"
@@ -21,7 +26,6 @@
     @validation-error="handleValidationError"
     @validation-success="handleValidationSuccess"
     @payout-settings-requested="handlePayoutSettingsRequested"
-    @payout-update-needed="handlePayoutUpdateNeeded"
   >
     <template #default="{ state, actions, utils, config, handlers }">
       <!-- Main Container - Preserving exact current UI -->
@@ -32,16 +36,15 @@
 
         <!-- Betting Controls Grid - Exact GameView.vue layout -->
         <div :class="config.settings.STYLING.BETTING_CONTROLS_GRID">
-          <!-- Balance Display (Read-only) - EXACT preservation -->
-          <div :class="config.settings.STYLING.FORM_FIELD_CONTAINER">
-            <label :class="config.settings.STYLING.FORM_FIELD_LABEL">
+          <!-- Current Balance (Display Only) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
               {{ config.settings.LABELS.BALANCE_LABEL }}
             </label>
-            <div :class="config.settings.STYLING.BALANCE_DISPLAY">
-              {{ utils.formatCurrency(currentBalance) }}
-            </div>
-            <div :class="config.settings.STYLING.FORM_FIELD_NOTE">
-              {{ config.settings.LABELS.BALANCE_SOURCE_NOTE }}
+            <div
+              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 font-medium"
+            >
+              {{ formatCurrencyWithCommas(currentBalance) }}
             </div>
           </div>
 
@@ -57,7 +60,13 @@
               :step="config.validation.BET_AMOUNT.STEP"
               :value="state.betAmount"
               @input="
-                actions.updateBetAmount(parseFloat(($event.target as HTMLInputElement).value))
+                (event: Event) => {
+                  const inputElement = event.target as HTMLInputElement;
+                  const amount = parseFloat(inputElement.value.replace(/[,$\\s]/g, ''));
+                  if (!isNaN(amount) && amount >= 0) {
+                    actions.updateBetAmount(amount);
+                  }
+                }
               "
               placeholder="10.00"
             />
@@ -148,15 +157,23 @@
           <div :class="config.settings.STYLING.FORM_FIELD_CONTAINER">
             <button
               @click="actions.placeBet"
-              :disabled="!state.validation.isValid || state.ui.isPlacingBet"
+              :disabled="
+                !state.validation.isValid || state.ui.isPlacingBet || state.currentBet.hasBet
+              "
               :class="[
                 config.settings.STYLING.PLACE_BET_BUTTON,
-                state.validation.isValid && !state.ui.isPlacingBet
+                state.validation.isValid && !state.ui.isPlacingBet && !state.currentBet.hasBet
                   ? config.settings.COLORS.PLACE_BET_ENABLED
                   : config.settings.COLORS.PLACE_BET_DISABLED,
               ]"
             >
-              {{ state.ui.isPlacingBet ? 'Placing...' : config.settings.LABELS.PLACE_BET_BUTTON }}
+              {{
+                state.currentBet.hasBet
+                  ? 'Bet Placed - Awaiting Hand'
+                  : state.ui.isPlacingBet
+                    ? 'Placing...'
+                    : config.settings.LABELS.PLACE_BET_BUTTON
+              }}
             </button>
           </div>
         </div>
@@ -175,6 +192,13 @@
             v-if="visibilityStore.isVisible('bettingInterface', 'payoutInfo')"
             :class="config.settings.STYLING.PAYOUT_INFO_GRID"
           >
+            <!-- Selected Mode Display -->
+            <div
+              class="col-span-full mb-2 text-xs font-medium text-gray-600 border-b border-gray-200 pb-1"
+            >
+              Selected: {{ state.payoutCalculations.selectedModeDisplay.name }}
+            </div>
+
             <div>Player: {{ state.payoutCalculations.player.payout }}</div>
             <div>
               Banker: {{ state.payoutCalculations.banker.payout }} ({{
@@ -199,28 +223,6 @@
             {{ config.settings.LABELS.WAITING_MESSAGE }}
           </div>
         </div>
-
-        <!-- Validation Errors Display -->
-        <div v-if="state.validation.errors.length > 0" class="mt-4">
-          <div
-            v-for="error in state.validation.errors"
-            :key="error"
-            class="text-red-600 text-sm mb-1"
-          >
-            {{ config.settings.ICONS.ERROR_EMOJI }} {{ error }}
-          </div>
-        </div>
-
-        <!-- Validation Warnings Display -->
-        <div v-if="state.validation.warnings.length > 0" class="mt-2">
-          <div
-            v-for="warning in state.validation.warnings"
-            :key="warning"
-            class="text-orange-600 text-sm mb-1"
-          >
-            {{ config.settings.ICONS.WARNING_EMOJI }} {{ warning }}
-          </div>
-        </div>
       </div>
     </template>
   </BettingInterface>
@@ -231,7 +233,7 @@
 // IMPORTS
 // =============================================================================
 
-import { computed } from 'vue';
+import { computed, nextTick } from 'vue';
 import { BettingInterface } from '@/design-system/primitives/BettingInterface';
 import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 import { useVisibilityStore } from '@/stores/visibilityStore';
@@ -263,6 +265,10 @@ export interface BettingInterfaceSectionProps {
   enableValidation?: boolean;
   enableRiskWarnings?: boolean;
 
+  // Payout mode tracking
+  selectedPresetName?: string | null;
+  useManualConfig?: boolean;
+
   // Professional algorithm integration
   kellyRecommendation?: {
     optimalBetSize: number;
@@ -287,6 +293,8 @@ const props = withDefaults(defineProps<BettingInterfaceSectionProps>(), {
   canPerformActions: true,
   enableValidation: true,
   enableRiskWarnings: true,
+  selectedPresetName: null,
+  useManualConfig: false,
 });
 
 // =============================================================================
@@ -306,11 +314,6 @@ export interface BettingInterfaceSectionEmits {
 
   // Integration events - PayoutSettings connection
   'payout-settings-requested': [];
-  'payout-update-needed': [payoutValues: PayoutValues];
-
-  // Professional algorithm events
-  'kelly-calculation-requested': [betAmount: number, betType: BetType];
-  'risk-assessment-requested': [betAmount: number, balance: number];
 }
 
 const emit = defineEmits<BettingInterfaceSectionEmits>();
@@ -326,13 +329,14 @@ const visibilityStore = useVisibilityStore();
 // =============================================================================
 
 const integrationHandlers = computed(() => ({
-  // PayoutSettings event handlers - CRITICAL CONNECTION
+  // PayoutSettings event handlers - REMOVED TO FIX CIRCULAR DEPENDENCY
   onPayoutChange: (payoutValues: PayoutValues) => {
     console.log('[betting-interface-section][integration] Payout change received', {
       newPayouts: payoutValues,
       source: 'PayoutSettings',
     });
-    emit('payout-update-needed', payoutValues);
+    // Removed emit('payout-update-needed') - this was causing circular loops
+    // Betting interface receives payout values via props (unidirectional flow)
   },
 
   onPayoutPresetSelected: (presetId: string) => {
@@ -432,12 +436,25 @@ const handlePayoutSettingsRequested = (): void => {
   emit('payout-settings-requested');
 };
 
-const handlePayoutUpdateNeeded = (payoutValues: PayoutValues): void => {
-  console.log('[betting-interface-section][integration] Payout update needed', {
-    newPayouts: payoutValues,
-    recalculatingDisplays: true,
-  });
-  emit('payout-update-needed', payoutValues);
+// =============================================================================
+// COMPUTED PROPERTIES AND UTILITY FUNCTIONS
+// =============================================================================
+
+const getSelectedModeDisplay = (): string => {
+  if (props.useManualConfig) {
+    return 'Manual Configuration';
+  }
+  if (props.selectedPresetName) {
+    return props.selectedPresetName;
+  }
+  return 'No preset selected';
+};
+
+const formatCurrencyWithCommas = (value: number): string => {
+  return `$${value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 };
 
 // =============================================================================

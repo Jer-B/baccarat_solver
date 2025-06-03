@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch, nextTick } from 'vue';
 import { payoutPresetService } from '@/services/payoutPresetService';
 import { PAYOUT_UTILS, PAYOUT_SETTINGS_DEFAULTS } from '@/config/payoutSettings';
 import type {
@@ -102,7 +102,32 @@ const canSetAsDefault = computed((): boolean => {
 });
 
 const hasUnsavedChanges = computed((): boolean => {
-  return JSON.stringify(state.currentValues) !== JSON.stringify(originalValues.value);
+  const currentStr = JSON.stringify(state.currentValues);
+  const originalStr = JSON.stringify(originalValues.value);
+  const hasChanges = currentStr !== originalStr;
+
+  console.log('[payout-settings][computed] hasUnsavedChanges evaluation', {
+    hasChanges,
+    currentValues: state.currentValues,
+    originalValues: originalValues.value,
+    selectedPreset: state.selectedPreset?.name,
+    isCustomPreset: state.selectedPreset && !state.selectedPreset.is_system_preset,
+    canSaveChanges: hasChanges && state.selectedPreset && !state.selectedPreset.is_system_preset,
+    comparison: {
+      playerPayout: {
+        current: state.currentValues.player_payout,
+        original: originalValues.value.player_payout,
+        changed: state.currentValues.player_payout !== originalValues.value.player_payout,
+      },
+      bankerCommission: {
+        current: state.currentValues.banker_commission,
+        original: originalValues.value.banker_commission,
+        changed: state.currentValues.banker_commission !== originalValues.value.banker_commission,
+      },
+    },
+  });
+
+  return hasChanges;
 });
 
 // =============================================================================
@@ -146,13 +171,30 @@ const calculatePayout = (
 const updateExampleCalculations = (): void => {
   const betAmount = state.exampleCalculations.betAmount;
 
-  state.exampleCalculations.results = {
+  console.log('[payout-settings][calc] Force updating example calculations', {
+    betAmount,
+    currentValues: state.currentValues,
+    previousResults: state.exampleCalculations.results,
+  });
+
+  // Force complete re-calculation with current values
+  const newResults = {
     player: calculatePayout('player_payout', betAmount),
     banker: calculatePayout('banker_payout', betAmount),
     tie: calculatePayout('tie_payout', betAmount),
     playerPair: calculatePayout('player_pair_payout', betAmount),
     bankerPair: calculatePayout('banker_pair_payout', betAmount),
   };
+
+  // Force reactivity by replacing the entire object
+  state.exampleCalculations.results = { ...newResults };
+
+  console.log('[payout-settings][calc] Updated example calculations', {
+    newResults: state.exampleCalculations.results,
+    playerPayout: `$${newResults.player.totalReturn.toFixed(2)} (${state.currentValues.player_payout}:1)`,
+    bankerPayout: `$${newResults.banker.totalReturn.toFixed(2)} (${state.currentValues.banker_payout}:1 - ${(state.currentValues.banker_commission * 100).toFixed(1)}% commission)`,
+    tiePayout: `$${newResults.tie.totalReturn.toFixed(2)} (${state.currentValues.tie_payout}:1)`,
+  });
 };
 
 // =============================================================================
@@ -184,28 +226,39 @@ const clearValidationErrors = (): void => {
 
 const updatePayoutValue = (field: keyof PayoutValues, value: number): void => {
   if (!props.enableManualEditing) {
+    console.log('[payout-settings][blocked] Manual editing disabled');
     return;
   }
 
-  // Clear preset selection when manual edit is made
-  if (state.selectedPreset) {
-    state.selectedPreset = null;
-    console.log('[payout-settings][action] Cleared preset selection due to manual edit', {
-      field,
-      value,
-    });
-  }
+  console.log('[payout-settings][action] Manual edit made to field', {
+    field,
+    value,
+    previousValue: state.currentValues[field],
+    selectedPreset: state.selectedPreset?.name,
+    preservingPresetSelection: true,
+    willTriggerHasUnsavedChanges: true,
+  });
 
+  // Update the value
   state.currentValues[field] = value;
+
+  // Force immediate update of example calculations
+  updateExampleCalculations();
+
+  console.log('[payout-settings][state] After manual edit', {
+    updatedField: field,
+    newValue: state.currentValues[field],
+    allCurrentValues: { ...state.currentValues },
+    originalValues: { ...originalValues.value },
+    hasUnsavedChanges: JSON.stringify(state.currentValues) !== JSON.stringify(originalValues.value),
+    exampleCalculations: state.exampleCalculations.results,
+  });
 
   // Clear any existing validation errors for this field
   state.validationErrors = state.validationErrors.filter(error => error.field !== field);
 
   // Validate the new value
   validateCurrentValues();
-
-  // Update example calculations
-  updateExampleCalculations();
 
   // Emit manual value change event
   emit('manual-value-change', field, value);
@@ -214,16 +267,45 @@ const updatePayoutValue = (field: keyof PayoutValues, value: number): void => {
   const changeEvent: PayoutChangeEvent = {
     values: { ...state.currentValues },
     source: 'manual',
+    // Include preset info if still selected
+    presetId: state.selectedPreset?.id,
+    presetName: state.selectedPreset?.name,
   };
   emit('payout-change', changeEvent);
+
+  console.log('[payout-settings][emitted] Events emitted for manual edit', {
+    manualValueChangeEvent: { field, value },
+    payoutChangeEvent: changeEvent,
+  });
 };
 
-const resetToDefaults = (): void => {
+const resetToDefaults = async (): Promise<void> => {
   const defaultValues = PAYOUT_UTILS.createDefaultPayoutValues();
 
   Object.assign(state.currentValues, defaultValues);
   originalValues.value = { ...defaultValues };
-  state.selectedPreset = null;
+
+  // Find and select the Vegas/Standard preset as default
+  const vegasPreset = state.availablePresets.find(
+    p => p.name.toLowerCase().includes('vegas') || p.name.toLowerCase().includes('standard')
+  );
+
+  if (vegasPreset) {
+    // Select Vegas preset instead of clearing selection
+    state.selectedPreset = vegasPreset;
+
+    // Make it the default preset if it isn't already
+    if (!vegasPreset.is_default) {
+      try {
+        await setDefaultPreset(vegasPreset.id);
+      } catch (error) {
+        console.warn('[payout-settings][warning] Could not set Vegas as default', { error });
+      }
+    }
+  } else {
+    // Fallback: clear selection if Vegas preset not found
+    state.selectedPreset = null;
+  }
 
   clearValidationErrors();
   updateExampleCalculations();
@@ -231,12 +313,14 @@ const resetToDefaults = (): void => {
   const changeEvent: PayoutChangeEvent = {
     values: { ...state.currentValues },
     source: 'reset',
+    presetId: state.selectedPreset?.id,
+    presetName: state.selectedPreset?.name,
   };
 
   emit('reset-to-defaults');
   emit('payout-change', changeEvent);
 
-  console.log('[payout-settings][action] Reset to default values');
+  console.log('[payout-settings][action] Reset to default values and selected Vegas preset');
 };
 
 // =============================================================================
@@ -280,6 +364,8 @@ const selectPreset = async (preset: PayoutPreset, emitEvent = true): Promise<voi
     banker_pair_payout: preset.banker_pair_payout,
   };
 
+  // ✨ CRITICAL: Update originalValues to reflect the preset values
+  // This ensures hasUnsavedChanges works correctly when user makes manual edits
   originalValues.value = { ...state.currentValues };
 
   clearValidationErrors();
@@ -301,6 +387,9 @@ const selectPreset = async (preset: PayoutPreset, emitEvent = true): Promise<voi
     name: preset.name,
     id: preset.id,
     isDefault: preset.is_default,
+    currentValues: state.currentValues,
+    originalValues: originalValues.value,
+    hasUnsavedChanges: JSON.stringify(state.currentValues) !== JSON.stringify(originalValues.value),
   });
 };
 
@@ -338,6 +427,43 @@ const createPreset = async (name: string): Promise<void> => {
     });
   } catch (error) {
     console.error('[payout-settings][error] Failed to create preset', { error, name });
+    throw error;
+  } finally {
+    state.isSavingPreset = false;
+  }
+};
+
+const updatePreset = async (presetId: string, updates: Partial<PayoutValues>): Promise<void> => {
+  if (!props.enablePresetManagement) {
+    return;
+  }
+
+  try {
+    state.isSavingPreset = true;
+    console.log('[payout-settings][presets] Updating preset', { presetId, updates });
+
+    const updatedPreset = await payoutPresetService.updatePreset(presetId, updates);
+
+    // Update preset in available list
+    const presetIndex = state.availablePresets.findIndex(p => p.id === presetId);
+    if (presetIndex !== -1) {
+      state.availablePresets[presetIndex] = updatedPreset;
+    }
+
+    // If this is the currently selected preset, update the selection
+    if (state.selectedPreset?.id === presetId) {
+      state.selectedPreset = updatedPreset;
+      // Update current values to match the updated preset
+      Object.assign(state.currentValues, updates);
+      // ✨ CRITICAL FIX: Update originalValues after successful save to reset hasUnsavedChanges
+      originalValues.value = { ...state.currentValues };
+    }
+
+    emit('preset-updated', presetId, updates);
+
+    console.log('[payout-settings][presets] Updated preset successfully', { presetId });
+  } catch (error) {
+    console.error('[payout-settings][error] Failed to update preset', { error, presetId });
     throw error;
   } finally {
     state.isSavingPreset = false;
@@ -432,6 +558,7 @@ const actions: PayoutSettingsSlotProps['actions'] = {
   clearValidationErrors,
   calculatePayout,
   updateExampleCalculations,
+  updatePreset,
 };
 
 // =============================================================================
@@ -454,6 +581,60 @@ if (props.initialPayoutValues) {
   originalValues.value = { ...state.currentValues };
 }
 
+// Watch for selectedPresetId changes from parent
+watch(
+  () => props.selectedPresetId,
+  async newPresetId => {
+    if (newPresetId && state.availablePresets.length > 0) {
+      const preset = state.availablePresets.find(p => p.id === newPresetId);
+      if (preset) {
+        await selectPreset(preset, false); // Don't emit event since it's coming from parent
+        console.log('[payout-settings][watch] Applied preset from selectedPresetId prop', {
+          presetId: newPresetId,
+          presetName: preset.name,
+        });
+      }
+    } else if (!newPresetId) {
+      // Clear selection if null/undefined
+      state.selectedPreset = null;
+    }
+  },
+  { immediate: true }
+);
+
+// Watch for when presets are loaded to apply selectedPresetId if set
+watch(
+  () => state.availablePresets.length,
+  async newLength => {
+    if (newLength > 0 && props.selectedPresetId) {
+      const preset = state.availablePresets.find(p => p.id === props.selectedPresetId);
+      if (preset && state.selectedPreset?.id !== preset.id) {
+        await selectPreset(preset, false); // Don't emit event since it's from prop
+        console.log('[payout-settings][watch] Applied preset after presets loaded', {
+          presetId: props.selectedPresetId,
+          presetName: preset.name,
+        });
+      }
+    }
+  }
+);
+
+// Watch for initialPayoutValues changes from parent (only if no preset selected)
+watch(
+  () => props.initialPayoutValues,
+  newInitialValues => {
+    if (newInitialValues && !props.selectedPresetId) {
+      Object.assign(state.currentValues, newInitialValues);
+      originalValues.value = { ...state.currentValues };
+      updateExampleCalculations();
+      console.log('[payout-settings][watch] Updated from initialPayoutValues', {
+        values: newInitialValues,
+      });
+    }
+  },
+  { deep: true }
+);
+
 // Update example calculations when bet amount changes
 watch(
   () => props.exampleBetAmount,
@@ -473,6 +654,20 @@ watch(
     }
   },
   { immediate: true }
+);
+
+// ✨ CRITICAL: Watch currentValues for real-time payout example updates
+watch(
+  () => state.currentValues,
+  async () => {
+    // Force reactivity with nextTick to ensure all updates are processed
+    await nextTick();
+    updateExampleCalculations();
+    console.log('[payout-settings][reactivity] Current values changed, updating examples', {
+      currentValues: state.currentValues,
+    });
+  },
+  { deep: true, immediate: true }
 );
 
 // Load presets on component mount

@@ -26,6 +26,10 @@ export interface BettingInterfaceProps {
   // Live Payout Settings Integration - CRITICAL FOR REAL-TIME DISPLAY
   currentPayoutValues: PayoutValues;
 
+  // Payout Settings Context - NEW: For selected mode display
+  selectedPresetName?: string | null;
+  useManualConfig?: boolean;
+
   // Session state dependencies
   sessionActive?: boolean;
   canPerformActions?: boolean;
@@ -97,7 +101,6 @@ export interface BettingInterfaceEmits {
 
   // Integration events - PayoutSettings connection
   'payout-settings-requested': [];
-  'payout-update-needed': [payoutValues: PayoutValues];
 
   // Session integration events
   'balance-update-requested': [newBalance: number];
@@ -123,6 +126,14 @@ export interface BettingInterfaceState {
 
   // Real-time payout calculations (using live PayoutSettings)
   payoutCalculations: {
+    // Selected mode display information
+    selectedModeDisplay: {
+      type: 'manual' | 'preset';
+      name: string;
+      isDefault?: boolean;
+    };
+
+    // Payout ratios by bet type
     player: { payout: string; commission: string };
     banker: { payout: string; commission: string };
     tie: { payout: string; commission: string };

@@ -75,17 +75,10 @@ export class BettingService {
     isBettingAllowed: boolean,
     hasBet: boolean
   ): { isValid: boolean; errorMessage?: string } {
-    if (!selectedBet || !betAmount) {
-      return {
-        isValid: false,
-        errorMessage: 'Please select a bet type and enter a bet amount',
-      };
-    }
-
     if (!isBettingAllowed) {
       return {
         isValid: false,
-        errorMessage: 'Betting is closed! Cards are already on the table. Wait for the next round.',
+        errorMessage: 'Please start a session before placing bets.',
       };
     }
 

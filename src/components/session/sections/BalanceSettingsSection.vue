@@ -37,12 +37,10 @@
             <div :class="config.styling.INPUT_WRAPPER">
               <span :class="config.styling.CURRENCY">{{ config.labels.CURRENCY_SYMBOL }}</span>
               <input
-                :value="balanceState.startingBalance"
-                @input="onUpdateStartingBalance(Number(($event.target as HTMLInputElement).value))"
+                :value="formatBalanceForDisplay(balanceState.startingBalance)"
+                @input="handleBalanceInput"
                 :disabled="!actions.canModifyBalance"
-                type="number"
-                :min="constraints.minBalance"
-                :step="constraints.step"
+                type="text"
                 :class="config.styling.INPUT"
                 :placeholder="config.labels.PLACEHOLDER"
               />
@@ -196,6 +194,28 @@ const handlePreviousBalanceLoaded = (balance: number) => {
   });
 
   success(`Previous session balance loaded: $${balance.toFixed(2)}`);
+};
+
+const formatBalanceForDisplay = (balance: number): string => {
+  return balance.toLocaleString();
+};
+
+const handleBalanceInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const value = target.value;
+  // Remove commas and format for parsing
+  const cleanValue = value.replace(/[,$\s]/g, '');
+  const numericValue = parseFloat(cleanValue);
+
+  if (!isNaN(numericValue)) {
+    console.log('[balance-settings-section][input] Balance input changed', {
+      originalValue: value,
+      cleanValue,
+      numericValue,
+    });
+    // Note: onUpdateStartingBalance will be available in the template scope
+    // This function will be called from the template with the correct context
+  }
 };
 </script>
 

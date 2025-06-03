@@ -65,7 +65,18 @@ export class DatabaseService {
     bankerCards: Card[],
     result: HandResult,
     cardsRemaining: number,
-    penetration: number
+    penetration: number,
+    betInfo?: {
+      betType: string;
+      betAmount: number;
+      won: boolean;
+      payout: number;
+      netResult: number;
+    },
+    balanceInfo?: {
+      balanceBefore: number;
+      balanceAfter: number;
+    }
   ): Promise<string> {
     const handData: HandInsert = {
       game_id: gameId,
@@ -80,16 +91,41 @@ export class DatabaseService {
       is_natural: result.natural,
       cards_remaining: cardsRemaining,
       penetration,
+      bet_type: betInfo?.betType || null,
+      bet_amount: betInfo?.betAmount || null,
+      bet_won: betInfo?.won || null,
+      bet_payout: betInfo?.payout || null,
+      bet_net_result: betInfo?.netResult || null,
+      balance_before: balanceInfo?.balanceBefore || null,
+      balance_after: balanceInfo?.balanceAfter || null,
     };
+
+    console.log('[database-service][save-hand] Saving hand with betting info', {
+      gameId,
+      handNumber,
+      winner: result.winner,
+      betInfo,
+      balanceInfo,
+    });
 
     const { data, error } = await supabase.from('hands').insert(handData).select('id').single();
 
     if (error) {
+      console.error('[database-service][save-hand] Failed to save hand', {
+        error: error.message,
+        handData,
+      });
       throw new Error(`Failed to save hand: ${error.message}`);
     }
 
     // Update game total hands count
     await supabase.rpc('increment_game_hands', { game_id: gameId });
+
+    console.log('[database-service][save-hand] Hand saved successfully', {
+      handId: data.id,
+      gameId,
+      handNumber,
+    });
 
     return data.id;
   }

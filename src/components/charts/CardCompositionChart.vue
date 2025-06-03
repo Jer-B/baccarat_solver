@@ -258,9 +258,13 @@ const validateCardSelection = (): boolean => {
     return false;
   }
 
-  // Check if user needs to place a bet first
-  if (currentStep === 'ready_to_bet' || !hasBet) {
-    warning('💰 Please place a bet first before selecting cards! Use P, B, or T keys to bet');
+  // Check if user needs to place a bet first - BUT ONLY if they don't already have one
+  if (!hasBet) {
+    if (currentStep === 'ready_to_bet') {
+      warning('💰 Please place a bet first before selecting cards! Use P, B, or T keys to bet');
+      return false;
+    }
+    warning('💰 Please place a bet first before selecting cards');
     return false;
   }
 

@@ -384,6 +384,8 @@ export interface CurrentHandSlotProps {
     LABELS: typeof import('@/config/currentHandSettings').CURRENT_HAND_LABELS;
     ICONS: typeof import('@/config/currentHandSettings').CURRENT_HAND_ICONS;
     DEFAULTS: typeof import('@/config/currentHandSettings').CURRENT_HAND_DEFAULTS;
+    SETTINGS: typeof import('@/config/currentHandSettings').CURRENT_HAND_SETTINGS;
+    UTILS: typeof import('@/config/currentHandSettings').CURRENT_HAND_UTILS;
   };
 
   // Integration handlers

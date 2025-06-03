@@ -109,16 +109,14 @@
             v-if="handState.playerCards.length === 0"
             is-card-back
             size="medium"
-            :clickable="true"
-            @click="() => addCard('player')"
+            :clickable="false"
           />
           <!-- Add card slots for missing cards -->
           <div
             v-for="slot in Math.max(0, 3 - handState.playerCards.length)"
             :key="`player-empty-${slot}`"
-            class="w-16 h-23 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer hover:border-gray-400 hover:bg-gray-100 transition-all"
-            @click="() => addCard('player')"
-            :title="config.LABELS.CARD_ADD_TOOLTIP"
+            class="w-16 h-23 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400"
+            :title="'Cards can only be added from Shoe Composition'"
           >
             +
           </div>
@@ -192,16 +190,14 @@
             v-if="handState.bankerCards.length === 0"
             is-card-back
             size="medium"
-            :clickable="true"
-            @click="() => addCard('banker')"
+            :clickable="false"
           />
           <!-- Add card slots for missing cards -->
           <div
             v-for="slot in Math.max(0, 3 - handState.bankerCards.length)"
             :key="`banker-empty-${slot}`"
-            class="w-16 h-23 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer hover:border-gray-400 hover:bg-gray-100 transition-all"
-            @click="() => addCard('banker')"
-            :title="config.LABELS.CARD_ADD_TOOLTIP"
+            class="w-16 h-23 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400"
+            :title="'Cards can only be added from Shoe Composition'"
           >
             +
           </div>
@@ -264,11 +260,14 @@
           </div>
           <div class="flex justify-between">
             <span class="text-red-600 font-medium">Banker:</span>
-            <span
-              >{{ props.currentPayoutValues.banker_payout }}:1 (-{{
-                (props.currentPayoutValues.banker_commission * 100).toFixed(1)
-              }}%)</span
+            <span>{{ props.currentPayoutValues.banker_payout }}:1</span>
+          </div>
+          <div class="flex justify-between text-gray-500">
+            <span class="ml-2"
+              >(-{{ (props.currentPayoutValues.banker_commission * 100).toFixed(1) }}%
+              commission)</span
             >
+            <span></span>
           </div>
         </div>
         <div class="space-y-1">
@@ -419,6 +418,19 @@ import { useMonteCarloSimulation } from '@/composables/useMonteCarloSimulation';
 import { useProfessionalAlgorithms } from '@/composables/useProfessionalAlgorithms';
 
 // =============================================================================
+// STORE INTEGRATION - Connect to store's current hand
+// =============================================================================
+
+import { useBaccaratStore } from '@/stores/baccaratStore';
+import { useNotifications } from '../../../composables/useNotifications';
+
+// Get store instance
+const store = useBaccaratStore();
+
+// Get notifications
+const { success, warning } = useNotifications();
+
+// =============================================================================
 // PROPS & EMITS
 // =============================================================================
 
@@ -468,7 +480,7 @@ const emit = defineEmits<{
 // =============================================================================
 
 const autoCompleteState = ref({
-  enabled: false,
+  enabled: true,
   cardCount: 6,
   timer: null as number | null,
 });
@@ -557,34 +569,44 @@ const {
 } = useCurrentHand(headlessProps.value, headlessEmit);
 
 // =============================================================================
-// COMPUTED DISPLAY STATE
+// COMPUTED DISPLAY STATE - Connected to Store Data
 // =============================================================================
 
 const handState = computed(() => ({
-  playerCards: playerCards.value,
-  bankerCards: bankerCards.value,
-  playerTotal: playerValue.value,
-  bankerTotal: bankerValue.value,
-  currentWinner: winner.value,
-  hasActiveCards: playerCards.value.length > 0 || bankerCards.value.length > 0,
+  // Use store's current hand data instead of headless composable
+  playerCards: store.shoe.currentHand.player,
+  bankerCards: store.shoe.currentHand.banker,
+  playerTotal: store.currentHandValues.player,
+  bankerTotal: store.currentHandValues.banker,
+  currentWinner:
+    store.currentHandValues.player > store.currentHandValues.banker
+      ? 'player'
+      : store.currentHandValues.banker > store.currentHandValues.player
+        ? 'banker'
+        : store.currentHandValues.player === store.currentHandValues.banker &&
+            store.currentHandValues.player > 0
+          ? 'tie'
+          : null,
+  hasActiveCards:
+    store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0,
   isProcessing: isLoading.value,
   canCompleteRound: canCompleteRound.value,
   playerHasBet: props.currentRoundBet.hasBet && props.currentRoundBet.betType === 'player',
   bankerHasBet: props.currentRoundBet.hasBet && props.currentRoundBet.betType === 'banker',
   naturalWins: {
-    player: hasNatural.value && playerValue.value >= 8 && winner.value === 'player',
-    banker: hasNatural.value && bankerValue.value >= 8 && winner.value === 'banker',
+    player: store.currentHandValues.player >= 8 && store.shoe.currentHand.player.length > 0,
+    banker: store.currentHandValues.banker >= 8 && store.shoe.currentHand.banker.length > 0,
   },
   pairs: {
-    player: detectPairInHand(playerCards.value),
-    banker: detectPairInHand(bankerCards.value),
+    player: detectPairInHand(store.shoe.currentHand.player),
+    banker: detectPairInHand(store.shoe.currentHand.banker),
   },
   isAutoCompleting: false,
 }));
 
 const displayState = computed(() => ({
-  playerValue: playerValue.value > 0 ? playerValue.value : '-',
-  bankerValue: bankerValue.value > 0 ? bankerValue.value : '-',
+  playerValue: store.currentHandValues.player > 0 ? store.currentHandValues.player : '-',
+  bankerValue: store.currentHandValues.banker > 0 ? store.currentHandValues.banker : '-',
 }));
 
 const algorithmState = computed(() => ({
@@ -651,6 +673,8 @@ const generateRandomCard = (): Card => {
 // =============================================================================
 
 const handleAutoCompleteToggle = (): void => {
+  autoCompleteState.value.enabled = !autoCompleteState.value.enabled;
+
   console.log('[current-hand-section] Auto-complete toggled', {
     enabled: autoCompleteState.value.enabled,
     cardCount: autoCompleteState.value.cardCount,
@@ -658,7 +682,7 @@ const handleAutoCompleteToggle = (): void => {
 
   if (autoCompleteState.value.enabled) {
     // Check if we should auto-complete immediately
-    const totalCards = handState.value.playerCards.length + handState.value.bankerCards.length;
+    const totalCards = store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length;
     if (totalCards >= autoCompleteState.value.cardCount) {
       setTimeout(() => {
         autoCompleteHand();
@@ -786,87 +810,326 @@ const getOtherBetTypeBadgeClasses = (): string => {
 };
 
 // =============================================================================
-// ACTION METHODS
+// ACTION METHODS - Fixed to work with store
 // =============================================================================
 
 const addCard = (position: 'player' | 'banker') => {
-  if (actions.addCard) {
-    const card = generateRandomCard();
-    actions.addCard(card, position);
-    emit('card-added', position, card);
+  // Generate a random card and add it directly to the store
+  const card = generateRandomCard();
 
-    // Check for auto-complete
-    if (autoCompleteState.value.enabled) {
-      const totalCards =
-        handState.value.playerCards.length + handState.value.bankerCards.length + 1;
-      if (totalCards >= autoCompleteState.value.cardCount) {
-        setTimeout(() => {
-          autoCompleteHand();
-        }, 1000);
-      }
-    }
-
-    return card;
+  if (position === 'player') {
+    store.shoe.currentHand.player.push(card);
+  } else {
+    store.shoe.currentHand.banker.push(card);
   }
-  console.warn('[current-hand-section] addCard method not available');
-  return null;
+
+  emit('card-added', position, card);
+
+  // Check for auto-complete
+  if (autoCompleteState.value.enabled) {
+    const totalCards = store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length;
+    if (totalCards >= autoCompleteState.value.cardCount) {
+      setTimeout(() => {
+        autoCompleteHand();
+      }, 1000);
+    }
+  }
+
+  console.log('[current-hand-section][card-added] Card added to store', {
+    position,
+    card: `${card.rank}-${card.suit}`,
+    totalCards: store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length,
+  });
+
+  return card;
 };
 
 const removeCard = (position: 'player' | 'banker', index: number) => {
-  // Since there's no removeCard action, we'll simulate it by re-dealing the cards
-  if (position === 'player' && playerCards.value.length > index) {
-    const newCards = [...playerCards.value];
-    newCards.splice(index, 1);
-    actions.dealCards(newCards as Card[], [...bankerCards.value] as Card[]);
+  // Remove card directly from store
+  if (position === 'player' && store.shoe.currentHand.player.length > index) {
+    const removedCard = store.shoe.currentHand.player.splice(index, 1)[0];
     emit('card-removed', position, index);
-  } else if (position === 'banker' && bankerCards.value.length > index) {
-    const newCards = [...bankerCards.value];
-    newCards.splice(index, 1);
-    actions.dealCards([...playerCards.value] as Card[], newCards as Card[]);
+    console.log('[current-hand-section][card-removed] Removed player card', { removedCard, index });
+  } else if (position === 'banker' && store.shoe.currentHand.banker.length > index) {
+    const removedCard = store.shoe.currentHand.banker.splice(index, 1)[0];
     emit('card-removed', position, index);
+    console.log('[current-hand-section][card-removed] Removed banker card', { removedCard, index });
   }
 };
 
 const clearHand = () => {
-  if (actions.clearHand) {
-    actions.clearHand();
-    emit('hand-cleared');
+  // Clear hand directly in store
+  store.shoe.currentHand.player = [];
+  store.shoe.currentHand.banker = [];
+
+  // Clear auto-complete timer
+  if (autoCompleteState.value.timer) {
+    clearTimeout(autoCompleteState.value.timer);
+    autoCompleteState.value.timer = null;
   }
+
+  emit('hand-cleared');
+  console.log('[current-hand-section][hand-cleared] Hand cleared in store');
 };
 
-const completeRound = () => {
-  if (actions.completeRound) {
-    actions.completeRound();
-    return { winner: winner.value, playerValue: playerValue.value, bankerValue: bankerValue.value };
+const completeRound = async (): Promise<void> => {
+  console.log('[current-hand-section] Starting round completion', {
+    playerCards: handState.value.playerCards.length,
+    bankerCards: handState.value.bankerCards.length,
+    hasBet: props.currentRoundBet.hasBet,
+    betType: props.currentRoundBet.betType,
+    betAmount: props.currentRoundBet.betAmount,
+  });
+
+  try {
+    // Calculate winner manually
+    const playerTotal = store.currentHandValues.player;
+    const bankerTotal = store.currentHandValues.banker;
+    const totalCards = store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length;
+
+    // Require minimum 4 cards for completion
+    if (totalCards < 4) {
+      console.log('[current-hand-section] Insufficient cards for completion');
+      return;
+    }
+
+    let winner: 'player' | 'banker' | 'tie';
+    if (playerTotal > bankerTotal) {
+      winner = 'player';
+    } else if (bankerTotal > playerTotal) {
+      winner = 'banker';
+    } else {
+      winner = 'tie';
+    }
+
+    // Calculate betting results if there's a bet placed
+    let betResult: any = undefined;
+    let balanceChange = 0;
+
+    if (props.currentRoundBet.hasBet && props.currentRoundBet.betType) {
+      const betWon =
+        (props.currentRoundBet.betType === 'player' && winner === 'player') ||
+        (props.currentRoundBet.betType === 'banker' && winner === 'banker') ||
+        (props.currentRoundBet.betType === 'tie' && winner === 'tie') ||
+        (props.currentRoundBet.betType === 'playerPair' &&
+          detectPairInHand(store.shoe.currentHand.player)) ||
+        (props.currentRoundBet.betType === 'bankerPair' &&
+          detectPairInHand(store.shoe.currentHand.banker));
+
+      // Calculate payout based on bet type and current payout settings
+      let payout = 0;
+      if (betWon) {
+        switch (props.currentRoundBet.betType) {
+          case 'player':
+            payout = props.currentRoundBet.betAmount * 2; // 1:1 payout
+            break;
+          case 'banker':
+            payout = props.currentRoundBet.betAmount * 1.95; // 1:1 minus 5% commission
+            break;
+          case 'tie':
+            payout = props.currentRoundBet.betAmount * 9; // 8:1 payout
+            break;
+          case 'playerPair':
+            payout = props.currentRoundBet.betAmount * 12; // 11:1 payout
+            break;
+          case 'bankerPair':
+            payout = props.currentRoundBet.betAmount * 12; // 11:1 payout
+            break;
+        }
+      }
+
+      const netResult = payout - props.currentRoundBet.betAmount;
+      balanceChange = netResult;
+
+      betResult = {
+        betType: props.currentRoundBet.betType,
+        betAmount: props.currentRoundBet.betAmount,
+        won: betWon,
+        payout,
+        netResult,
+      };
+
+      // CRITICAL: Update balance immediately
+      const newBalance = store.ui.currentBalance + netResult;
+      store.ui.currentBalance = newBalance;
+
+      console.log('[current-hand-section][balance-update] Balance updated after bet settlement', {
+        oldBalance: store.ui.currentBalance - netResult,
+        betAmount: props.currentRoundBet.betAmount,
+        payout,
+        netResult,
+        newBalance,
+        won: betWon,
+      });
+    }
+
+    // Create hand result for database storage
+    const handResult = {
+      player: [...store.shoe.currentHand.player],
+      banker: [...store.shoe.currentHand.banker],
+      winner,
+      playerPair: detectPairInHand(store.shoe.currentHand.player),
+      bankerPair: detectPairInHand(store.shoe.currentHand.banker),
+      playerTotal,
+      bankerTotal,
+      natural: playerTotal >= 8 || bankerTotal >= 8,
+      timestamp: Date.now(),
+      handNumber: (store.handHistory?.length || 0) + 1,
+      // Include betting information
+      betInfo: betResult,
+    };
+
+    // CRITICAL: Save hand to database if session is active
+    if (store.ui.sessionActive) {
+      try {
+        const { databaseService } = await import('../../../services/databaseService');
+
+        // First, ensure we have a game ID (create one if needed)
+        let gameId = store.ui.currentGameId;
+        if (!gameId) {
+          console.log('[current-hand-section][database] Creating new game record');
+          gameId = await databaseService.createGame(
+            store.settings.numberOfDecks,
+            store.settings.cutCardPosition
+          );
+          store.ui.currentGameId = gameId;
+          console.log('[current-hand-section][database] Created game ID:', gameId);
+        }
+
+        // Save the hand to database
+        const balanceBefore = store.ui.currentBalance - (betResult?.netResult || 0);
+        const handId = await databaseService.saveHand(
+          gameId,
+          handResult.handNumber,
+          handResult.player,
+          handResult.banker,
+          handResult, // Pass the complete handResult object
+          store.totalCardsRemaining,
+          store.shoe.cardsDealt / store.shoe.totalCards,
+          betResult
+            ? {
+                betType: betResult.betType,
+                betAmount: betResult.betAmount,
+                won: betResult.won,
+                payout: betResult.payout,
+                netResult: betResult.netResult,
+              }
+            : undefined,
+          {
+            balanceBefore,
+            balanceAfter: store.ui.currentBalance,
+          }
+        );
+
+        console.log('[current-hand-section][database] Hand saved to database successfully', {
+          gameId,
+          handId,
+          handNumber: handResult.handNumber,
+          winner: handResult.winner,
+          sessionId: store.ui.currentSessionId,
+          betInfo: betResult
+            ? {
+                type: betResult.betType,
+                amount: betResult.betAmount,
+                won: betResult.won,
+                netResult: betResult.netResult,
+              }
+            : null,
+        });
+
+        // Show success notification with balance update
+        if (betResult) {
+          const message = betResult.won
+            ? `🎉 Won $${betResult.payout.toFixed(2)}! Net: +$${betResult.netResult.toFixed(2)}`
+            : `💸 Lost $${betResult.betAmount.toFixed(2)}`;
+          success(`${message} (Balance: $${store.ui.currentBalance.toFixed(2)})`);
+        } else {
+          success(`✅ Hand completed and saved to database`);
+        }
+      } catch (error) {
+        console.error('[current-hand-section][database] Failed to save hand to database', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          sessionActive: store.ui.sessionActive,
+          sessionId: store.ui.currentSessionId,
+          gameId: store.ui.currentGameId,
+        });
+        // Continue with local completion even if database save fails
+        warning(
+          `Hand completed but not saved to database: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    } else {
+      console.log('[current-hand-section][database] Session not active, skipping database save');
+    }
+
+    // Add to hand history if store has this functionality
+    if (store.addHandResult) {
+      store.addHandResult(handResult);
+    }
+
+    // CRITICAL: Emit round completion with full hand data BEFORE clearing state
+    emit('round-completed', handResult);
+
+    // Clear the cards from the store
+    store.shoe.currentHand.player = [];
+    store.shoe.currentHand.banker = [];
+
+    // Emit additional events for compatibility
+    emit('hand-completed', winner, playerTotal, bankerTotal);
+    emit('winner-determined', winner, playerTotal, bankerTotal);
+
+    console.log('[current-hand-section] Round completion finished', {
+      winner,
+      playerTotal,
+      bankerTotal,
+      betInfo: handResult.betInfo,
+      handNumber: handResult.handNumber,
+      balanceChange,
+      newBalance: store.ui.currentBalance,
+    });
+  } catch (error) {
+    console.error('[current-hand-section] Error completing round:', error);
+    emit('validation-error', [
+      `Failed to complete round: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    ]);
   }
-  return null;
 };
 
 const autoCompleteHand = () => {
   console.log('[current-hand-section] Auto-completing hand');
 
-  const currentPlayerCards = handState.value.playerCards.length;
-  const currentBankerCards = handState.value.bankerCards.length;
+  const currentPlayerCards = store.shoe.currentHand.player.length;
+  const currentBankerCards = store.shoe.currentHand.banker.length;
   const totalCards = currentPlayerCards + currentBankerCards;
 
   // Complete to minimum 4 cards if less than that
   const targetCards = Math.max(4, totalCards);
 
-  while (handState.value.playerCards.length + handState.value.bankerCards.length < targetCards) {
+  while (
+    store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length <
+    targetCards
+  ) {
     // Alternate adding cards to player and banker
     const shouldAddToPlayer =
-      handState.value.playerCards.length <= handState.value.bankerCards.length;
-    if (shouldAddToPlayer && handState.value.playerCards.length < 3) {
+      store.shoe.currentHand.player.length <= store.shoe.currentHand.banker.length;
+    if (shouldAddToPlayer && store.shoe.currentHand.player.length < 3) {
       addCard('player');
-    } else if (handState.value.bankerCards.length < 3) {
+    } else if (store.shoe.currentHand.banker.length < 3) {
       addCard('banker');
     } else {
       break; // Both sides have 3 cards
     }
   }
 
-  if (actions.triggerAutoComplete) {
-    actions.triggerAutoComplete();
+  // If we have a bet, complete the round automatically
+  if (
+    props.currentRoundBet.hasBet &&
+    store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length >= 4
+  ) {
+    setTimeout(() => {
+      completeRound();
+    }, 500);
   }
 
   emit('auto-complete-triggered');
@@ -905,12 +1168,12 @@ const triggerAlgorithmAnalysis = () => {
 };
 
 // =============================================================================
-// AUTO-COMPLETE WATCHER (RESTORED from original)
+// AUTO-COMPLETE WATCHER - Fixed to work with store
 // =============================================================================
 
 // Watch for card count and auto-complete if enabled
 watch(
-  () => handState.value.playerCards.length + handState.value.bankerCards.length,
+  () => store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length,
   totalCards => {
     if (totalCards >= autoCompleteState.value.cardCount && autoCompleteState.value.enabled) {
       // Auto-complete the round after a short delay
@@ -921,6 +1184,11 @@ watch(
       autoCompleteState.value.timer = setTimeout(() => {
         autoCompleteHand();
       }, 1000) as unknown as number;
+
+      console.log('[current-hand-section][auto-complete] Auto-complete triggered', {
+        totalCards,
+        threshold: autoCompleteState.value.cardCount,
+      });
     }
   }
 );

@@ -9,11 +9,20 @@
 // =============================================================================
 
 export const BETTING_INTERFACE_DEFAULTS = {
-  // Default betting values
+  // Default values
   DEFAULT_BET_AMOUNT: 10,
-  MIN_BET_AMOUNT: 0.01,
-  MAX_BET_AMOUNT: 100000,
-  BET_STEP: 0.01,
+  MIN_BET_AMOUNT: 0.5,
+  MAX_BET_AMOUNT: 125000,
+  BET_STEP: 0.5,
+
+  // Risk management
+  LOW_BALANCE_WARNING_RATIO: 0.5,
+  LARGE_BET_WARNING_THRESHOLD: 100,
+
+  // UI defaults
+  ENABLE_SOUND_EFFECTS: false,
+  ENABLE_ANIMATIONS: true,
+  AUTO_CLEAR_ON_NEW_SESSION: false,
 
   // Button layout configuration
   BET_BUTTONS_PER_ROW: 3,
@@ -28,10 +37,6 @@ export const BETTING_INTERFACE_DEFAULTS = {
   // Professional formatting
   CURRENCY_DECIMALS: 2,
   PERCENTAGE_DECIMALS: 1,
-
-  // UI thresholds
-  LARGE_BET_WARNING_THRESHOLD: 1000, // Warn if bet > $1000
-  LOW_BALANCE_WARNING_RATIO: 0.1, // Warn if bet > 10% of balance
 } as const;
 
 // =============================================================================
@@ -61,7 +66,6 @@ export const BETTING_INTERFACE_SETTINGS = {
     BANKER_PAIR_LABEL: 'B Pair',
 
     // Status messages
-    BALANCE_SOURCE_NOTE: 'Set in Session Control',
     WAITING_MESSAGE: 'Waiting for hand to complete...',
 
     // Professional terminology
@@ -321,22 +325,19 @@ export const BETTING_INTERFACE_EVENTS = {
 
 export const BETTING_VALIDATION = {
   BET_AMOUNT: {
-    REQUIRED: true,
-    MIN_VALUE: BETTING_INTERFACE_DEFAULTS.MIN_BET_AMOUNT,
-    MAX_VALUE: BETTING_INTERFACE_DEFAULTS.MAX_BET_AMOUNT,
-    STEP: BETTING_INTERFACE_DEFAULTS.BET_STEP,
-    BALANCE_RATIO_WARNING: BETTING_INTERFACE_DEFAULTS.LOW_BALANCE_WARNING_RATIO,
-    LARGE_BET_WARNING: BETTING_INTERFACE_DEFAULTS.LARGE_BET_WARNING_THRESHOLD,
+    MIN_VALUE: 0.05,
+    MAX_VALUE: 125000,
+    STEP: 0.01,
+    DEFAULT: 10,
   },
-
+  BALANCE: {
+    MIN_PERCENTAGE: 0.01, // 1% of balance
+    MAX_PERCENTAGE: 1.0, // 100% of balance
+    WARNING_PERCENTAGE: 0.5, // Warn if betting more than 50% of balance
+  },
   BET_TYPE: {
     REQUIRED: true,
     VALID_TYPES: ['player', 'banker', 'tie', 'playerPair', 'bankerPair'] as const,
-  },
-
-  BALANCE: {
-    MINIMUM_REQUIRED: 0.01,
-    INSUFFICIENT_BALANCE_THRESHOLD: 0,
   },
 } as const;
 
@@ -381,12 +382,15 @@ export const INTEGRATION_POINTS = {
 // =============================================================================
 
 export const BETTING_UTILS = {
-  // Currency formatting
+  // Currency formatting with comma separators for large numbers
   formatCurrency: (
     amount: number,
     decimals = BETTING_INTERFACE_DEFAULTS.CURRENCY_DECIMALS
   ): string => {
-    return `$${amount.toFixed(decimals)}`;
+    return `$${amount.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })}`;
   },
 
   // Percentage formatting
@@ -397,12 +401,18 @@ export const BETTING_UTILS = {
     return `${(decimal * 100).toFixed(decimals)}%`;
   },
 
-  // Professional number formatting
+  // Professional number formatting with commas
   formatNumber: (num: number, decimals = 0): string => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
     if (num >= STATISTICS_SETTINGS.FORMATTING.LARGE_NUMBER_THRESHOLD) {
       return `${(num / 1000).toFixed(1)}K`;
     }
-    return num.toFixed(decimals);
+    return num.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
   },
 
   // Bet type validation

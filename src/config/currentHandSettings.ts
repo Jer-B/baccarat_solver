@@ -36,6 +36,13 @@ export interface HandCompletionEvent {
   timestamp: number;
 }
 
+export interface AutoCompleteEvent {
+  enabled: boolean;
+  cardCount: number;
+  timestamp: number;
+  triggeredBy: 'user' | 'system';
+}
+
 // =============================================================================
 // CORE CONFIGURATION
 // =============================================================================
@@ -99,6 +106,7 @@ export const CURRENT_HAND_SETTINGS = {
     ALGORITHM_TITLE: '🧠 Professional Analysis',
     KELLY_CRITERION_LABEL: 'Kelly Criterion',
     RISK_ASSESSMENT_LABEL: 'Risk Assessment',
+    RISK_ASSESSMENT: 'Risk Assessment',
     RECOMMENDATION_LABEL: 'Recommendation',
     PAYOUT_VALUES_TITLE: 'Current Payout Values',
     HAND_SUMMARY_TITLE: 'Hand Summary',

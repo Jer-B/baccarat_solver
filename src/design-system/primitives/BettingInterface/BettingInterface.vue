@@ -15,6 +15,8 @@
 // =============================================================================
 
 import { ref, computed, watch, nextTick } from 'vue';
+import type { BetType, BettingValidationResult } from '@/config/bettingInterfaceSettings';
+import type { PayoutValues } from '@/config/payoutSettings';
 import type {
   BettingInterfaceProps,
   BettingInterfaceEmits,
@@ -22,8 +24,6 @@ import type {
   BettingInterfaceSlotProps,
   PayoutIntegration,
 } from './index';
-import type { PayoutValues } from '@/config/payoutSettings';
-import type { BetType } from '@/config/bettingInterfaceSettings';
 
 // Import configuration modules
 import {
@@ -50,6 +50,8 @@ const props = withDefaults(defineProps<BettingInterfaceProps>(), {
   showStatistics: true,
   isPlacingBet: false,
   isValidatingBet: false,
+  useManualConfig: false,
+  selectedPresetName: null,
 });
 
 const emit = defineEmits<BettingInterfaceEmits>();
@@ -89,7 +91,20 @@ const statisticsData = ref({
 const payoutCalculations = computed(() => {
   const payouts = props.currentPayoutValues;
 
+  // Determine selected mode display
+  const selectedModeDisplay = {
+    type: props.useManualConfig ? 'manual' : 'preset',
+    name: props.useManualConfig
+      ? 'Manual Configuration'
+      : props.selectedPresetName || 'Unknown Preset',
+    isDefault: false, // This could be enhanced to detect default presets
+  } as const;
+
   return {
+    // Selected mode display information
+    selectedModeDisplay,
+
+    // Payout ratios by bet type
     player: {
       payout: `${payouts.player_payout}:1`,
       commission: '0%', // Player bets have no commission
@@ -182,13 +197,66 @@ const actions = {
   updateBetAmount: (amount: number): void => {
     console.log('[betting-interface][action] Updating bet amount', {
       previousAmount: betAmount.value,
-      newAmount: amount,
+      requestedAmount: amount,
       balance: props.currentBalance,
+      minAllowed: BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE,
+      maxAllowed: BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE,
     });
 
-    betAmount.value = amount;
+    // Handle invalid input (NaN, negative, etc.)
+    if (isNaN(amount) || amount < 0) {
+      console.log('[betting-interface][validation] Invalid amount input, keeping previous value');
+      return;
+    }
+
+    let adjustedAmount = amount;
+    let showToast = false;
+    let toastMessage = '';
+
+    // CRITICAL: Validate minimum bet amount (Auto-adjust ANY value below 0.5)
+    if (amount > 0 && amount < BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE) {
+      adjustedAmount = BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE;
+      showToast = true;
+      toastMessage = `⚠️ Minimum bet is $${BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE.toFixed(2)}. Amount adjusted automatically.`;
+
+      console.log('[betting-interface][validation] Auto-adjusting bet amount below minimum', {
+        inputAmount: amount,
+        adjustedAmount,
+        minimum: BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE,
+      });
+    }
+
+    // Validate maximum bet amount
+    if (amount > BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE) {
+      adjustedAmount = BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE;
+      showToast = true;
+      toastMessage = `⚠️ Maximum bet is $${BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE.toLocaleString()}. Amount adjusted automatically.`;
+
+      console.log('[betting-interface][validation] Auto-adjusting bet amount above maximum', {
+        inputAmount: amount,
+        adjustedAmount,
+        maximum: BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE,
+      });
+    }
+
+    // Update the bet amount
+    betAmount.value = adjustedAmount;
+
+    // Emit validation error/warning for UI feedback
+    if (showToast) {
+      const validationResult = {
+        isValid: true, // Still valid after adjustment
+        errors: [],
+        warnings: [toastMessage],
+      };
+      emit('validation-error', validationResult);
+    }
+
+    // Always revalidate after amount change
     actions.validateBet();
-    emit('bet-amount-changed', amount);
+
+    // CRITICAL: Emit amount change for parent component state sync
+    emit('bet-amount-changed', adjustedAmount);
   },
 
   selectBetType: (betType: BetType): void => {
@@ -196,6 +264,7 @@ const actions = {
       previousBet: selectedBet.value,
       newBet: betType,
       currentAmount: betAmount.value,
+      preservingAmount: true,
     });
 
     selectedBet.value = betType;
@@ -204,17 +273,59 @@ const actions = {
   },
 
   placeBet: async (): Promise<void> => {
-    if (!selectedBet.value) {
-      return;
-    }
-
-    console.log('[betting-interface][action] Placing bet', {
+    console.log('[betting-interface][action] Attempting to place bet', {
       betType: selectedBet.value,
       amount: betAmount.value,
       balance: props.currentBalance,
-      payoutInfo: payoutCalculations.value[selectedBet.value],
+      sessionActive: props.sessionActive,
+      canPerformActions: props.canPerformActions,
     });
 
+    // Validation 1: Check if session is active
+    if (!props.sessionActive) {
+      const validationResult = {
+        isValid: false,
+        errors: ['Please start a session before placing bets.'],
+        warnings: [],
+      };
+      emit('validation-error', validationResult);
+      return;
+    }
+
+    // Validation 2: Check if bet type is selected
+    if (!selectedBet.value) {
+      const validationResult = {
+        isValid: false,
+        errors: ['Please select a bet type (Player, Banker, Tie, or Pairs).'],
+        warnings: [],
+      };
+      emit('validation-error', validationResult);
+      return;
+    }
+
+    // Validation 3: Check minimum bet amount
+    if (betAmount.value < BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE) {
+      const validationResult = {
+        isValid: false,
+        errors: [`Minimum bet amount is $${BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE.toFixed(2)}.`],
+        warnings: [],
+      };
+      emit('validation-error', validationResult);
+      return;
+    }
+
+    // Validation 4: Check if user has sufficient balance
+    if (betAmount.value > props.currentBalance) {
+      const validationResult = {
+        isValid: false,
+        errors: ['Insufficient balance for this bet amount.'],
+        warnings: [],
+      };
+      emit('validation-error', validationResult);
+      return;
+    }
+
+    // All validations passed
     isPlacingBet.value = true;
 
     try {
@@ -226,6 +337,13 @@ const actions = {
       };
 
       emit('bet-placed', betEvent);
+
+      // CRITICAL: DO NOT RESET BET AMOUNT OR BET TYPE AFTER PLACING BET
+      // User wants to keep their selected values
+      console.log('[betting-interface][action] Bet placed successfully, preserving values', {
+        preservedBetType: selectedBet.value,
+        preservedBetAmount: betAmount.value,
+      });
     } finally {
       isPlacingBet.value = false;
     }
@@ -234,11 +352,10 @@ const actions = {
   clearBet: (): void => {
     console.log('[betting-interface][action] Clearing bet', {
       previousBet: selectedBet.value,
-      previousAmount: betAmount.value,
+      preservedAmount: betAmount.value,
     });
 
     selectedBet.value = null;
-    betAmount.value = BETTING_INTERFACE_DEFAULTS.DEFAULT_BET_AMOUNT;
     validationErrors.value = [];
     validationWarnings.value = [];
     emit('bet-cleared');
@@ -270,12 +387,12 @@ const actions = {
   },
 
   updatePayoutCalculations: (payoutValues: PayoutValues): void => {
-    console.log('[betting-interface][integration] Updating payout calculations', {
-      newPayouts: payoutValues,
+    console.log('[betting-interface][payout] Recalculating payout displays', {
       affectedCalculations: Object.keys(payoutCalculations.value),
     });
 
-    emit('payout-update-needed', payoutValues);
+    // REMOVED: emit('payout-update-needed', payoutValues) - was causing circular dependency
+    // The betting interface now receives payout values via props (unidirectional flow)
   },
 
   // Professional algorithm actions
@@ -330,6 +447,14 @@ const utils = {
     return BETTING_UTILS.formatCurrency(amount);
   },
 
+  // Enhanced currency formatting with commas for large numbers
+  formatCurrencyWithCommas: (amount: number): string => {
+    return `$${amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  },
+
   // This formatPercentage connects to PayoutSettings formatPercentage
   formatPercentage: (decimal: number): string => {
     return BETTING_UTILS.formatPercentage(decimal);
@@ -337,6 +462,14 @@ const utils = {
 
   formatPayout: (payout: number): string => {
     return `${payout}:1`;
+  },
+
+  // Number formatting with commas for readability
+  formatNumberWithCommas: (value: number): string => {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   },
 
   // Professional calculation utilities
@@ -436,9 +569,12 @@ const handlers = {
 // HELPER FUNCTIONS
 // =============================================================================
 
-const performValidation = () => {
+const performValidation = (): BettingValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
+
+  // ONLY validate bet amount and balance for button enablement
+  // Session and bet type validation happens in placeBet action with toast messages
 
   // Bet amount validation
   if (betAmount.value < BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE) {
@@ -449,37 +585,31 @@ const performValidation = () => {
     errors.push(`Maximum bet is ${utils.formatCurrency(BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE)}`);
   }
 
+  // Balance validation
   if (betAmount.value > props.currentBalance) {
-    errors.push('Insufficient balance for this bet');
+    errors.push('Insufficient balance for this bet amount');
   }
 
-  // Risk warnings
-  if (props.enableRiskWarnings) {
-    const riskRatio = betAmount.value / props.currentBalance;
-    if (riskRatio > BETTING_VALIDATION.BET_AMOUNT.BALANCE_RATIO_WARNING) {
-      warnings.push(`This bet is ${utils.formatPercentage(riskRatio)} of your balance`);
-    }
-
-    if (betAmount.value > BETTING_VALIDATION.BET_AMOUNT.LARGE_BET_WARNING) {
-      warnings.push('This is a large bet amount');
-    }
+  // Balance warnings
+  if (betAmount.value > props.currentBalance * 0.5) {
+    warnings.push('Large bet relative to balance');
   }
 
-  // Bet type validation
-  if (!selectedBet.value) {
-    errors.push('Please select a bet type');
-  }
-
-  // Session validation
-  if (!props.sessionActive && props.enableValidation) {
-    errors.push('Session must be active to place bets');
-  }
-
-  return {
+  const result = {
     isValid: errors.length === 0,
     errors,
     warnings,
   };
+
+  console.log('[betting-interface][validation] Validation performed', {
+    betAmount: betAmount.value,
+    balance: props.currentBalance,
+    errors: errors.length,
+    warnings: warnings.length,
+    buttonEnabled: errors.length === 0,
+  });
+
+  return result;
 };
 
 const calculateRiskLevel = (): 'low' | 'medium' | 'high' => {
@@ -541,7 +671,7 @@ const calculateCurrentStatistics = () => {
 // WATCHERS FOR PROPS CHANGES
 // =============================================================================
 
-// Watch for payout changes and recalculate
+// Watch for payout changes and recalculate displays
 watch(
   () => props.currentPayoutValues,
   newPayouts => {
@@ -550,10 +680,14 @@ watch(
       recalculatingDisplays: true,
     });
 
-    // Trigger recalculation of payout displays
+    // Only recalculate displays - DO NOT emit payout-update-needed
+    // The betting interface receives payout values via props (unidirectional flow)
+    // It should only emit payout updates for internal business needs
     nextTick(() => {
-      // Emit event to notify about payout integration update
-      emit('payout-update-needed', newPayouts);
+      // Update internal payout calculations if needed
+      if (props.enableValidation) {
+        actions.validateBet();
+      }
     });
   },
   { deep: true }
@@ -569,10 +703,11 @@ watch(
       currentBet: betAmount.value,
     });
 
-    // Revalidate bet if balance changes
-    if (props.enableValidation) {
-      actions.validateBet();
-    }
+    // REMOVED: Automatic validation on balance change to prevent unwanted validation success toasts
+    // Users can manually validate if needed
+    // if (props.enableValidation) {
+    //   actions.validateBet();
+    // }
   }
 );
 
