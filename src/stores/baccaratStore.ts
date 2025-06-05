@@ -1419,35 +1419,33 @@ export const useBaccaratStore = defineStore('baccarat', {
         handsPlayed = this.history.hands.length;
       }
 
-      // CRITICAL: Cancel any pending bets and restore balance
-      // Access betting interface from App.vue injection
-      const bettingInterfaceElement = document.querySelector('[data-betting-interface]');
-      if (bettingInterfaceElement) {
-        // Check if there's a pending bet that needs to be cancelled
-        const pendingBetData = (bettingInterfaceElement as any).__vue__?.ctx?.currentRoundBet;
-        if (pendingBetData?.hasBet) {
-          console.log('[session-tracking][pending-bet] Cancelling pending bet on session end', {
-            betType: pendingBetData.betType,
-            betAmount: pendingBetData.betAmount,
-            currentBalance: this.ui.currentBalance,
-          });
+      // CRITICAL: Add a global flag to indicate session is ending
+      // This will be used by the betting interface to cancel pending bets
+      (window as any).sessionEnding = true;
 
-          // Restore the bet amount to balance
-          this.ui.currentBalance += pendingBetData.betAmount;
+      // Emit a custom event to notify all components about session ending
+      const sessionEndEvent = new CustomEvent('session-ending', {
+        detail: {
+          sessionId,
+          restoreBalance: true,
+          timestamp: Date.now(),
+        },
+      });
+      window.dispatchEvent(sessionEndEvent);
 
-          console.log(
-            '[session-tracking][pending-bet] Balance restored after pending bet cancellation',
-            {
-              restoredAmount: pendingBetData.betAmount,
-              newBalance: this.ui.currentBalance,
-            }
-          );
-        }
-      }
+      console.log(
+        '[session-tracking][pending-bet] Session ending event dispatched for bet cancellation'
+      );
+
+      // Give components time to respond to the event
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       this.ui.sessionActive = false;
       this.ui.sessionStartTime = null;
       this.ui.currentSessionId = null;
+
+      // Clean up global flag
+      delete (window as any).sessionEnding;
 
       // Update session in Supabase
       if (sessionId) {

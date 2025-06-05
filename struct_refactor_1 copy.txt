@@ -1,0 +1,235 @@
+nope like this, and if I were to use Sass, I will add a theme folder in src with variable.scss.
+then an asset/styles folder in src with global.scss and toast scss and subfolders base(reset.scss and typo.scss), mixins(breakpoints.scss), utilities(layout.scss spacing.scss)
+and specific.scss for specific components in components if needed. 
+
+````
+src/
+├── utils/                           # 🎯 Pure utility functions
+│   ├── math/
+│   │   ├── CDDMathUtils.ts         # Mathematical calculations
+│   │   ├── CDDStatisticsUtils.ts   # Statistical functions
+│   │   └── CDDProbabilityUtils.ts  # Probability calculations
+│   ├── format/
+│   │   ├── CDDStringUtils.ts       # String formatting, validation
+│   │   ├── CDDDateUtils.ts         # Date/time utilities
+│   │   └── CDDCurrencyUtils.ts     # Currency formatting
+│   ├── validation/
+│   │   ├── CDDValidationUtils.ts   # Generic validation functions
+│   │   ├── CDDGameValidation.ts    # Game-specific validation
+│   │   └── CDDFormValidation.ts    # Form validation helpers
+│   └── array/
+│       ├── CDDArrayUtils.ts        # Array manipulations
+│       └── CDDCollectionUtils.ts   # Collection utilities
+│
+│
+├── config/                          # 🎯 Application configuration
+│   ├── app/
+│   │   ├── CDDAppConfig.ts         # Application settings
+│   │   ├── CDDEnvironmentConfig.ts # Environment variables
+│   │   └── CDDFeatureFlags.ts      # Feature toggles
+│   ├── game/
+│   │   ├── CDDGameRules.ts         # Baccarat rules configuration
+│   │   ├── CDDCardConfig.ts        # Card deck configuration
+│   │   ├── CDDScoringConfig.ts     # Scoring rules
+│   │   └── CDDPayoutConfig.ts      # Payout tables
+│   ├── betting/
+│   │   ├── CDDBettingLimits.ts     # Betting limits configuration
+│   │   ├── CDDRiskConfig.ts        # Risk management settings
+│   │   └── CDDBankrollConfig.ts    # Bankroll management rules
+│   ├── ui/
+│   │   ├── CDDThemeConfig.ts       # Theme configuration
+│   │   ├── CDDLayoutConfig.ts      # Layout settings
+│   │   └── CDDAnimationConfig.ts   # Animation settings
+│   ├── api/
+│   │   ├── CDDSupabaseConfig.ts    # Supabase configuration
+│   │   ├── CDDApiEndpoints.ts      # API endpoint definitions
+│   │   └── CDDApiRetryConfig.ts    # Retry policies
+│   └── algorithms/
+│       ├── CDDKellyConfig.ts       # Kelly criterion settings
+│       ├── CDDMonteCarloConfig.ts  # Monte Carlo parameters
+│       └── CDDBurnAnalysisConfig.ts # Burn analysis settings
+│
+├── stores/                          # 🎯 Pinia state management
+│   ├── game/
+│   │   ├── CDDGameStore.ts         # Main game state
+│   │   ├── CDDCurrentHandStore.ts  # Current hand state
+│   │   ├── CDDScoreboardStore.ts   # Scoreboard state
+│   │   └── CDDGameHistoryStore.ts  # Game history state
+│   ├── session/
+│   │   ├── CDDSessionStore.ts      # Session management state
+│   │   ├── CDDUserPrefsStore.ts    # User preferences
+│   │   └── CDDSessionStatsStore.ts # Session statistics
+│   ├── betting/
+│   │   ├── CDDBettingStore.ts      # Betting state management
+│   │   ├── CDDBankrollStore.ts     # Bankroll tracking
+│   │   └── CDDRiskStore.ts         # Risk management state
+│   ├── ui/
+│   │   ├── CDDUIStore.ts           # UI state (modals, themes)
+│   │   ├── CDDNotificationStore.ts # Notifications state
+│   │   └── CDDLayoutStore.ts       # Layout preferences
+│   └── algorithms/
+│       ├── CDDKellyStore.ts        # Kelly criterion state
+│       ├── CDDMonteCarloStore.ts   # Monte Carlo state
+│       └── CDDBurnAnalysisStore.ts # Burn analysis state
+│
+├── router/                          # 🎯 Vue Router configuration
+│   ├── index.ts                    # Main router setup
+│   ├── routes/
+│   │   ├── CDDGameRoutes.ts        # Game-related routes
+│   │   ├── CDDHistoryRoutes.ts     # History routes
+│   │   ├── CDDSettingsRoutes.ts    # Settings routes
+│   │   └── CDDAuthRoutes.ts        # Authentication routes
+│   ├── guards/
+│   │   ├── CDDAuthGuard.ts         # Authentication guard
+│   │   ├── CDDSessionGuard.ts      # Session validation guard
+│   │   └── CDDPermissionGuard.ts   # Permission checking
+│   └── middleware/
+│       ├── CDDAnalyticsMiddleware.ts # Route analytics
+│       ├── CDDErrorMiddleware.ts    # Error handling
+│       └── CDDLoadingMiddleware.ts  # Loading states
+│
+├── types/                           # 🎯 TypeScript definitions
+│   ├── common/
+│   │   ├── CDDBaseTypes.ts         # Base types, Result, Error types
+│   │   └── CDDUtilityTypes.ts      # Utility types
+│   ├── game/
+│   │   ├── CDDGameTypes.ts         # Game state, hands, results
+│   │   ├── CDDCardTypes.ts         # Cards, suits, values
+│   │   └── CDDScoringTypes.ts      # Scoring, rules
+│   ├── session/
+│   │   ├── CDDSessionTypes.ts      # Session state, config
+│   │   └── CDDUserTypes.ts         # User profiles, preferences
+│   ├── betting/
+│   │   ├── CDDBettingTypes.ts      # Bets, payouts, limits
+│   │   └── CDDRiskTypes.ts         # Risk levels, analysis
+│   ├── ui/
+│   │   ├── CDDComponentTypes.ts    # Component props, events
+│   │   └── CDDThemeTypes.ts        # Theme configuration
+│   └── api/
+│       ├── CDDApiTypes.ts          # API requests/responses
+│       └── CDDDatabaseTypes.ts     # Database schemas
+│
+├── services/                        # 🎯 Business logic & orchestration
+│   ├── game/
+│   │   ├── CDDGameEngine.ts        # Core game logic
+│   │   ├── CDDCardEngine.ts        # Card dealing, validation
+│   │   ├── CDDScoringEngine.ts     # Hand scoring, results
+│   │   └── CDDRuleEngine.ts        # Baccarat rules validation
+│   ├── session/
+│   │   ├── CDDSessionManager.ts    # Session lifecycle management
+│   │   ├── CDDSessionStorage.ts    # Persistence strategies
+│   │   └── CDDSessionAnalytics.ts  # Session analytics
+│   ├── betting/
+│   │   ├── CDDBettingEngine.ts     # Bet validation, payouts
+│   │   ├── CDDRiskManager.ts       # Risk assessment
+│   │   └── CDDBankrollManager.ts   # Bankroll management
+│   ├── algorithms/
+│   │   ├── CDDKellyCriterionService.ts  # Kelly calculations
+│   │   ├── CDDMonteCarloService.ts      # Monte Carlo simulations
+│   │   └── CDDBurnAnalysisService.ts    # Burn card analysis
+│   └── api/
+│       ├── CDDSupabaseService.ts   # Database operations
+│       ├── CDDAnalyticsService.ts  # Analytics tracking
+│       └── CDDNotificationService.ts # Notifications
+│
+├── composables/                     # 🎯 Vue reactive wrappers
+│   ├── game/
+│   │   ├── useCDDCurrentHand.ts    # Current hand reactive state
+│   │   ├── useCDDScoreboard.ts     # Scoreboard reactive logic
+│   │   ├── useCDDBetting.ts        # Betting reactive interface
+│   │   └── useCDDGameState.ts      # Overall game reactive state
+│   ├── session/
+│   │   ├── useCDDSession.ts        # Session reactive management
+│   │   ├── useCDDSessionPersistence.ts # Session storage logic
+│   │   └── useCDDSessionValidation.ts  # Session validation rules
+│   ├── ui/
+│   │   ├── useCDDModal.ts          # Modal reactive logic
+│   │   ├── useCDDToast.ts          # Toast notifications
+│   │   ├── useCDDTheme.ts          # Theme switching
+│   │   └── useCDDResponsive.ts     # Responsive breakpoints
+│   └── algorithms/
+│       ├── useCDDKellyCriterion.ts # Kelly algorithm reactive
+│       ├── useCDDMonteCarlo.ts     # Monte Carlo reactive
+│       └── useCDDBurnAnalysis.ts   # Burn analysis reactive
+│
+├── components/                      # 🎯 UI components
+│   ├── ui/                         # Pure UI components (Design System)
+│   │   └── CDD/
+│   │       ├── atoms/              # Basic building blocks
+│   │       │   ├── Button/
+│   │       │   │   ├── CDDButton.vue
+│   │       │   │   ├── CDDButton.test.ts
+│   │       │   │   ├── CDDButton.stories.ts
+│   │       │   │   └── CDDButton.scss
+│   │       │   ├── Input/
+│   │       │   │   ├── CDDInput.vue
+│   │       │   │   ├── CDDInput.test.ts
+│   │       │   │   ├── CDDInput.stories.ts
+│   │       │   │   └── CDDInput.scss
+│   │       │   ├── Card/
+│   │       │   │   ├── CDDCard.vue
+│   │       │   │   ├── CDDPlayingCard.vue
+│   │       │   │   ├── CDDGameCard.vue
+│   │       │   │   └── CDDCard.scss
+│   │       │   └── Badge/
+│   │       │       ├── CDDBadge.vue
+│   │       │       ├── CDDBadge.test.ts
+│   │       │       └── CDDBadge.scss
+│   │       ├── molecules/          # Simple combinations
+│   │       │   ├── FormField/
+│   │       │   │   ├── CDDFormField.vue
+│   │       │   │   └── CDDFormField.scss
+│   │       │   ├── SearchBox/
+│   │       │   │   ├── CDDSearchBox.vue
+│   │       │   │   └── CDDSearchBox.scss
+│   │       │   └── BettingButton/
+│   │       │       ├── CDDBettingButton.vue
+│   │       │       └── CDDBettingButton.scss
+│   │       └── organisms/          # Complex components
+│   │           ├── DataTable/
+│   │           │   ├── CDDDataTable.vue
+│   │           │   └── CDDDataTable.scss
+│   │           └── Modal/
+│   │               ├── CDDModal.vue
+│   │               └── CDDModal.scss
+│   └── business/                   # Business-specific components
+│       └── game/
+│           ├── CDDHandDisplay.vue
+│           ├── CDDScoreboardGrid.vue
+│           └── CDDBettingInterface.vue
+│
+├── views/                          # 🎯 Pages & containers
+│   ├── game/
+│   │   ├── CDDGameViewContainer.vue    # Main container (routing, global state)
+│   │   ├── CDDGameView.vue             # Layout orchestrator
+│   │   └── components/                 # View-specific components
+│   │       ├── header/
+│   │       │   ├── CDDGameHeader.vue
+│   │       │   └── CDDGameStats.vue
+│   │       ├── footer/
+│   │       │   └── CDDGameFooter.vue
+│   │       ├── controls/
+│   │       │   ├── CDDSessionControl.vue
+│   │       │   └── CDDGameActions.vue
+│   │       └── sections/
+│   │           ├── CDDCurrentHand.vue
+│   │           ├── CDDScoreboard.vue
+│   │           ├── CDDBettingPanel.vue
+│   │           └── CDDStatistics.vue
+│   └── history/
+│       ├── CDDHistoryViewContainer.vue
+│       └── CDDHistoryView.vue
+│
+└── tests/                          # 🎯 Testing
+    ├── unit/
+    │   ├── components/
+    │   ├── composables/
+    │   ├── services/
+    │   └── utils/
+    ├── integration/
+    │   ├── game-flows/
+    │   └── api-integration/
+    └── e2e/
+        ├── gambling-scenarios/
+        └── user-journeys/
+````

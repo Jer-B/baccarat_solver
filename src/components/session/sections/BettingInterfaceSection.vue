@@ -50,23 +50,36 @@
 
           <!-- Bet Amount Input - EXACT preservation -->
           <div :class="config.settings.STYLING.FORM_FIELD_CONTAINER">
-            <label :class="config.settings.STYLING.FORM_FIELD_LABEL">
-              {{ config.settings.LABELS.BET_AMOUNT_LABEL }}
-            </label>
+            <div class="flex items-center justify-between mb-1">
+              <label :class="config.settings.STYLING.FORM_FIELD_LABEL">
+                {{ config.settings.LABELS.BET_AMOUNT_LABEL }}
+              </label>
+              <button
+                @click="() => actions.updateBetAmount(currentBalance)"
+                :disabled="!sessionActive || !canPerformActions || state.currentBet.hasBet"
+                class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                title="Set bet amount to current balance"
+              >
+                Max
+              </button>
+            </div>
             <input
               :class="config.settings.STYLING.FORM_FIELD_INPUT"
-              type="number"
-              :min="config.validation.BET_AMOUNT.MIN_VALUE"
-              :step="config.validation.BET_AMOUNT.STEP"
-              :value="state.betAmount"
+              type="text"
+              :value="formatInitialValue(state.betAmount)"
               @input="
-                (event: Event) => {
-                  const inputElement = event.target as HTMLInputElement;
-                  const amount = parseFloat(inputElement.value.replace(/[,$\\s]/g, ''));
-                  if (!isNaN(amount) && amount >= 0) {
-                    actions.updateBetAmount(amount);
-                  }
-                }
+                event =>
+                  handleNumberInput(event, actions.updateBetAmount, {
+                    minValue: config.validation.BET_AMOUNT.MIN_VALUE,
+                    maxValue: config.validation.BET_AMOUNT.MAX_VALUE,
+                  })
+              "
+              @blur="
+                event =>
+                  handleNumberBlur(event, actions.updateBetAmount, {
+                    minValue: config.validation.BET_AMOUNT.MIN_VALUE,
+                    defaultValue: config.validation.BET_AMOUNT.MIN_VALUE,
+                  })
               "
               placeholder="10.00"
             />
@@ -178,6 +191,14 @@
           </div>
         </div>
 
+        <!-- Validation Error Display - Red text under entire betting section -->
+        <div
+          v-if="state.validation.errors.length > 0"
+          class="mt-2 text-sm text-red-600 text-center"
+        >
+          {{ state.validation.errors[0] }}
+        </div>
+
         <!-- Payout Information Panel - LIVE VALUES FROM PAYOUTSETTINGS! -->
         <div :class="config.settings.STYLING.PAYOUT_INFO_PANEL">
           <div :class="config.settings.STYLING.PAYOUT_INFO_HEADER">
@@ -199,16 +220,46 @@
               Selected: {{ state.payoutCalculations.selectedModeDisplay.name }}
             </div>
 
-            <div>Player: {{ state.payoutCalculations.player.payout }}</div>
             <div>
-              Banker: {{ state.payoutCalculations.banker.payout }} ({{
-                state.payoutCalculations.banker.commission
-              }}
-              commission)
+              <div>Player: {{ state.payoutCalculations.player.payout }}</div>
+              <div class="text-xs text-gray-500">
+                Possible Gain:
+                {{ calculatePossibleGain('player', state.betAmount, currentPayoutValues) }}
+              </div>
             </div>
-            <div>Tie: {{ state.payoutCalculations.tie.payout }}</div>
-            <div>Player Pair: {{ state.payoutCalculations.playerPair.payout }}</div>
-            <div>Banker Pair: {{ state.payoutCalculations.bankerPair.payout }}</div>
+            <div>
+              <div>
+                Banker: {{ state.payoutCalculations.banker.payout }} ({{
+                  state.payoutCalculations.banker.commission
+                }}
+                commission)
+              </div>
+              <div class="text-xs text-gray-500">
+                Possible Gain:
+                {{ calculatePossibleGain('banker', state.betAmount, currentPayoutValues) }}
+              </div>
+            </div>
+            <div>
+              <div>Tie: {{ state.payoutCalculations.tie.payout }}</div>
+              <div class="text-xs text-gray-500">
+                Possible Gain:
+                {{ calculatePossibleGain('tie', state.betAmount, currentPayoutValues) }}
+              </div>
+            </div>
+            <div>
+              <div>Player Pair: {{ state.payoutCalculations.playerPair.payout }}</div>
+              <div class="text-xs text-gray-500">
+                Possible Gain:
+                {{ calculatePossibleGain('playerPair', state.betAmount, currentPayoutValues) }}
+              </div>
+            </div>
+            <div>
+              <div>Banker Pair: {{ state.payoutCalculations.bankerPair.payout }}</div>
+              <div class="text-xs text-gray-500">
+                Possible Gain:
+                {{ calculatePossibleGain('bankerPair', state.betAmount, currentPayoutValues) }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -237,6 +288,8 @@ import { computed, nextTick } from 'vue';
 import { BettingInterface } from '@/design-system/primitives/BettingInterface';
 import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
 import { useVisibilityStore } from '@/stores/visibilityStore';
+import { PAYOUT_UTILS } from '@/config/payoutSettings';
+import { handleNumberInput, handleNumberBlur, formatInitialValue } from '@/utils/numberFormatting';
 import type { PayoutValues } from '@/config/payoutSettings';
 import type {
   BetType,
@@ -457,6 +510,52 @@ const formatCurrencyWithCommas = (value: number): string => {
   })}`;
 };
 
+const calculatePossibleGain = (
+  betType: BetType,
+  betAmount: number,
+  payoutValues: PayoutValues
+): string => {
+  if (betAmount <= 0) {
+    return '$0.00';
+  }
+
+  let payoutRatio = 0;
+  let commission = 0;
+
+  switch (betType) {
+    case 'player':
+      payoutRatio = payoutValues.player_payout;
+      commission = 0;
+      break;
+    case 'banker':
+      payoutRatio = payoutValues.banker_payout;
+      commission = payoutValues.banker_commission;
+      break;
+    case 'tie':
+      payoutRatio = payoutValues.tie_payout;
+      commission = 0;
+      break;
+    case 'playerPair':
+      payoutRatio = payoutValues.player_pair_payout;
+      commission = 0;
+      break;
+    case 'bankerPair':
+      payoutRatio = payoutValues.banker_pair_payout;
+      commission = 0;
+      break;
+    default:
+      return '$0.00';
+  }
+
+  // Calculate the profit/gain (winnings only, not including the original bet)
+  const gain = PAYOUT_UTILS.calculateProfit(betAmount, payoutRatio, commission);
+
+  return `$${gain.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 // =============================================================================
 // LIFECYCLE LOGGING
 // =============================================================================
@@ -470,3 +569,23 @@ console.log('[betting-interface-section][lifecycle] Styled wrapper initialized',
   riskWarningsEnabled: props.enableRiskWarnings,
 });
 </script>
+<style scoped>
+/* Ensure number input arrows are visible */
+input[type='number'] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: inner-spin-button;
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Firefox number input arrows */
+input[type='number'] {
+  -moz-appearance: number-input;
+}
+</style>

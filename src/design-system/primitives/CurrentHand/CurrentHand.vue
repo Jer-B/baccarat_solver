@@ -557,7 +557,7 @@ const actions = computed(
       emit('payout-reference-updated', payoutReference.value);
     },
 
-    // BettingInterface integration
+    // BettingInterface integration with FRESH PAYOUT VALUES
     settleBet: async (handResult: HandResult): Promise<BetResult | undefined> => {
       if (!props.currentRoundBet?.hasBet || !props.currentRoundBet?.betType) {
         return undefined;
@@ -571,12 +571,13 @@ const actions = computed(
           playerTotal: handResult.playerTotal,
           bankerTotal: handResult.bankerTotal,
         },
+        currentPayoutValues: currentPayoutValues.value,
       });
 
       isSettlingBets.value = true;
 
       try {
-        // Calculate bet result using live PayoutSettings
+        // ✨ CRITICAL: Calculate bet result using FRESH PayoutSettings values
         const betResult = BettingService.calculatePayout(
           props.currentRoundBet.betType,
           props.currentRoundBet.betAmount,
@@ -591,14 +592,18 @@ const actions = computed(
           }
         );
 
-        // Update balance
+        // ✨ CRITICAL: Calculate new balance but DON'T update store directly
+        // Let the parent component (GameView) handle the actual store update
         const newBalance = currentBalance.value + betResult.payout;
         balanceChange.value = betResult.netResult;
         lastBetResult.value = betResult;
 
-        actions.value.updateBalance(newBalance);
+        // Update local balance for UI consistency
+        currentBalance.value = newBalance;
 
+        // Emit events for parent component to handle store updates
         emit('bet-settled', betResult);
+        emit('balance-updated', newBalance);
         emit('payout-calculated', betResult.payout, props.currentRoundBet.betType);
 
         if (props.handlers?.onBetSettlement) {
@@ -610,6 +615,8 @@ const actions = computed(
           payout: betResult.payout,
           netResult: betResult.netResult,
           newBalance,
+          payoutValuesUsed: currentPayoutValues.value,
+          note: 'Local balance updated, parent will handle store update',
         });
 
         return betResult;
@@ -626,9 +633,13 @@ const actions = computed(
         previousBalance: currentBalance.value,
         newBalance,
         change: newBalance - currentBalance.value,
+        note: 'Local balance update only, emitting event for parent to handle store',
       });
 
+      // Update local balance for UI consistency
       currentBalance.value = newBalance;
+
+      // Emit event for parent component to handle store update
       emit('balance-updated', newBalance);
 
       if (props.handlers?.onBalanceUpdate) {
@@ -783,7 +794,19 @@ const utils = computed(
     },
 
     // Hand status utilities
-    formatHandStatus: CURRENT_HAND_UTILS.formatHandStatus,
+    formatHandStatus: (
+      playerCards: Card[],
+      bankerCards: Card[],
+      playerValue: number,
+      bankerValue: number
+    ): string => {
+      return CURRENT_HAND_UTILS.formatHandStatus(
+        playerCards,
+        bankerCards,
+        playerValue,
+        bankerValue
+      );
+    },
     getWinnerClass: CURRENT_HAND_UTILS.getWinnerClass,
 
     getHandStatusColor: (status: string): string => {
@@ -851,10 +874,9 @@ const utils = computed(
 // =============================================================================
 
 const config = {
-  STYLING: CURRENT_HAND_SETTINGS.STYLING,
   COLORS: CURRENT_HAND_SETTINGS.COLORS,
   LABELS: CURRENT_HAND_SETTINGS.LABELS,
-  ICONS: CURRENT_HAND_SETTINGS.ICONS,
+  CLASSES: CURRENT_HAND_SETTINGS.CLASSES,
   DEFAULTS: CURRENT_HAND_SETTINGS.DEFAULTS,
   MAGIC_NUMBERS: CURRENT_HAND_SETTINGS.MAGIC_NUMBERS,
 };

@@ -37,8 +37,21 @@
             <div :class="config.styling.INPUT_WRAPPER">
               <span :class="config.styling.CURRENCY">{{ config.labels.CURRENCY_SYMBOL }}</span>
               <input
-                :value="formatBalanceForDisplay(balanceState.startingBalance)"
-                @input="handleBalanceInput"
+                :value="formatInitialValue(balanceState.startingBalance)"
+                @input="
+                  event =>
+                    handleNumberInput(event, onUpdateStartingBalance, {
+                      minValue: 1,
+                      maxValue: 1000000000000,
+                    })
+                "
+                @blur="
+                  event =>
+                    handleNumberBlur(event, onUpdateStartingBalance, {
+                      minValue: 1,
+                      defaultValue: 500,
+                    })
+                "
                 :disabled="!actions.canModifyBalance"
                 type="text"
                 :class="config.styling.INPUT"
@@ -134,6 +147,7 @@ import type { BalanceState } from '@/design-system/primitives/BalanceSettings';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useNotifications } from '@/composables/useNotifications';
 import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
+import { handleNumberInput, handleNumberBlur, formatInitialValue } from '@/utils/numberFormatting';
 import { BALANCE_SETTINGS } from '@/config/sessionControlSettings';
 
 // =============================================================================
@@ -194,28 +208,6 @@ const handlePreviousBalanceLoaded = (balance: number) => {
   });
 
   success(`Previous session balance loaded: $${balance.toFixed(2)}`);
-};
-
-const formatBalanceForDisplay = (balance: number): string => {
-  return balance.toLocaleString();
-};
-
-const handleBalanceInput = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const value = target.value;
-  // Remove commas and format for parsing
-  const cleanValue = value.replace(/[,$\s]/g, '');
-  const numericValue = parseFloat(cleanValue);
-
-  if (!isNaN(numericValue)) {
-    console.log('[balance-settings-section][input] Balance input changed', {
-      originalValue: value,
-      cleanValue,
-      numericValue,
-    });
-    // Note: onUpdateStartingBalance will be available in the template scope
-    // This function will be called from the template with the correct context
-  }
 };
 </script>
 

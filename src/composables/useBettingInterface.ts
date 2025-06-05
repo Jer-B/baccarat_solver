@@ -1,4 +1,4 @@
-import { reactive, computed } from 'vue';
+import { reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useNotifications } from '@/composables/useNotifications';
 import { BettingService } from '@/services/bettingService';
@@ -87,6 +87,13 @@ export function useBettingInterface(currentPayoutValues?: ComputedRef<PayoutValu
       return { won: false, payout: 0, netResult: 0 };
     }
 
+    console.log('[betting-interface][settle] Settling bet', {
+      betType: currentRoundBet.betType,
+      betAmount: currentRoundBet.betAmount,
+      winner: handResult.winner,
+      balanceBefore: store.ui.currentBalance,
+    });
+
     // Use provided payout values or fallback to store values
     const payoutSettings = currentPayoutValues
       ? {
@@ -110,6 +117,14 @@ export function useBettingInterface(currentPayoutValues?: ComputedRef<PayoutValu
     // Add payout to store balance
     store.ui.currentBalance += betResult.payout;
 
+    console.log('[betting-interface][settle] Bet settled', {
+      won: betResult.won,
+      payout: betResult.payout,
+      netResult: betResult.netResult,
+      balanceAfter: store.ui.currentBalance,
+      note: 'Bet state NOT reset yet - caller must handle reset after hand processing',
+    });
+
     // Record the bet in statistics
     store.recordBet(currentRoundBet.betType, currentRoundBet.betAmount, handResult);
 
@@ -118,8 +133,9 @@ export function useBettingInterface(currentPayoutValues?: ComputedRef<PayoutValu
     const emoji = betResult.won ? '🎉' : '💸';
     success(`${emoji} ${message}`);
 
-    // Reset bet for next round
-    resetCurrentBet();
+    // ✨ CRITICAL FIX: DO NOT reset bet here!
+    // The bet state must remain until hand is completely processed and saved
+    // resetCurrentBet(); // REMOVED - caller must reset after hand processing
 
     return betResult;
   };
@@ -139,6 +155,55 @@ export function useBettingInterface(currentPayoutValues?: ComputedRef<PayoutValu
   const startNewRound = (): void => {
     resetCurrentBet();
   };
+
+  // Handle session ending event
+  const handleSessionEnding = (event: CustomEvent): void => {
+    console.log('[betting-interface][session-ending] Session ending event received', {
+      hasPendingBet: currentRoundBet.hasBet,
+      betAmount: currentRoundBet.betAmount,
+      betType: currentRoundBet.betType,
+      currentBalance: store.ui.currentBalance,
+    });
+
+    // Cancel any pending bet and restore balance
+    if (currentRoundBet.hasBet && currentRoundBet.betAmount > 0) {
+      console.log('[betting-interface][session-ending] Cancelling pending bet', {
+        betType: currentRoundBet.betType,
+        betAmount: currentRoundBet.betAmount,
+        balanceBeforeRestore: store.ui.currentBalance,
+      });
+
+      // Restore the bet amount to balance
+      store.ui.currentBalance += currentRoundBet.betAmount;
+
+      console.log(
+        '[betting-interface][session-ending] Balance restored after pending bet cancellation',
+        {
+          restoredAmount: currentRoundBet.betAmount,
+          newBalance: store.ui.currentBalance,
+        }
+      );
+
+      // Show notification to user
+      warning(
+        `🔄 Pending bet of $${currentRoundBet.betAmount.toFixed(2)} on ${currentRoundBet.betType?.toUpperCase()} cancelled - balance restored`
+      );
+
+      // Reset the bet state
+      resetCurrentBet();
+    }
+  };
+
+  // Set up event listeners
+  onMounted(() => {
+    window.addEventListener('session-ending', handleSessionEnding as EventListener);
+    console.log('[betting-interface][lifecycle] Session ending event listener added');
+  });
+
+  onUnmounted(() => {
+    window.removeEventListener('session-ending', handleSessionEnding as EventListener);
+    console.log('[betting-interface][lifecycle] Session ending event listener removed');
+  });
 
   return {
     // State

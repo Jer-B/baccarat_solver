@@ -292,7 +292,18 @@ const actions = {
       return;
     }
 
-    // Validation 2: Check if bet type is selected
+    // Validation 2: Check if a bet has already been placed for this round (FIXED ORDER)
+    if (props.currentRoundBet?.hasBet) {
+      const validationResult = {
+        isValid: false,
+        errors: ['You have already placed a bet for this round. Wait for the hand to complete.'],
+        warnings: [],
+      };
+      emit('validation-error', validationResult);
+      return;
+    }
+
+    // Validation 3: Check if bet type is selected
     if (!selectedBet.value) {
       const validationResult = {
         isValid: false,
@@ -303,7 +314,7 @@ const actions = {
       return;
     }
 
-    // Validation 3: Check minimum bet amount
+    // Validation 4: Check minimum bet amount
     if (betAmount.value < BETTING_VALIDATION.BET_AMOUNT.MIN_VALUE) {
       const validationResult = {
         isValid: false,
@@ -314,7 +325,7 @@ const actions = {
       return;
     }
 
-    // Validation 4: Check if user has sufficient balance
+    // Validation 5: Check if user has sufficient balance
     if (betAmount.value > props.currentBalance) {
       const validationResult = {
         isValid: false,
@@ -585,8 +596,9 @@ const performValidation = (): BettingValidationResult => {
     errors.push(`Maximum bet is ${utils.formatCurrency(BETTING_VALIDATION.BET_AMOUNT.MAX_VALUE)}`);
   }
 
-  // Balance validation
-  if (betAmount.value > props.currentBalance) {
+  // Balance validation - only check if no bet is currently placed
+  // If there's a pending bet, the balance has already been adjusted
+  if (!state.value.currentBet.hasBet && betAmount.value > props.currentBalance) {
     errors.push('Insufficient balance for this bet amount');
   }
 
@@ -604,6 +616,7 @@ const performValidation = (): BettingValidationResult => {
   console.log('[betting-interface][validation] Validation performed', {
     betAmount: betAmount.value,
     balance: props.currentBalance,
+    hasBet: state.value.currentBet.hasBet,
     errors: errors.length,
     warnings: warnings.length,
     buttonEnabled: errors.length === 0,

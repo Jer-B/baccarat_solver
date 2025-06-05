@@ -640,3 +640,43 @@ This software is for educational and research purposes only. Gambling involves r
 - Mathematical formulas based on established baccarat probability theory
 - Inspired by the work of gambling mathematicians and researchers
 - Built with modern web technologies for optimal performance
+
+## Pattern Analysis Debug Checklist (Current Session)
+
+### Issues Fixed:
+
+1. ✅ Removed debug overlay numbers from pattern views
+2. ✅ Removed data-debug attributes showing unwanted data
+3. ✅ Fixed pattern analysis algorithm grid filling logic
+4. ✅ Fixed configuration access for PATTERN_DOT sizing
+5. ✅ Added comprehensive debugging throughout the flow
+
+### IMPORTANT: Pattern Analysis Requirements
+
+**Pattern analysis REQUIRES multiple hands with different results:**
+
+- **Big Eye Boy**: Needs at least **2 columns** (2 different results like Player → Banker)
+- **Small Road**: Needs at least **3 columns** (3 different result changes)
+- **Cockroach Pig**: Needs at least **4 columns** (4 different result changes)
+
+**Example to test patterns:**
+
+1. Play hand 1: Player wins → Creates column 1
+2. Play hand 2: Banker wins → Creates column 2 (Big Eye Boy can now generate patterns)
+3. Play hand 3: Player wins → Creates column 3 (Small Road can now generate patterns)
+4. Play hand 4: Banker wins → Creates column 4 (Cockroach Pig can now generate patterns)
+
+### Console Messages Explained:
+
+- `"Insufficient columns for analysis, returning empty grid"` = **CORRECT** when < required hands
+- `"nonEmptyPatternCells: 0"` = **NORMAL** until enough hands are played
+- Pattern analysis will automatically start working once sufficient hands are played
+
+### Test Sequence for Verification:
+
+1. Start new session
+2. Play: Player, Banker, Player, Banker (4 different results)
+3. Switch to pattern views → Should see red/blue dots
+4. Check console for `cellsGenerated` > 0 in pattern analysis logs
+
+---

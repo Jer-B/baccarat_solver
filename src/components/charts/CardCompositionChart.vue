@@ -67,16 +67,16 @@
                   :disabled="isCardDisabled(rank)"
                   :style="{
                     position: 'absolute',
-                    left: `${index * 8}px`,
+                    left: `${index * 13}px`,
                     zIndex: zeroValueRanks.length - index,
                   }"
                   @click="addZeroValueCardToHand"
                   class="cursor-pointer hover:scale-105 transition-transform"
                 />
-              </div>
-              <!-- Count Badge for overlapped cards -->
-              <div class="overlapped-count-badge">
-                {{ getTotalZeroValueCount() }}
+                <!-- Count Badge positioned like other cards -->
+                <div class="card-count-badge">
+                  {{ getTotalZeroValueCount() }}
+                </div>
               </div>
             </div>
             <!-- Single Combined Count -->
@@ -687,12 +687,12 @@ defineExpose({
 
 .overlapped-cards-container {
   position: relative;
-  width: 72px; /* Base card width + 3 * 8px offset */
+  width: 96px; /* Base card width + 3 * 24px offset for better spacing */
   height: 48px; /* Small card height */
   margin-bottom: 20px; /* Extra space for input field */
 }
 
-.overlapped-count-badge {
+.card-count-badge {
   position: absolute;
   top: -8px;
   right: -8px;

@@ -164,7 +164,7 @@ export function useBalanceManagement() {
       recordBalanceChange(previousBalance, newBalance, reason, details);
 
       // Show appropriate notification
-      showBalanceNotification(previousBalance, newBalance, reason);
+      showBalanceNotification(previousBalance, newBalance, reason, details);
 
       console.log('[balance-management][success] Balance updated', {
         previousBalance,
@@ -199,13 +199,22 @@ export function useBalanceManagement() {
   /**
    * Handle bet settlement (add payout to balance)
    */
-  const handleBetSettlement = (betResult: BetResult, handResult: HandResult): void => {
-    console.log('[balance-management][action] Handling bet settlement', { betResult, handResult });
+  const handleBetSettlement = (
+    betResult: BetResult,
+    handResult: HandResult,
+    betType?: string
+  ): void => {
+    console.log('[balance-management][action] Handling bet settlement', {
+      betResult,
+      handResult,
+      betType,
+    });
 
     const newBalance = currentBalance.value + betResult.payout;
     updateBalance(newBalance, 'bet_settled', {
       betResult,
       handResult,
+      betType: betType || 'bet',
     });
   };
 
@@ -275,7 +284,8 @@ export function useBalanceManagement() {
   const showBalanceNotification = (
     previousBalance: number,
     newBalance: number,
-    reason: BalanceChangeEvent['reason']
+    reason: BalanceChangeEvent['reason'],
+    details?: BalanceChangeEvent['details']
   ): void => {
     const change = newBalance - previousBalance;
     const absChange = Math.abs(change);
@@ -285,12 +295,16 @@ export function useBalanceManagement() {
         toast.info(`💰 Bet placed: -$${absChange.toFixed(2)}`, { timeout: 2000 });
         break;
       case 'bet_settled':
+        // Get bet type from details if available
+        const betType = details?.betType || 'bet';
+        const capitalizedBetType = betType.charAt(0).toUpperCase() + betType.slice(1);
+
         if (change > 0) {
-          toast.success(`🎉 Won: +$${change.toFixed(2)} (Total: $${newBalance.toFixed(2)})`, {
+          toast.success(`Won with ${capitalizedBetType} bet`, {
             timeout: 4000,
           });
         } else if (change < 0) {
-          toast.warning(`💸 Lost: -$${absChange.toFixed(2)} (Total: $${newBalance.toFixed(2)})`, {
+          toast.error(`Lost with ${capitalizedBetType} bet`, {
             timeout: 3000,
           });
         }

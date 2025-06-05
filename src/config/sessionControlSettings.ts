@@ -223,7 +223,7 @@ export const DECK_SETTINGS = {
   /** Default values */
   DEFAULTS: {
     NUMBER_OF_DECKS: 8,
-    CUT_CARD_POSITION: 45,
+    CUT_CARD_POSITION: 56,
   },
 
   /** Labels and text */

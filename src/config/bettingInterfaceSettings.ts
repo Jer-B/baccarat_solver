@@ -325,9 +325,9 @@ export const BETTING_INTERFACE_EVENTS = {
 
 export const BETTING_VALIDATION = {
   BET_AMOUNT: {
-    MIN_VALUE: 0.05,
+    MIN_VALUE: 0.2,
     MAX_VALUE: 125000,
-    STEP: 0.01,
+    STEP: 0.1,
     DEFAULT: 10,
   },
   BALANCE: {

@@ -72,7 +72,7 @@
               v-if="handState.playerHasBet"
               class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold"
             >
-              ${{ props.currentRoundBet.betAmount }}
+              ${{ injectedCurrentRoundBet.betAmount }}
             </div>
           </div>
           <div class="flex items-center space-x-2">
@@ -153,7 +153,7 @@
               v-if="handState.bankerHasBet"
               class="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold"
             >
-              ${{ props.currentRoundBet.betAmount }}
+              ${{ injectedCurrentRoundBet.betAmount }}
             </div>
           </div>
           <div class="flex items-center space-x-2">
@@ -217,7 +217,7 @@
           class="text-white px-3 py-1 rounded-full text-sm font-bold"
           :class="getOtherBetTypeBadgeClasses()"
         >
-          ${{ props.currentRoundBet.betAmount }}
+          ${{ injectedCurrentRoundBet.betAmount }}
         </div>
       </div>
     </div>
@@ -402,7 +402,7 @@
 // Preserves EXACT UI styling while using clean headless architecture
 // Integrates seamlessly with PayoutSettings and BettingInterface
 
-import { computed, ref, watch, nextTick, type ComputedRef } from 'vue';
+import { computed, ref, watch, nextTick, type ComputedRef, inject } from 'vue';
 import { useCurrentHand } from '@/composables/useCurrentHand';
 import { CURRENT_HAND_SETTINGS } from '@/config/currentHandSettings';
 import type { PayoutValues } from '@/config/payoutSettings';
@@ -429,6 +429,24 @@ const store = useBaccaratStore();
 
 // Get notifications
 const { success, warning } = useNotifications();
+
+// ✨ CRITICAL FIX: Inject betting interface from App.vue instead of creating new instance
+const bettingInterface = inject('bettingInterface') as any;
+const injectedCurrentRoundBet = inject('currentRoundBet') as any;
+
+// Validation to ensure injection worked
+if (!bettingInterface || !injectedCurrentRoundBet) {
+  console.error(
+    '[current-hand-section][injection] Failed to inject betting interface from App.vue',
+    {
+      hasBettingInterface: !!bettingInterface,
+      hasCurrentRoundBet: !!injectedCurrentRoundBet,
+    }
+  );
+  throw new Error(
+    'CurrentHandSection requires betting interface to be provided by parent (App.vue)'
+  );
+}
 
 // =============================================================================
 // PROPS & EMITS
@@ -591,8 +609,8 @@ const handState = computed(() => ({
     store.shoe.currentHand.player.length > 0 || store.shoe.currentHand.banker.length > 0,
   isProcessing: isLoading.value,
   canCompleteRound: canCompleteRound.value,
-  playerHasBet: props.currentRoundBet.hasBet && props.currentRoundBet.betType === 'player',
-  bankerHasBet: props.currentRoundBet.hasBet && props.currentRoundBet.betType === 'banker',
+  playerHasBet: injectedCurrentRoundBet.hasBet && injectedCurrentRoundBet.betType === 'player',
+  bankerHasBet: injectedCurrentRoundBet.hasBet && injectedCurrentRoundBet.betType === 'banker',
   naturalWins: {
     player: store.currentHandValues.player >= 8 && store.shoe.currentHand.player.length > 0,
     banker: store.currentHandValues.banker >= 8 && store.shoe.currentHand.banker.length > 0,
@@ -626,9 +644,9 @@ const algorithmState = computed(() => ({
 
 const showOtherBetTypes = computed(() => {
   return (
-    props.currentRoundBet.hasBet &&
-    props.currentRoundBet.betType &&
-    ['tie', 'playerPair', 'bankerPair'].includes(props.currentRoundBet.betType)
+    injectedCurrentRoundBet.hasBet &&
+    injectedCurrentRoundBet.betType &&
+    ['tie', 'playerPair', 'bankerPair'].includes(injectedCurrentRoundBet.betType)
   );
 });
 
@@ -692,7 +710,7 @@ const handleAutoCompleteToggle = (): void => {
 };
 
 const handleCompleteOrClear = (): void => {
-  if (props.currentRoundBet.hasBet) {
+  if (injectedCurrentRoundBet.hasBet) {
     completeRound();
   } else {
     clearHand();
@@ -700,7 +718,7 @@ const handleCompleteOrClear = (): void => {
 };
 
 const getMainActionLabel = (): string => {
-  return props.currentRoundBet.hasBet ? 'Complete Round' : 'Clear Hand';
+  return injectedCurrentRoundBet.hasBet ? 'Complete Round' : 'Clear Hand';
 };
 
 const canPerformMainAction = (): boolean => {
@@ -713,7 +731,7 @@ const canPerformMainAction = (): boolean => {
 
   const totalCards = handState.value.playerCards.length + handState.value.bankerCards.length;
 
-  if (props.currentRoundBet.hasBet) {
+  if (injectedCurrentRoundBet.hasBet) {
     // Can complete round if we have cards and a bet
     return totalCards >= 4;
   }
@@ -771,7 +789,7 @@ const getHandStatus = (): string => {
 };
 
 const getOtherBetTypeLabel = (): string => {
-  switch (props.currentRoundBet.betType) {
+  switch (injectedCurrentRoundBet.betType) {
     case 'tie':
       return 'Tie Bet';
     case 'playerPair':
@@ -784,7 +802,7 @@ const getOtherBetTypeLabel = (): string => {
 };
 
 const getOtherBetTypeClasses = (): string => {
-  switch (props.currentRoundBet.betType) {
+  switch (injectedCurrentRoundBet.betType) {
     case 'tie':
       return 'bg-green-50 border-green-400 shadow-lg ring-2 ring-green-300';
     case 'playerPair':
@@ -797,7 +815,7 @@ const getOtherBetTypeClasses = (): string => {
 };
 
 const getOtherBetTypeBadgeClasses = (): string => {
-  switch (props.currentRoundBet.betType) {
+  switch (injectedCurrentRoundBet.betType) {
     case 'tie':
       return 'bg-green-600';
     case 'playerPair':
@@ -876,15 +894,18 @@ const completeRound = async (): Promise<void> => {
   console.log('[current-hand-section] Starting round completion', {
     playerCards: handState.value.playerCards.length,
     bankerCards: handState.value.bankerCards.length,
-    hasBet: props.currentRoundBet.hasBet,
-    betType: props.currentRoundBet.betType,
-    betAmount: props.currentRoundBet.betAmount,
+    hasBet: injectedCurrentRoundBet.hasBet,
+    betType: injectedCurrentRoundBet.betType,
+    betAmount: injectedCurrentRoundBet.betAmount,
+    currentBalance: store.ui.currentBalance,
+    bettingInterfaceExists: !!bettingInterface,
+    injectedBetStateExists: !!injectedCurrentRoundBet,
   });
 
   try {
-    // Calculate winner manually
-    const playerTotal = store.currentHandValues.player;
-    const bankerTotal = store.currentHandValues.banker;
+    // ✨ CRITICAL: Calculate winner manually using current hand values
+    const playerTotal = handState.value.playerTotal;
+    const bankerTotal = handState.value.bankerTotal;
     const totalCards = store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length;
 
     // Require minimum 4 cards for completion
@@ -893,6 +914,7 @@ const completeRound = async (): Promise<void> => {
       return;
     }
 
+    // Determine winner
     let winner: 'player' | 'banker' | 'tie';
     if (playerTotal > bankerTotal) {
       winner = 'player';
@@ -906,61 +928,59 @@ const completeRound = async (): Promise<void> => {
     let betResult: any = undefined;
     let balanceChange = 0;
 
-    if (props.currentRoundBet.hasBet && props.currentRoundBet.betType) {
-      const betWon =
-        (props.currentRoundBet.betType === 'player' && winner === 'player') ||
-        (props.currentRoundBet.betType === 'banker' && winner === 'banker') ||
-        (props.currentRoundBet.betType === 'tie' && winner === 'tie') ||
-        (props.currentRoundBet.betType === 'playerPair' &&
-          detectPairInHand(store.shoe.currentHand.player)) ||
-        (props.currentRoundBet.betType === 'bankerPair' &&
-          detectPairInHand(store.shoe.currentHand.banker));
-
-      // Calculate payout based on bet type and current payout settings
-      let payout = 0;
-      if (betWon) {
-        switch (props.currentRoundBet.betType) {
-          case 'player':
-            payout = props.currentRoundBet.betAmount * 2; // 1:1 payout
-            break;
-          case 'banker':
-            payout = props.currentRoundBet.betAmount * 1.95; // 1:1 minus 5% commission
-            break;
-          case 'tie':
-            payout = props.currentRoundBet.betAmount * 9; // 8:1 payout
-            break;
-          case 'playerPair':
-            payout = props.currentRoundBet.betAmount * 12; // 11:1 payout
-            break;
-          case 'bankerPair':
-            payout = props.currentRoundBet.betAmount * 12; // 11:1 payout
-            break;
+    if (injectedCurrentRoundBet.hasBet && injectedCurrentRoundBet.betType) {
+      // ✨ CRITICAL FIX: Use proper betting interface settlement instead of hardcoded calculations
+      console.log(
+        '[current-hand-section][bet-settlement] Using proper betting interface settlement',
+        {
+          betType: injectedCurrentRoundBet.betType,
+          betAmount: injectedCurrentRoundBet.betAmount,
+          winner,
+          playerTotal,
+          bankerTotal,
+          previousBalance: store.ui.currentBalance,
         }
+      );
+
+      try {
+        // Create hand result for bet settlement
+        const handResultForBetting = {
+          player: [...store.shoe.currentHand.player],
+          banker: [...store.shoe.currentHand.banker],
+          winner,
+          playerPair: detectPairInHand(store.shoe.currentHand.player),
+          bankerPair: detectPairInHand(store.shoe.currentHand.banker),
+          playerTotal,
+          bankerTotal,
+          natural: handState.value.naturalWins.player || handState.value.naturalWins.banker,
+          timestamp: Date.now(),
+          handNumber: (store.handHistory?.length || 0) + 1,
+        };
+
+        // ✨ CRITICAL FIX: Use the actual betting interface settlement method
+        betResult = bettingInterface.settleCurrentBet(handResultForBetting);
+        balanceChange = betResult.netResult;
+
+        console.log(
+          '[current-hand-section][bet-settlement] Bet settled successfully using betting interface',
+          {
+            betResult: {
+              won: betResult.won,
+              payout: betResult.payout,
+              netResult: betResult.netResult,
+            },
+            balanceAfter: store.ui.currentBalance,
+            change: balanceChange,
+          }
+        );
+      } catch (error) {
+        console.error('[current-hand-section][bet-settlement] Error settling bet:', error);
+        warning(`Failed to settle bet: ${(error as Error).message}`);
+
+        // Fallback to no bet result if settlement fails
+        betResult = undefined;
+        balanceChange = 0;
       }
-
-      const netResult = payout - props.currentRoundBet.betAmount;
-      balanceChange = netResult;
-
-      betResult = {
-        betType: props.currentRoundBet.betType,
-        betAmount: props.currentRoundBet.betAmount,
-        won: betWon,
-        payout,
-        netResult,
-      };
-
-      // CRITICAL: Update balance immediately
-      const newBalance = store.ui.currentBalance + netResult;
-      store.ui.currentBalance = newBalance;
-
-      console.log('[current-hand-section][balance-update] Balance updated after bet settlement', {
-        oldBalance: store.ui.currentBalance - netResult,
-        betAmount: props.currentRoundBet.betAmount,
-        payout,
-        netResult,
-        newBalance,
-        won: betWon,
-      });
     }
 
     // Create hand result for database storage
@@ -972,7 +992,7 @@ const completeRound = async (): Promise<void> => {
       bankerPair: detectPairInHand(store.shoe.currentHand.banker),
       playerTotal,
       bankerTotal,
-      natural: playerTotal >= 8 || bankerTotal >= 8,
+      natural: handState.value.naturalWins.player || handState.value.naturalWins.banker,
       timestamp: Date.now(),
       handNumber: (store.handHistory?.length || 0) + 1,
       // Include betting information
@@ -1037,12 +1057,10 @@ const completeRound = async (): Promise<void> => {
             : null,
         });
 
-        // Show success notification with balance update
+        // Show success notification for database save only
         if (betResult) {
-          const message = betResult.won
-            ? `🎉 Won $${betResult.payout.toFixed(2)}! Net: +$${betResult.netResult.toFixed(2)}`
-            : `💸 Lost $${betResult.betAmount.toFixed(2)}`;
-          success(`${message} (Balance: $${store.ui.currentBalance.toFixed(2)})`);
+          // Don't show bet result toast here - it's handled by balance management
+          success(`✅ Hand completed and saved to database`);
         } else {
           success(`✅ Hand completed and saved to database`);
         }
@@ -1079,6 +1097,20 @@ const completeRound = async (): Promise<void> => {
     emit('hand-completed', winner, playerTotal, bankerTotal);
     emit('winner-determined', winner, playerTotal, bankerTotal);
 
+    // ✨ CRITICAL FIX: Reset betting state only AFTER hand is completely processed and saved
+    // This ensures betting details are preserved for scoreboard and database storage
+    if (betResult) {
+      console.log('[current-hand-section] Resetting betting state after complete hand processing', {
+        hadBet: injectedCurrentRoundBet.hasBet,
+        betType: injectedCurrentRoundBet.betType,
+        betAmount: injectedCurrentRoundBet.betAmount,
+        finalBalance: store.ui.currentBalance,
+      });
+
+      // Reset the betting interface state for next round
+      bettingInterface.resetCurrentBet();
+    }
+
     console.log('[current-hand-section] Round completion finished', {
       winner,
       playerTotal,
@@ -1087,6 +1119,7 @@ const completeRound = async (): Promise<void> => {
       handNumber: handResult.handNumber,
       balanceChange,
       newBalance: store.ui.currentBalance,
+      bettingStateReset: !!betResult,
     });
   } catch (error) {
     console.error('[current-hand-section] Error completing round:', error);
@@ -1124,7 +1157,7 @@ const autoCompleteHand = () => {
 
   // If we have a bet, complete the round automatically
   if (
-    props.currentRoundBet.hasBet &&
+    injectedCurrentRoundBet.hasBet &&
     store.shoe.currentHand.player.length + store.shoe.currentHand.banker.length >= 4
   ) {
     setTimeout(() => {

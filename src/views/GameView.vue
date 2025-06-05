@@ -145,6 +145,12 @@
         <BettingInterfaceSection
           :current-balance="store.ui.currentBalance"
           :current-payout-values="currentPayoutValues"
+          :current-round-bet="{
+            hasBet: currentRoundBet.hasBet,
+            betType: currentRoundBet.betType,
+            betAmount: currentRoundBet.betAmount,
+            placedAt: null,
+          }"
           :session-active="store.ui.sessionActive"
           :can-perform-actions="store.canPerformActions"
           :selected-preset-name="configurationStatus.name"
@@ -195,7 +201,19 @@
 
       <!-- Baccarat Scoreboard -->
       <div class="lg:col-span-2">
-        <BaccaratScoreboard />
+        <ScoreboardSection
+          :game-history="store.history.hands"
+          :max-rows="6"
+          :max-cols="20"
+          :show-tooltips="true"
+          :enable-pattern-analysis="true"
+          @view-changed="
+            (view: string) => console.log('[game-view][scoreboard] View changed', { view })
+          "
+          @cell-hovered="
+            (cell: any) => console.log('[game-view][scoreboard] Cell hovered', { cell })
+          "
+        />
       </div>
     </div>
 
@@ -316,7 +334,7 @@ import type { Rank } from '@/types/cards';
 import SessionControl from '@/components/session/SessionControl.vue';
 import CardCompositionChart from '@/components/charts/CardCompositionChart.vue';
 import InfoSectionToggleButton from '@/components/common/button/InfoSectionToggleButton.vue';
-import BaccaratScoreboard from '@/components/scoreboard/BaccaratScoreboard.vue';
+import ScoreboardSection from '@/components/scoreboard/ScoreboardSection.vue';
 import ProfessionalBurnAnalysis from '@/components/analytics/ProfessionalBurnAnalysis.vue';
 import ProfessionalRecommendations from '@/components/analytics/ProfessionalRecommendations.vue';
 import DealerTellAnalysis from '@/components/analytics/DealerTellAnalysis.vue';
@@ -633,8 +651,8 @@ const handleClearHand = (): void => {
       const resultText = `${handResult.winner} ${betResult.won ? '(Won)' : '(Lost)'} - Net: ${betResult.netResult >= 0 ? '+' : ''}$${betResult.netResult.toFixed(2)}`;
       gameSequenceRef.value?.gameSequence?.showRoundResult(resultText);
 
-      // Update balance
-      store.ui.currentBalance += betResult.netResult;
+      // Balance is already updated by useBettingInterface.settleCurrentBet()
+      // Do not update balance here to prevent double deduction
     }
 
     // Add the hand result to update pattern analysis and history
@@ -810,26 +828,10 @@ const handleBalanceUpdated = (newBalance: number): void => {
 const handleBetSettled = (betResult: any): void => {
   console.log('[game-view][balance-integration] Bet settled', { betResult });
 
-  // CRITICAL: Calculate and update the new balance
-  const oldBalance = store.ui.currentBalance;
-  const newBalance = oldBalance + (betResult.netResult || 0);
+  // Balance is already updated by useBettingInterface.settleCurrentBet()
+  // Do not update balance here to prevent double deduction
 
-  console.log('[game-view][balance-calculation] Calculating new balance', {
-    oldBalance,
-    netResult: betResult.netResult,
-    newBalance,
-    won: betResult.won,
-  });
-
-  // Update the balance immediately
-  store.ui.currentBalance = newBalance;
-
-  // Show appropriate win/loss message
-  const message = betResult.won
-    ? `🎉 Won $${(betResult.payout || 0).toFixed(2)}! Net: +$${(betResult.netResult || 0).toFixed(2)}`
-    : `💸 Lost $${Math.abs(betResult.netResult || 0).toFixed(2)}`;
-
-  success(`${message} (Balance: $${newBalance.toFixed(2)})`);
+  // Don't show toast here - it's handled by balance management composable
 };
 
 const handlePayoutValuesChanged = (payoutValues: any): void => {
@@ -909,13 +911,24 @@ const handleBettingInterfaceBetCleared = () => {
 };
 
 const handleBettingInterfaceValidationError = (result: any) => {
-  console.error('[game-view][betting-interface] Validation error', { result });
-  if (result.errors && Array.isArray(result.errors)) {
+  console.log('[game-view][betting-interface] Validation failed (expected behavior)', {
+    validationResult: result,
+    reason: result.errors?.[0] || 'Unknown validation error',
+    note: 'This is normal validation flow - not an error',
+  });
+
+  // Show proper toast notifications for validation errors
+  if (result.errors && result.errors.length > 0) {
     result.errors.forEach((errorMessage: string) => {
       error(`❌ ${errorMessage}`);
     });
-  } else {
-    error(`❌ Validation failed`);
+  }
+
+  // Show warnings if any
+  if (result.warnings && result.warnings.length > 0) {
+    result.warnings.forEach((warningMessage: string) => {
+      warning(`⚠️ ${warningMessage}`);
+    });
   }
 };
 
