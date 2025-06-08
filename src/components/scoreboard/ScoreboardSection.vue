@@ -522,7 +522,7 @@ const handleCellClicked = (cell: ScoreboardCell) => {
     console.log('[scoreboard-section][cell-click-debug] Cell clicked', {
       handNumber: cell.handNumber,
       result: cell.result,
-      hasBetInfo: !!cell.betInfo,
+      hasBetInfo: Boolean(cell.betInfo),
       betInfo: cell.betInfo,
       playerCards: cell.playerCards,
       bankerCards: cell.bankerCards,
@@ -656,7 +656,9 @@ const getPatternTitle = (currentView: string): string => {
 
 // Enhanced tooltip functions with card details and betting info
 const getBigRoadTooltip = (cell: ScoreboardCell): string => {
-  if (!cell || !cell.result) return '';
+  if (!cell || !cell.result) {
+    return '';
+  }
 
   let tooltip = `Hand #${cell.handNumber}: ${cell.result.toUpperCase()}`;
 
@@ -693,12 +695,16 @@ const getBeadPlateTooltip = (cell: ScoreboardCell, slotConfig: any): string => {
 };
 
 const getPatternTooltip = (cell: any, currentView: string, slotConfig: any): string => {
-  if (!cell.result) return '';
+  if (!cell.result) {
+    return '';
+  }
   return `${currentView}: ${cell.result} - Hand #${cell.handNumber}`;
 };
 
 const getResultDisplayClass = (result: string | null): string => {
-  if (!result) return 'bg-gray-100 text-gray-800 border-gray-300';
+  if (!result) {
+    return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
 
   switch (result) {
     case 'player':
@@ -714,15 +720,21 @@ const getResultDisplayClass = (result: string | null): string => {
 
 // Helper functions for card display
 const calculateCardTotal = (cards: any[]): number => {
-  if (!cards || cards.length === 0) return 0;
+  if (!cards || cards.length === 0) {
+    return 0;
+  }
 
   let total = 0;
   cards.forEach(card => {
     if (typeof card === 'object' && card.rank) {
       const rank = card.rank;
-      if (rank === 'A') total += 1;
-      else if (['J', 'Q', 'K'].includes(rank)) total += 0;
-      else total += parseInt(rank) || 0;
+      if (rank === 'A') {
+        total += 1;
+      } else if (['J', 'Q', 'K'].includes(rank)) {
+        total += 0;
+      } else {
+        total += parseInt(rank) || 0;
+      }
     }
   });
 
@@ -730,7 +742,9 @@ const calculateCardTotal = (cards: any[]): number => {
 };
 
 const formatCards = (cards: any[]): string => {
-  if (!cards || cards.length === 0) return '';
+  if (!cards || cards.length === 0) {
+    return '';
+  }
 
   return cards
     .map(card => {
@@ -751,18 +765,18 @@ console.log('[scoreboard-section][lifecycle] Scoreboard section initialized', {
     index,
     handNumber: hand.handNumber || index + 1,
     winner: hand.winner,
-    hasBetInfo: !!hand.betInfo,
+    hasBetInfo: Boolean(hand.betInfo),
     betInfo: hand.betInfo,
-    hasCards: !!(hand.playerCards || hand.player) && !!(hand.bankerCards || hand.banker),
+    hasCards: Boolean(hand.playerCards || hand.player) && Boolean(hand.bankerCards || hand.banker),
   })),
   configCheck: {
-    hasDefaults: !!config.value.defaults,
-    hasPatternDotSize: !!config.value.defaults?.PATTERN_DOT?.SIZE,
+    hasDefaults: Boolean(config.value.defaults),
+    hasPatternDotSize: Boolean(config.value.defaults?.PATTERN_DOT?.SIZE),
     patternDotSize: config.value.defaults?.PATTERN_DOT?.SIZE,
     hasPatternColors: {
-      red: !!config.value.colors.PATTERN_RED,
-      blue: !!config.value.colors.PATTERN_BLUE,
-      base: !!config.value.colors.PATTERN_DOT_BASE,
+      red: Boolean(config.value.colors.PATTERN_RED),
+      blue: Boolean(config.value.colors.PATTERN_BLUE),
+      base: Boolean(config.value.colors.PATTERN_DOT_BASE),
     },
     patternColors: {
       red: config.value.colors.PATTERN_RED,

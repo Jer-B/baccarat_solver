@@ -1,0 +1,79 @@
+1. jsdom 🌐
+What it is: A fake browser that runs in Node.js
+Why you need it:
+Your Vue components need a "browser" to run in tests
+Like having a toy kitchen to practice cooking before using the real one
+Without it: Your tests crash because they can't find document or window
+2. @vue/test-utils 🧩
+What it is: Special tools to test Vue components
+Why you need it:
+Like having special tools to take apart and examine a LEGO set
+Lets you click buttons, type in inputs, and check if components work
+Example: "Did the balance change when I bet?"
+3. vitest ⚡
+What it is: A super fast test runner
+Why you need it:
+Like having a robot that runs all your homework checks automatically
+Faster than other test runners
+Works perfectly with Vite (your build tool)
+4. cypress 🤖
+What it is: A robot that controls your browser
+Why you need it:
+Like having a robot friend play your game to make sure it works
+Tests the ENTIRE app from user's perspective
+Catches bugs that unit tests miss
+
+
+
+💎 What Are The Other Packages For?
+
+zod 🛡️
+What it is: A data validator
+Why you need it for gambling:
+// Without zod - DANGEROUS!
+function placeBet(amount) {
+  // What if amount is "banana"? 💥
+}
+
+// With zod - SAFE!
+const BetSchema = z.object({
+  amount: z.number().min(1).max(1000)
+});
+// Now it catches bad data before it breaks your game!
+
+
+
+pinia-plugin-persistedstate 💾
+What it is: Saves your game state when you close the browser
+Why you need it:
+Like a save file in a video game
+Without it: Close browser = lose all your betting progress
+With it: Reopen browser = everything is still there!
+
+
+
+async-lock 🔒
+What it is: Prevents race conditions in gambling
+Why you need it:
+
+// Without async-lock - DANGEROUS!
+// User clicks bet button 10 times fast = 10 bets! 💸
+
+// With async-lock - SAFE!
+const lock = new AsyncLock();
+lock.acquire('betting', () => {
+  // Only one bet at a time, no matter how fast they click!
+});
+
+📁 @types Packages Explained
+@types/async-lock 📝
+What it is: TypeScript "translation book" for async-lock
+Why you need it:
+async-lock was written in JavaScript (no types)
+TypeScript needs to know what functions exist and what they return
+Like having a dictionary when reading a foreign book
+@types/node 📝
+What it is: TypeScript types for Node.js
+Why you need it:
+Your build tools use Node.js features
+Prevents TypeScript errors about __dirname, process, etc.

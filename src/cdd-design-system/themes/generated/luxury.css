@@ -1,0 +1,47 @@
+/* ⚠️  AUTO-GENERATED CSS - DO NOT EDIT MANUALLY! ⚠️ 
+ * Generated from: src/cdd-design-system/themes/definitions/luxury.ts
+ * To modify theme colors, edit the TypeScript file and run: yarn build:themes
+ * Last generated: 2025-06-06T20:08:42.685Z
+ */
+
+[data-theme='luxury'] {
+  --theme-header-bg: linear-gradient(135deg, #1a1a2e, #16213e, #0f0f23);
+  --theme-header-border: rgba(0, 212, 170, 0.15);
+  --theme-header-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 20px rgba(0, 212, 170, 0.05);
+  --theme-text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 212, 170, 0.2);
+  --theme-text-glow: drop-shadow(0 0 2px rgba(0, 212, 170, 0.3));
+  --theme-track-bg: linear-gradient(135deg, #1a1a2e, #16213e);
+  --theme-track-border: rgba(0, 212, 170, 0.25);
+  --theme-track-border-hover: rgba(0, 255, 247, 0.4);
+  --theme-track-shadow: 0 0 15px rgba(0, 212, 170, 0.1);
+  --theme-track-shadow-hover: 0 0 25px rgba(0, 212, 170, 0.15);
+  --theme-slider-bg: linear-gradient(135deg, #00d4aa, #00b894);
+  --theme-slider-shadow: 0 4px 12px rgba(0, 212, 170, 0.3), 0 0 20px rgba(0, 212, 170, 0.2);
+  --theme-slider-text-color: #1a1a2e;
+  --theme-primary: #00d4aa;
+  --theme-primary-hover: #00fff7;
+  --theme-text-primary: #00d4aa;
+  --theme-text-secondary: rgba(0, 212, 170, 0.7);
+  --theme-tab-menu-bg: linear-gradient(to bottom, #ffffff, #fefffe);
+  --theme-tab-menu-border: rgba(0, 212, 170, 0.12);
+  --theme-tab-inactive-color: #6b7280;
+  --theme-tab-inactive-bg: linear-gradient(to bottom, transparent, rgba(0, 212, 170, 0.02));
+  --theme-tab-inactive-hover-color: #16213e;
+  --theme-tab-inactive-hover-bg: linear-gradient(to bottom, rgba(0, 212, 170, 0.06), rgba(0, 212, 170, 0.12));
+  --theme-tab-inactive-hover-shadow: 0 0 10px rgba(0, 212, 170, 0.1);
+  --theme-tab-active-color: #00d4aa;
+  --theme-tab-active-bg: linear-gradient(to bottom, rgba(0, 212, 170, 0.08), rgba(0, 212, 170, 0.15));
+  --theme-tab-active-border: #00d4aa;
+  --theme-tab-active-text-shadow: 0 1px 2px rgba(0, 212, 170, 0.3);
+  --theme-tab-active-text-glow: none;
+  --theme-tab-active-shadow: 0 0 15px rgba(0, 212, 170, 0.15);
+  --theme-switch-bg: linear-gradient(135deg, #1a1a2e, #16213e);
+  --theme-switch-color: #00d4aa;
+  --theme-switch-border: rgba(0, 212, 170, 0.25);
+  --theme-switch-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --theme-switch-shadow: 0 0 10px rgba(0, 212, 170, 0.1);
+  --theme-switch-hover-bg: linear-gradient(135deg, #1e1e35, #1a253f);
+  --theme-switch-hover-color: #00fff7;
+  --theme-switch-hover-border: rgba(0, 255, 247, 0.4);
+  --theme-switch-hover-shadow: 0 4px 12px rgba(0, 212, 170, 0.2), 0 0 20px rgba(0, 255, 247, 0.15);
+}

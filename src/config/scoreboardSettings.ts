@@ -125,9 +125,12 @@ export const SCOREBOARD_SETTINGS = {
         '🏗️ BIG ROAD: Shows game results in columns. Same results stack down, different results start new columns. Click any cell to see hand details and betting info (if you placed a bet). Pairs shown as dots: Blue dot (•) = Player Pair, Red dot (•) = Banker Pair.',
       BEADPLATE:
         '📿 BEAD PLATE: Shows all results in order like beads on a string. Read left to right, top to bottom. Click any cell for hand details. Player = Blue, Banker = Red, Tie = Green. Pair indicators: P in black circle = Player Pair, B in black circle = Banker Pair.',
-      BIGEYEBOY: `👁️‍🗨️ BIG EYE BOY: Looks at the last 2 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they're similar!" (regular), 🔴 Red = "No, they're different!" (irregular). Simple rule: Blue = Same, Red = Different! This helps you see if the game has repeating patterns.`,
-      SMALLROAD: `🛤️ SMALL ROAD: Looks at the last 3 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they're similar!" (same pattern), 🔴 Red = "No, they're different!" (different pattern). Simple rule: Blue = Same, Red = Different! This shows deeper patterns than Big Eye Boy.`,
-      COCKROACHPIG: `🐷 COCKROACH PIG: Looks at the last 4 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they're similar!" (same pattern), 🔴 Red = "No, they're different!" (different pattern). Simple rule: Blue = Same, Red = Different! This shows the deepest patterns. Named because it's as ugly as a cockroach but as useful as a pig!`,
+      BIGEYEBOY:
+        '👁️‍🗨️ BIG EYE BOY: Looks at the last 2 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they\'re similar!" (regular), 🔴 Red = "No, they\'re different!" (irregular). Simple rule: Blue = Same, Red = Different! This helps you see if the game has repeating patterns.',
+      SMALLROAD:
+        '🛤️ SMALL ROAD: Looks at the last 3 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they\'re similar!" (same pattern), 🔴 Red = "No, they\'re different!" (different pattern). Simple rule: Blue = Same, Red = Different! This shows deeper patterns than Big Eye Boy.',
+      COCKROACHPIG:
+        '🐷 COCKROACH PIG: Looks at the last 4 columns and asks "Do they grow the same way?" 🔵 Blue = "Yes, they\'re similar!" (same pattern), 🔴 Red = "No, they\'re different!" (different pattern). Simple rule: Blue = Same, Red = Different! This shows the deepest patterns. Named because it\'s as ugly as a cockroach but as useful as a pig!',
     },
 
     // Pattern description background colors (matching old implementation)

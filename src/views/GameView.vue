@@ -1,5 +1,47 @@
 <template>
   <div class="space-y-6">
+    <!-- Navigation Header -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="px-6 py-4">
+        <div class="flex items-center justify-between">
+          <!-- Logo and Title -->
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-gray-900">Original Baccarat</h1>
+            <span class="text-sm text-gray-500">Current Implementation</span>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="hidden md:flex space-x-8">
+            <router-link
+              to="/game"
+              class="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              active-class="text-blue-600 bg-blue-50"
+            >
+              Game
+            </router-link>
+            <router-link
+              to="/history"
+              class="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              active-class="text-blue-600 bg-blue-50"
+            >
+              History
+            </router-link>
+          </nav>
+
+          <!-- CDD Implementation Access -->
+          <div class="flex items-center space-x-4">
+            <div class="text-sm text-gray-600">Try the new CDD implementation:</div>
+            <button
+              @click="switchToCDD"
+              class="inline-flex items-center px-4 py-2 border border-purple-600 text-sm font-medium rounded-md text-purple-600 bg-white hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+            >
+              Switch to CDD
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Session Required Notification (Professional Headless Architecture) -->
     <SessionRequiredNotification
       config-key="SESSION_REQUIRED"
@@ -323,6 +365,7 @@
 
 <script setup lang="ts">
 import { inject, ref, nextTick, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useVisibilityStore } from '@/stores/visibilityStore';
 import { useGameLogic } from '@/composables/useGameLogic';
@@ -351,6 +394,7 @@ import { useSessionNotifications } from '@/composables/useSessionNotifications';
 import { CurrentHandSection } from '@/components/session/sections';
 import BettingInterfaceSection from '@/components/session/sections/BettingInterfaceSection.vue';
 
+const router = useRouter();
 const store = useBaccaratStore();
 const visibilityStore = useVisibilityStore();
 const { createHandResult } = useGameLogic();
@@ -385,14 +429,13 @@ const configurationStatus = computed(() => {
       isDefault: false, // We'll update this if needed
       isSystem: false,
     };
-  } else {
-    return {
-      type: 'manual' as const,
-      name: 'No Selection',
-      isDefault: false,
-      isSystem: false,
-    };
   }
+  return {
+    type: 'manual' as const,
+    name: 'No Selection',
+    isDefault: false,
+    isSystem: false,
+  };
 });
 
 const { warning, error, success } = useNotifications();
@@ -940,6 +983,11 @@ const handleBettingInterfaceValidationSuccess = (result: any) => {
 const handleBettingInterfacePayoutSettingsRequested = () => {
   console.log('[game-view][betting-interface] Payout settings requested');
   // Implement the logic to open the payout settings dialog
+};
+
+// Add switchToCDD method
+const switchToCDD = () => {
+  router.push('/cdd/game');
 };
 </script>
 

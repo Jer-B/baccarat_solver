@@ -1,35 +1,40 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-100">
-    <!-- Header Component -->
-    <CommonAppHeader
-      :show-developer-tools="showDeveloperTools"
-      @toggle-developer-tools="handleDeveloperToolsToggle"
-      @toggle-info-panels="handleInfoPanelsToggle"
-    />
+    <!-- Shared components only for original implementation -->
+    <template v-if="!isCDDRoute">
+      <!-- Header Component -->
+      <CommonAppHeader
+        :show-developer-tools="showDeveloperTools"
+        @toggle-developer-tools="handleDeveloperToolsToggle"
+        @toggle-info-panels="handleInfoPanelsToggle"
+      />
 
-    <!-- Developer Tools Panel (Collapsible) -->
-    <DeveloperToolsPanel v-if="showDeveloperTools" @close="handleDeveloperToolsClose" />
+      <!-- Developer Tools Panel (Collapsible) -->
+      <DeveloperToolsPanel v-if="showDeveloperTools" @close="handleDeveloperToolsClose" />
 
-    <!-- Navigation Tabs -->
-    <CommonTabMenu :tabs="tabs" @tab-click="handleTabClick" @tab-change="handleTabChange" />
+      <!-- Navigation Tabs -->
+      <CommonTabMenu :tabs="tabs" @tab-click="handleTabClick" @tab-change="handleTabChange" />
 
-    <!-- Connection Status Banner -->
-    <ConnectionStatusBanner />
+      <!-- Connection Status Banner -->
+      <ConnectionStatusBanner />
+    </template>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-6">
+    <main :class="isCDDRoute ? '' : 'container mx-auto px-4 py-6'">
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide } from 'vue';
+import { ref, onMounted, onUnmounted, provide, computed, nextTick } from 'vue';
 import { useBaccaratStore } from '@/stores/baccaratStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { useBettingInterface } from '@/composables/useBettingInterface';
 import { useSessionPersistence } from '@/composables/useSessionPersistence';
 import { TOGGLE_SETTINGS } from '@/config/gameSettings';
+import { useRoute } from 'vue-router';
 
 import { testSupabaseConnection } from './utils/testSupabase';
 import ConnectionStatusBanner from './components/ConnectionStatusBanner.vue';
@@ -39,6 +44,8 @@ import CommonTabMenu from './components/common/CommonTabMenu.vue';
 
 const store = useBaccaratStore();
 const connectionStore = useConnectionStore();
+const themeStore = useThemeStore();
+const route = useRoute();
 
 // Session persistence with setup() pattern
 const { handlePageLoad, cleanupSessionPersistence } = useSessionPersistence();
@@ -66,7 +73,6 @@ const handleDeveloperToolsToggle = (): void => {
   if (TOGGLE_SETTINGS.PERSIST_TOGGLE_STATES) {
     localStorage.setItem('showDeveloperTools', JSON.stringify(showDeveloperTools.value));
   }
-  console.log('[app][event] Developer tools toggled', { visible: showDeveloperTools.value });
 };
 
 const handleDeveloperToolsClose = (): void => {
@@ -74,35 +80,26 @@ const handleDeveloperToolsClose = (): void => {
   if (TOGGLE_SETTINGS.PERSIST_TOGGLE_STATES) {
     localStorage.setItem('showDeveloperTools', JSON.stringify(false));
   }
-  console.log('[app][user-action] Developer tools closed from panel');
 };
 
 const handleInfoPanelsToggle = (): void => {
-  console.log('[app][event] Info panels toggle delegated to store via header');
+  // Delegate to store via header
 };
 
 // Tab navigation event handlers
 const handleTabClick = (tab: any): void => {
-  console.log('[navigation][tab-click] Tab clicked', {
-    tabId: tab.id,
-    tabName: tab.name,
-    tabPath: tab.path,
-    timestamp: new Date().toISOString(),
-  });
+  // Tab click handling
 };
 
 const handleTabChange = (tab: any): void => {
-  console.log('[navigation][tab-change] Tab changed', {
-    tabId: tab.id,
-    tabName: tab.name,
-    tabPath: tab.path,
-    timestamp: new Date().toISOString(),
-  });
+  // Tab change handling
 };
 
 // Setup lifecycle with setup() pattern
 onMounted(async () => {
-  console.log('[app][lifecycle] App mounted, initializing...');
+  // Initialize theme AFTER mount to ensure persistence has loaded
+  await nextTick();
+  themeStore.initializeTheme();
 
   // Handle page load and setup session persistence
   await handlePageLoad();
@@ -110,15 +107,11 @@ onMounted(async () => {
   // Initialize stores with configuration
   await connectionStore.initialize();
 
-  // Initialize shoe on app start (always initialize regardless of session state)
-  console.log('[app][initialization] Initializing shoe...');
+  // Initialize shoe on app start
   store.initializeShoe();
-  console.log('[app][initialization] Shoe initialized, total cards:', store.totalCardsRemaining);
 
   // Test Supabase connection (legacy - now handled by connection store)
   await testSupabaseConnection();
-
-  console.log('[app][lifecycle] App initialization complete');
 });
 
 onUnmounted(() => {
@@ -131,6 +124,9 @@ provide('currentRoundBet', currentRoundBet);
 provide('bettingInterface', bettingInterface);
 provide('placeBet', placeBet);
 provide('isBettingAllowed', isBettingAllowed);
+
+// Computed property to determine if the current route is a CDD route
+const isCDDRoute = computed(() => route.path.startsWith('/cdd'));
 </script>
 
 <style scoped>

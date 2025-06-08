@@ -394,14 +394,13 @@ const loadPreviousBalance = async (): Promise<number> => {
 
       previousEndBalance.value = latestCompletedSession.end_balance;
       return latestCompletedSession.end_balance;
-    } else {
-      console.log(
-        '[session-control][loader] No previous session with end balance found, using fallback'
-      );
-      const fallbackBalance = config.FALLBACKS.BALANCE;
-      previousEndBalance.value = fallbackBalance;
-      return fallbackBalance;
     }
+    console.log(
+      '[session-control][loader] No previous session with end balance found, using fallback'
+    );
+    const fallbackBalance = config.FALLBACKS.BALANCE;
+    previousEndBalance.value = fallbackBalance;
+    return fallbackBalance;
   } catch (error) {
     console.error('[session-control][loader] Failed to load previous balance', {
       error: error instanceof Error ? error.message : String(error),

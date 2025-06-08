@@ -1,0 +1,47 @@
+/* ⚠️  AUTO-GENERATED CSS - DO NOT EDIT MANUALLY! ⚠️ 
+ * Generated from: src/cdd-design-system/themes/definitions/elite.ts
+ * To modify theme colors, edit the TypeScript file and run: yarn build:themes
+ * Last generated: 2025-06-06T20:08:42.687Z
+ */
+
+[data-theme='elite'] {
+  --theme-header-bg: linear-gradient(135deg, #2c2c2c, #1a1a1a, #0d0d0d);
+  --theme-header-border: rgba(229, 228, 226, 0.12);
+  --theme-header-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 30px rgba(229, 228, 226, 0.04);
+  --theme-text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(229, 228, 226, 0.15);
+  --theme-text-glow: drop-shadow(0 0 2px rgba(229, 228, 226, 0.25));
+  --theme-track-bg: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+  --theme-track-border: rgba(229, 228, 226, 0.2);
+  --theme-track-border-hover: rgba(248, 248, 255, 0.3);
+  --theme-track-shadow: 0 0 20px rgba(229, 228, 226, 0.05);
+  --theme-track-shadow-hover: 0 0 30px rgba(229, 228, 226, 0.1);
+  --theme-slider-bg: linear-gradient(135deg, #e5e4e2, #d3d3d3);
+  --theme-slider-shadow: 0 4px 20px rgba(229, 228, 226, 0.25), 0 0 30px rgba(248, 248, 255, 0.15);
+  --theme-slider-text-color: #2c2c2c;
+  --theme-primary: #e5e4e2;
+  --theme-primary-hover: #f8f8ff;
+  --theme-text-primary: #e5e4e2;
+  --theme-text-secondary: rgba(229, 228, 226, 0.6);
+  --theme-tab-menu-bg: #ffffff;
+  --theme-tab-menu-border: rgba(0, 0, 0, 0.08);
+  --theme-tab-inactive-color: #a1a1aa;
+  --theme-tab-inactive-bg: transparent;
+  --theme-tab-inactive-hover-color: #71717a;
+  --theme-tab-inactive-hover-bg: rgba(0, 0, 0, 0.02);
+  --theme-tab-inactive-hover-shadow: none;
+  --theme-tab-active-color: #000000;
+  --theme-tab-active-bg: #ffffff;
+  --theme-tab-active-border: #000000;
+  --theme-tab-active-text-shadow: none;
+  --theme-tab-active-text-glow: 0 0 8px rgba(229, 228, 226, 0.6);
+  --theme-tab-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --theme-switch-bg: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+  --theme-switch-color: #e5e4e2;
+  --theme-switch-border: rgba(229, 228, 226, 0.2);
+  --theme-switch-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --theme-switch-shadow: 0 0 15px rgba(229, 228, 226, 0.05);
+  --theme-switch-hover-bg: linear-gradient(135deg, #333333, #1f1f1f);
+  --theme-switch-hover-color: #f8f8ff;
+  --theme-switch-hover-border: rgba(248, 248, 255, 0.3);
+  --theme-switch-hover-shadow: 0 4px 20px rgba(229, 228, 226, 0.15), 0 0 30px rgba(248, 248, 255, 0.1);
+}

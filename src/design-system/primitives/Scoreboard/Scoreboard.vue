@@ -311,7 +311,9 @@ const buildBigRoadData = (gameHistory: any[]): ScoreboardCell[][] => {
   let lastResult: string | null = null;
 
   gameHistory.forEach((hand, index) => {
-    if (!hand.winner) return;
+    if (!hand.winner) {
+      return;
+    }
 
     const cell: ScoreboardCell = {
       result: hand.winner as 'player' | 'banker' | 'tie',

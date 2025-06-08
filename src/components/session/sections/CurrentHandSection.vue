@@ -439,8 +439,8 @@ if (!bettingInterface || !injectedCurrentRoundBet) {
   console.error(
     '[current-hand-section][injection] Failed to inject betting interface from App.vue',
     {
-      hasBettingInterface: !!bettingInterface,
-      hasCurrentRoundBet: !!injectedCurrentRoundBet,
+      hasBettingInterface: Boolean(bettingInterface),
+      hasCurrentRoundBet: Boolean(injectedCurrentRoundBet),
     }
   );
   throw new Error(
@@ -898,8 +898,8 @@ const completeRound = async (): Promise<void> => {
     betType: injectedCurrentRoundBet.betType,
     betAmount: injectedCurrentRoundBet.betAmount,
     currentBalance: store.ui.currentBalance,
-    bettingInterfaceExists: !!bettingInterface,
-    injectedBetStateExists: !!injectedCurrentRoundBet,
+    bettingInterfaceExists: Boolean(bettingInterface),
+    injectedBetStateExists: Boolean(injectedCurrentRoundBet),
   });
 
   try {
@@ -1060,9 +1060,9 @@ const completeRound = async (): Promise<void> => {
         // Show success notification for database save only
         if (betResult) {
           // Don't show bet result toast here - it's handled by balance management
-          success(`✅ Hand completed and saved to database`);
+          success('✅ Hand completed and saved to database');
         } else {
-          success(`✅ Hand completed and saved to database`);
+          success('✅ Hand completed and saved to database');
         }
       } catch (error) {
         console.error('[current-hand-section][database] Failed to save hand to database', {
@@ -1119,7 +1119,7 @@ const completeRound = async (): Promise<void> => {
       handNumber: handResult.handNumber,
       balanceChange,
       newBalance: store.ui.currentBalance,
-      bettingStateReset: !!betResult,
+      bettingStateReset: Boolean(betResult),
     });
   } catch (error) {
     console.error('[current-hand-section] Error completing round:', error);
