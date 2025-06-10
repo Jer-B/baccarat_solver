@@ -34,6 +34,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import CDDSessionControl from './components/controls/CDDSessionControl.vue';
+
 const router = useRouter();
 
 const switchToOriginal = () => {

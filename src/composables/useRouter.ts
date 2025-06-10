@@ -19,7 +19,7 @@ import type {
 } from '@/types/core/routeTypes';
 
 import { ROUTE_PATHS, ROUTE_NAMES, ROUTE_METADATA } from '@/types/core/routeTypes';
-
+import { NAVIGATION_TIMING } from '../utils';
 // Validation and utilities
 import {
   validateRoutePath,
@@ -88,11 +88,6 @@ export const useRouter = (): RouterComposableReturn => {
   const isNavigating = ref(false);
   const navigationError = ref<string | null>(null);
   const navigationHistory = ref<RoutePath[]>([]);
-
-  // Constants for magic numbers
-  const RETRY_ATTEMPTS = 3;
-  const RETRY_DELAY_MS = 5000;
-  const TRANSITION_TIMEOUT_MS = 3000;
 
   // ==================== SETUP ====================
 
@@ -291,7 +286,7 @@ export const useRouter = (): RouterComposableReturn => {
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
           reject(createNavigationError('Navigation timeout', targetPath));
-        }, TRANSITION_TIMEOUT_MS);
+        }, NAVIGATION_TIMING.TRANSITION_TIMEOUT_MS);
       });
 
       // Race between navigation and timeout

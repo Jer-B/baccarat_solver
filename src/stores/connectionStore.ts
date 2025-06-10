@@ -1,3 +1,4 @@
+// old implementation of connection store not CDD refactored one
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { supabase } from '@/lib/supabase';

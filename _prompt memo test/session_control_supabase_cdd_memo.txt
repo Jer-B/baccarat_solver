@@ -1,0 +1,83 @@
+Ok now lets fix few things:
+
+The session recording is complete ? it seems like it has unused imports:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSessionRecording.ts
+
+Same for this, its complete ? there is unused import :
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/sessionControlStore.ts
+
+For both new CDD control sessions and supabase session recording features, types, error handler and validation files are corrects ?
+
+Both flow use setup() pattern and cleanup pattern instead of OnMounted and OnUnmounted ?
+
+Both flow is dry ?
+
+Do we now need to uncomment this part in /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/vite-env.d.ts for thats used for the session recording to work right?:
+````
+//   readonly VITE_SUPABASE_URL: string;
+//   readonly VITE_SUPABASE_ANON_KEY: string;
+````
+
+
+files you created are complete at 100% ? no more improvement / enhancement required on them ?
+Do they have unused stuff ?
+Does our game, history, settings pages view base is adapted and using refactor changes adequatly at excellence level ?
+
+Without thinking about refactoring UI , but just the start / end session buttons does without breaking actual size and UI could it be base on a CDD modular reusable compount button component ? thats just a question for now. something like we did for container generator but for buttons. and just that one for now. (I do really like the size and color for now) I REPEAT THIS PART IS JUST A QUESTION.
+
+Does events are well emitted and catch at parent level following right standards ?(if im not wrong about that standard)
+
+
+Supabase client is already created in /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/lib/supabase.ts and I think you can use it as it is for that. 
+
+I dont want things to be just production-ready with enterprise-level. i want things to be top-notch excellence level surpassing production-ready and enterprise-level levels. so be disciplined. Thats why i am just asking for double check as always.
+
+
+Session Controls and Supabase CDD refactored files:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/components/controls/CDDSessionControl.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/sessionRecordingValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/sessionControlValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/errors/sessionControlErrorHandler.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/sessionRecordingTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/sessionControlTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/sessionControlStore.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/sessionRecordingService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSessionRecording.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSessionControl.ts
+
+Original supabase lib:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/lib/supabase.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/databaseService.ts
+
+
+CDD design and theme toolkit:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/base.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/components.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/main.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/utilities.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/buttons.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/cards.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/index.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/elite.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/luxury.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/elite.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/luxury.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/build-themes.cjs
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/animations.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/borders.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/breakpoints.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/colors.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/shadows.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/spacing.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/typography.ts
+
+CDD gameview / history pages:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/CDDMainContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/settings/CDDSettingsViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/settings/CDDSettingsView.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/history/CDDHistoryViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/history/CDDHistoryView.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/CDDGameViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/CDDGameView.vue

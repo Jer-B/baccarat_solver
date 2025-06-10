@@ -587,3 +587,94 @@ export const getErrorRecoveryStrategy = (error: ThemeError): ErrorRecoveryStrate
       });
   }
 };
+
+// ==================== ADDITIONAL VALIDATION FUNCTIONS ====================
+
+/**
+ * Validate complete theme state with all properties
+ */
+export const validateThemeState = (
+  state: unknown,
+  context?: CreateErrorOptions
+): ThemeOperationResult<{ currentTheme: ThemeMode }> => {
+  try {
+    const result = ThemeStateSchema.safeParse(state);
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: createThemeError(ThemeErrorType.VALIDATION_FAILED, 'Invalid theme state structure', {
+          severity: ThemeErrorSeverity.MEDIUM,
+          context: {
+            provided: state,
+            zodErrors: result.error.errors,
+          },
+          ...context,
+        }),
+      };
+    }
+
+    return { success: true, data: result.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: createThemeError(
+        ThemeErrorType.VALIDATION_FAILED,
+        `Theme state validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          severity: ThemeErrorSeverity.MEDIUM,
+          cause: error instanceof Error ? error : undefined,
+          ...context,
+        }
+      ),
+    };
+  }
+};
+
+/**
+ * Quick theme mode validation using helper function
+ */
+export const quickValidateThemeMode = (mode: unknown): boolean => {
+  return isValidThemeMode(mode);
+};
+
+/**
+ * Parse theme mode from string with error handling
+ */
+export const parseThemeModeFromString = (
+  input: string,
+  context?: CreateErrorOptions
+): ThemeOperationResult<ThemeMode> => {
+  try {
+    const parsed = parseThemeMode(input);
+    if (parsed) {
+      return { success: true, data: parsed };
+    }
+
+    return {
+      success: false,
+      error: createThemeError(
+        ThemeErrorType.INVALID_THEME,
+        `Could not parse theme mode from: ${input}`,
+        {
+          severity: ThemeErrorSeverity.LOW,
+          context: { input, availableModes: THEME_MODES },
+          ...context,
+        }
+      ),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: createThemeError(
+        ThemeErrorType.VALIDATION_FAILED,
+        `Theme parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          severity: ThemeErrorSeverity.MEDIUM,
+          cause: error instanceof Error ? error : undefined,
+          ...context,
+        }
+      ),
+    };
+  }
+};

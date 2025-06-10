@@ -546,3 +546,81 @@ export const validateRoutes = (paths: string[]): ValidationResult<RoutePath[]> =
     };
   }
 };
+
+// ==================== ADDITIONAL VALIDATION FUNCTIONS ====================
+
+/**
+ * Get all available route names for validation and development
+ */
+export const getAllRouteNames = (): RouteName[] => {
+  return Object.values(ROUTE_NAMES);
+};
+
+/**
+ * Validate route name exists in the system
+ */
+export const isValidRouteNameInSystem = (name: RouteName): boolean => {
+  return Object.values(ROUTE_NAMES).includes(name);
+};
+
+/**
+ * Get route path by route name lookup
+ */
+export const getRoutePathByName = (routeName: RouteName): RoutePath | null => {
+  try {
+    // Find the route path that corresponds to this route name
+    const pathEntry = Object.entries(ROUTE_METADATA).find(
+      ([, metadata]) => metadata.meta.title === routeName
+    );
+
+    if (pathEntry) {
+      return pathEntry[0] as RoutePath;
+    }
+
+    console.warn('[route-validation][name-lookup] Route name not found:', { routeName });
+    return null;
+  } catch (error) {
+    console.error('[route-validation][name-lookup] Error finding route by name:', error);
+    return null;
+  }
+};
+
+/**
+ * Validate route name format and existence
+ */
+export const validateRouteNameExists = (name: string): ValidationResult<RouteName> => {
+  try {
+    // First validate the format
+    const formatResult = validateRouteName(name);
+    if (!formatResult.success) {
+      return formatResult;
+    }
+
+    // Then check if it exists in the system
+    if (!isValidRouteNameInSystem(formatResult.data)) {
+      return {
+        success: false,
+        error: {
+          message: `Route name "${name}" is not registered in the system`,
+          code: 'ROUTE_NAME_NOT_FOUND',
+          field: 'name',
+          details: {
+            providedName: name,
+            availableNames: getAllRouteNames(),
+          },
+        },
+      };
+    }
+
+    return { success: true, data: formatResult.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        message: 'Route name existence validation failed',
+        code: 'ROUTE_NAME_VALIDATION_ERROR',
+        details: { originalError: error },
+      },
+    };
+  }
+};

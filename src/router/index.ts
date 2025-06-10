@@ -34,6 +34,9 @@ import CDDGameViewContainer from '../views/game/CDDGameViewContainer.vue';
 import CDDHistoryViewContainer from '../views/history/CDDHistoryViewContainer.vue';
 import CDDSettingsViewContainer from '../views/settings/CDDSettingsViewContainer.vue';
 
+// Container Generator Demo
+// import ContainerGeneratorDemo from '../components/common/ContainerGeneratorDemo.vue';
+
 // ==================== ROUTE DEFINITIONS ====================
 
 /**
@@ -120,6 +123,18 @@ const routes: RouteRecordRaw[] = [
           // accessLevel: ROUTE_METADATA[ROUTE_PATHS.CDD_SETTINGS].accessLevel, // COMMENTED OUT - No access restrictions
         },
       },
+      // {
+      //   path: 'container-demo',
+      //   name: 'CDD_CONTAINER_DEMO',
+      //   component: ContainerGeneratorDemo,
+      //   meta: {
+      //     title: 'Container Generator Demo',
+      //     description:
+      //       'Dynamic Layout Composition Engine demonstration with session control recreation',
+      //     category: 'development',
+      //     navigationMode: 'cdd' as NavigationMode,
+      //   },
+      // },
     ],
   },
 ];

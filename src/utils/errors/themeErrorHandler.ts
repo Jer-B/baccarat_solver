@@ -666,6 +666,90 @@ export class ThemeErrorMonitor {
   }
 }
 
+// ==================== ADDITIONAL UTILITY FUNCTIONS ====================
+
+/**
+ * Check if an error can be recovered from using the imported utility
+ */
+export const checkErrorRecoverability = (error: unknown): boolean => {
+  return isRecoverableError(error);
+};
+
+/**
+ * Create a standardized error recovery strategy with theme constants
+ */
+export const createStandardErrorRecovery = (
+  canRecover: boolean,
+  errorType: ThemeErrorType,
+  customOptions?: {
+    userMessage?: string;
+    technicalDetails?: string;
+    maxRetries?: number;
+  }
+): ErrorRecoveryStrategy => {
+  return createErrorRecovery(canRecover, {
+    fallbackTheme: THEME_CONSTANTS.DEFAULT_THEME,
+    userMessage: customOptions?.userMessage || 'A theme error occurred',
+    technicalDetails: customOptions?.technicalDetails || `${errorType} error`,
+    maxRetries: customOptions?.maxRetries || THEME_CONSTANTS.PERSISTENCE_RETRY_COUNT,
+    retryDelay: THEME_CONSTANTS.ERROR_RECOVERY_DELAY,
+    recommendedActions: [
+      'Check browser console for details',
+      'Try refreshing the page',
+      'Clear browser cache if issue persists',
+    ],
+  });
+};
+
+/**
+ * Validate theme error handler configuration using theme constants
+ */
+export const validateErrorHandlerConfig = (
+  config?: Partial<ErrorMonitorConfig>
+): { isValid: boolean; issues: string[]; correctedConfig: ErrorMonitorConfig } => {
+  const issues: string[] = [];
+
+  const correctedConfig: ErrorMonitorConfig = {
+    maxHistorySize: config?.maxHistorySize || 100,
+    analysisWindow: config?.analysisWindow || 3600000,
+    errorThreshold: config?.errorThreshold || THEME_CONSTANTS.PERSISTENCE_RETRY_COUNT * 3,
+    autoRecovery: config?.autoRecovery ?? true,
+  };
+
+  // Validate against theme constants
+  if (correctedConfig.errorThreshold > THEME_CONSTANTS.PERSISTENCE_RETRY_COUNT * 10) {
+    issues.push('Error threshold too high, adjusted to reasonable limit');
+    correctedConfig.errorThreshold = THEME_CONSTANTS.PERSISTENCE_RETRY_COUNT * 10;
+  }
+
+  if (correctedConfig.maxHistorySize > 1000) {
+    issues.push('History size too large, adjusted to prevent memory issues');
+    correctedConfig.maxHistorySize = 1000;
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+    correctedConfig,
+  };
+};
+
+/**
+ * Create error handler with validated configuration
+ */
+export const createValidatedErrorHandler = (
+  config?: Partial<ErrorMonitorConfig>
+): { handler: ThemeErrorHandler; warnings: string[] } => {
+  const validation = validateErrorHandlerConfig(config);
+
+  const handler = ThemeErrorHandler.getInstance(validation.correctedConfig);
+
+  return {
+    handler,
+    warnings: validation.issues,
+  };
+};
+
 // ==================== GLOBAL ERROR HANDLER INSTANCE ====================
 
 /**

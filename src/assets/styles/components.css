@@ -1,4 +1,4 @@
-@tailwind components;
-
-/* Import CDD design system components */
+/* Import CDD design system components  */
 @import '../../cdd-design-system/components/index.css';
+
+@tailwind components;

@@ -35,6 +35,13 @@ CREATE TABLE api.hands (
     is_natural BOOLEAN NOT NULL DEFAULT FALSE,
     cards_remaining INTEGER NOT NULL,
     penetration DECIMAL(5,4) NOT NULL CHECK (penetration BETWEEN 0 AND 1),
+    bet_type TEXT CHECK (bet_type IS NULL OR (bet_type = ANY (ARRAY['player', 'banker', 'tie', 'playerPair', 'bankerPair']))),
+    bet_amount DECIMAL,
+    bet_won BOOLEAN,
+    bet_payout DECIMAL,
+    bet_net_result DECIMAL,
+    balance_before DECIMAL,
+    balance_after DECIMAL,
     UNIQUE(game_id, hand_number)
 );
 
@@ -43,9 +50,11 @@ CREATE TABLE api.burned_cards (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     game_id UUID NOT NULL REFERENCES api.games(id) ON DELETE CASCADE,
     card_value TEXT NOT NULL,
-    card_suit TEXT NOT NULL CHECK (card_suit IN ('hearts', 'diamonds', 'clubs', 'spades')),
+    card_suit TEXT NOT NULL CHECK (card_suit = ANY (ARRAY['hearts', 'diamonds', 'clubs', 'spades'])),
     burned_at TIMESTAMPTZ DEFAULT NOW(),
-    position_in_shoe INTEGER NOT NULL
+    position_in_shoe INTEGER NOT NULL,
+    CONSTRAINT burned_cards_pkey PRIMARY KEY (id),
+    CONSTRAINT burned_cards_game_id_fkey FOREIGN KEY (game_id) REFERENCES api.games(id)
 );
 
 -- Edge calculations table - stores calculated advantages
@@ -60,7 +69,10 @@ CREATE TABLE api.edge_calculations (
     player_pair_edge DECIMAL(8,6) NOT NULL,
     banker_pair_edge DECIMAL(8,6) NOT NULL,
     confidence DECIMAL(5,4) NOT NULL CHECK (confidence BETWEEN 0 AND 1),
-    cards_remaining INTEGER NOT NULL
+    cards_remaining INTEGER NOT NULL,
+    CONSTRAINT edge_calculations_pkey PRIMARY KEY (id),
+    CONSTRAINT edge_calculations_hand_id_fkey FOREIGN KEY (hand_id) REFERENCES api.hands(id),
+    CONSTRAINT edge_calculations_game_id_fkey FOREIGN KEY (game_id) REFERENCES api.games(id)
 );
 
 -- User sessions table - tracks gaming sessions
@@ -72,11 +84,29 @@ CREATE TABLE api.user_sessions (
     ended_at TIMESTAMPTZ,
     duration_seconds INTEGER,
     total_hands INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'interrupted')),
+    session_name TEXT NOT NULL,
     cards_remaining INTEGER,
     start_balance DECIMAL(10,2),
     end_balance DECIMAL(10,2),
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
-    session_name TEXT NOT NULL
+    session_lifecycle_flag INTEGER NOT NULL DEFAULT 1 CHECK (session_lifecycle_flag = ANY (ARRAY[1, 2, 3])),
+    CONSTRAINT user_sessions_pkey PRIMARY KEY (id)
+);
+
+-- Payout presets table - stores payout presets
+CREATE TABLE api.payout_presets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL UNIQUE,
+    player_payout DECIMAL NOT NULL DEFAULT 1.00 CHECK (player_payout >= 0::numeric),
+    banker_payout DECIMAL NOT NULL DEFAULT 1.00 CHECK (banker_payout >= 0::numeric),
+    banker_commission DECIMAL NOT NULL DEFAULT 0.050 CHECK (banker_commission >= 0::numeric AND banker_commission <= 1::numeric),
+    tie_payout DECIMAL NOT NULL DEFAULT 8.00 CHECK (tie_payout >= 0::numeric),
+    player_pair_payout DECIMAL NOT NULL DEFAULT 11.00 CHECK (player_pair_payout >= 0::numeric),
+    banker_pair_payout DECIMAL NOT NULL DEFAULT 11.00 CHECK (banker_pair_payout >= 0::numeric),
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    is_system_preset BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes for performance

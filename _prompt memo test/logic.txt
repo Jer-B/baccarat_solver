@@ -1,0 +1,17 @@
+// Betting Interface - handlers connect payout changes to betting decisions
+// Statistics Display - formatPercentage shows professional-grade percentage formatting
+// Algorithm Coordination - props provide data for Kelly Criterion, edge calculations, etc.
+// The refactor is now complete and professional-grade, ready for integration with the advanced gambling analysis algorithms. All variables have their intended purpose and the "Set as Default" button works as requested!
+// 📊 Statistics Display Integration (formatPercentage)
+// Target Locations for Professional Percentage Formatting:
+// Edge Calculations Display → Real-time edge percentages with payout impact
+// Current Hand Statistics → Commission impact on expected value
+// Kelly Criterion Calculator → Risk-adjusted bet sizing with payout ratios
+// Burn Card Analysis → Payout-adjusted edge calculations
+// Session Statistics → Win rate analysis with commission effects
+// 🎰 Betting Interface Integration (handlers)
+// Target Integration Points:
+// Real-time Bet Recommendations → Payout changes trigger new Kelly calculations
+// Edge-Based Betting → Commission changes affect optimal bet sizes
+// Risk Management → Payout ratios influence bankroll allocation
+// Professional Algorithms → Live payout integration with Jacobson/Griffin methods

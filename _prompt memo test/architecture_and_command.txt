@@ -1,0 +1,93 @@
+yarn vue-tsc --noEmit
+
+follow the "IMPLEMENTATION > REMOVAL" rules on that
+
+Unit Tests: Comprehensive test suite for the new architecture
+JSDoc Documentation: Formal API documentation (though code is self-documenting)
+
+PLEASE KEEP THE CURRENT UI ! STOP BREAKING UI !! KEEP ACTUAL BUTTONS COLORS WHEN CLICKED OR NOT PATTERN, background colors, design, texts etc... every design as it is originally !!!!!!!!!! just adapt to a headless design / cdd component pattern
+
+on a scale from 0 to 100 how is small toggles buttons of every infos sections now at the very best professional level of exellency speaking ?
+
+
+predicting algorithm on streak and pattern of the scoreboard is well done ? like for very long streak or dragon tail stuff
+
+our yarn server is running on 5173, stop look for other ports btw.
+
+Make sure you use adequates files and toolkits. 
+ /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system 
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles
+
+
+Our CDD prefixed files refactor are quite small yet, id like you invest time on being, clean, dry, and efficient in your tasks.
+
+yarn dev --host
+yarn dev --port 5173
+
+
+````
+hei02@Hei02s-MacBook-Air improved_baccarat_assistant % npx cypress open                
+
+DevTools listening on ws://127.0.0.1:63909/devtools/browser/34c5c134-c221-42e5-80b7-c392491865c4
+(node:37572) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("file%3A///Users/hei02/Library/Caches/Cypress/14.4.1/Cypress.app/Contents/Resources/app/node_modules/ts-node/esm/transpile-only.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37572) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:37572) Warning: Failed to load the ES module: /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/cypress.config.ts. Make sure to set "type": "module" in the nearest package.json file or use the .mjs extension.
+````
+
+
+I use Brave browser mainly for web3 development purpose, but when testing with cypress there is just edge, chrome, electron as setted browser. I d like to add brave and safari to it.
+
+I saw something on the web at this page about configs if i want brave https://docs.cypress.io/app/references/launching-browsers
+
+
+also Cypress-vite plugin is necessary ? https://docs.cypress.io/app/plugins/plugins-list
+
+what about the @cypress/code-coverage plugin ? https://github.com/cypress-io/code-coverage https://docs.cypress.io/app/tooling/code-coverage
+
+what is stub ? https://docs.cypress.io/api/commands/stub explain like im 5 yo.
+
+
+==========
+
+ok about the below search result for warnings when running cypress open command. we will try a node update later on. so skip it for now. i just leave this as memo
+````
+## **🔍 CYPRESS WARNINGS RESEARCH RESULTS**
+
+### **✅ SOLUTION FOUND: Suppress Using NODE_OPTIONS Environment Variable**
+
+From Node.js 21.3.0+ (your project is already on 18+), the solution is:
+
+```bash
+NODE_OPTIONS="--disable-warning=ExperimentalWarning --disable-warning=DEP0180" yarn test:e2e:open
+```
+
+This will suppress:
+- `(node:37572) ExperimentalWarning: --experimental-loader may be removed in the future`
+- `(node:37572) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated`
+
+The warnings are indeed **cosmetic only** and don't affect Cypress functionality.
+````
+
+========
+
+
+"Please implement excellence-level tests for [COMPONENT] following our test organization architecture. Use the theme test patterns for consistency and include [SPECIFIC_REQUIREMENTS]."
+
+"Please implement excellence-level tests for CommonHeader component following our established test organization architecture. I want:
+
+1. Unit tests in tests/unit/components/common/
+2. Integration tests in tests/integration/components/header/
+3. E2E tests in tests/e2e/navigation/
+4. Follow the theme test patterns for consistency
+5. Include performance benchmarks and accessibility tests"
+
+
+npx cypress run --headless --browser chrome --spec "cypress/e2e/*.cy.ts"
+
+
+npx cypress open
+
+VUE 3 LIFECYCLE COMPLIANCE

@@ -1,7 +1,7 @@
-@tailwind base;
-
 @import '../../cdd-design-system/themes/generated/luxury.css';
 @import '../../cdd-design-system/themes/generated/elite.css';
+
+@tailwind base;
 
 @layer base {
   /* Custom base styles */

@@ -281,6 +281,243 @@ export class SessionService {
   }
 
   /**
+   * Delete multiple sessions by their IDs (batch operation)
+   */
+  async deleteSessions(
+    sessionIds: string[]
+  ): Promise<{ deletedCount: number; failedIds: string[] }> {
+    console.log('[session-tracking][batch-delete] Deleting multiple sessions', {
+      count: sessionIds.length,
+      sessionIds,
+    });
+
+    if (sessionIds.length === 0) {
+      return { deletedCount: 0, failedIds: [] };
+    }
+
+    try {
+      // Use Supabase IN operator for efficient batch deletion
+      const { error } = await supabase.from('user_sessions').delete().in('id', sessionIds);
+
+      if (error) {
+        console.error('[session-tracking][batch-delete] Batch deletion failed', {
+          error,
+          sessionIds,
+          count: sessionIds.length,
+        });
+
+        // Show toast notification for the error
+        try {
+          const { error: errorNotification } = await getNotifications();
+          errorNotification(`Failed to delete ${sessionIds.length} sessions from database`);
+        } catch (notifError) {
+          console.warn('[session-tracking][error] Failed to show error notification', {
+            notifError,
+          });
+        }
+
+        throw new Error(`Failed to delete sessions: ${error.message}`);
+      }
+
+      console.log('[session-tracking][batch-delete] Sessions deleted successfully', {
+        deletedCount: sessionIds.length,
+      });
+
+      return { deletedCount: sessionIds.length, failedIds: [] };
+    } catch (error) {
+      console.error('[session-tracking][batch-delete] Unexpected error during batch deletion', {
+        error,
+        sessionIds,
+      });
+
+      // If batch deletion fails, try individual deletions to identify problematic IDs
+      const failedIds: string[] = [];
+      let deletedCount = 0;
+
+      for (const sessionId of sessionIds) {
+        try {
+          await this.deleteSession(sessionId);
+          deletedCount++;
+        } catch (err) {
+          console.warn('[session-tracking][batch-delete] Failed to delete individual session', {
+            sessionId,
+            error: err,
+          });
+          failedIds.push(sessionId);
+        }
+      }
+
+      return { deletedCount, failedIds };
+    }
+  }
+
+  /**
+   * Delete ALL sessions for the current user (optimized bulk operation)
+   */
+  async deleteAllSessions(): Promise<{ deletedCount: number; error?: string }> {
+    console.log('[session-tracking][delete-all] Deleting ALL sessions');
+
+    try {
+      // First, count existing sessions for logging
+      const { count: sessionCount, error: countError } = await supabase
+        .from('user_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.warn('[session-tracking][delete-all] Could not count sessions before deletion', {
+          error: countError,
+        });
+      }
+
+      // Delete all sessions for the authenticated user
+      const { error } = await supabase.from('user_sessions').delete().not('id', 'is', null); // Delete all records (with RLS filtering by user)
+
+      if (error) {
+        console.error('[session-tracking][delete-all] Failed to delete all sessions', { error });
+
+        // Show toast notification for the error
+        try {
+          const { error: errorNotification } = await getNotifications();
+          errorNotification('Failed to delete all sessions from database');
+        } catch (notifError) {
+          console.warn('[session-tracking][error] Failed to show error notification', {
+            notifError,
+          });
+        }
+
+        return {
+          deletedCount: 0,
+          error: `Failed to delete all sessions: ${error.message}`,
+        };
+      }
+
+      const deletedCount = sessionCount || 0;
+      console.log('[session-tracking][delete-all] All sessions deleted successfully', {
+        deletedCount,
+      });
+
+      return { deletedCount };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[session-tracking][delete-all] Unexpected error during bulk deletion', {
+        error,
+      });
+
+      return {
+        deletedCount: 0,
+        error: `Unexpected error during bulk deletion: ${errorMessage}`,
+      };
+    }
+  }
+
+  /**
+   * Rename a session (update session name with validation)
+   */
+  async renameSession(sessionId: string, newName: string): Promise<UserSession> {
+    console.log('[session-tracking][rename] Renaming session', {
+      sessionId,
+      newName: newName.trim(),
+    });
+
+    // Validate new name
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      throw new Error('Session name cannot be empty');
+    }
+
+    if (trimmedName.length > 100) {
+      throw new Error('Session name too long (maximum 100 characters)');
+    }
+
+    try {
+      const updatedSession = await this.updateSession(sessionId, {
+        session_name: trimmedName,
+      });
+
+      console.log('[session-tracking][rename] Session renamed successfully', {
+        sessionId,
+        oldName: 'unknown', // We don't have old name here
+        newName: trimmedName,
+      });
+
+      return updatedSession;
+    } catch (error) {
+      console.error('[session-tracking][rename] Failed to rename session', {
+        error,
+        sessionId,
+        newName: trimmedName,
+      });
+
+      // Show toast notification for the error
+      try {
+        const { error: errorNotification } = await getNotifications();
+        errorNotification('Failed to rename session');
+      } catch (notifError) {
+        console.warn('[session-tracking][error] Failed to show error notification', { notifError });
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Update the currently running session (if any)
+   */
+  async updateCurrentSession(updateData: UpdateSessionData): Promise<UserSession | null> {
+    console.log('[session-tracking][update-current] Updating current running session', {
+      updateData,
+    });
+
+    try {
+      // Find the currently active session
+      const { data: activeSessions, error: selectError } = await supabase
+        .from('user_sessions')
+        .select('*')
+        .eq('status', 'active')
+        .eq('session_lifecycle_flag', 1)
+        .order('started_at', { ascending: false })
+        .limit(1);
+
+      if (selectError) {
+        console.error('[session-tracking][update-current] Failed to find active session', {
+          error: selectError,
+        });
+        throw new Error(`Failed to find active session: ${selectError.message}`);
+      }
+
+      if (!activeSessions || activeSessions.length === 0) {
+        console.log('[session-tracking][update-current] No active session found');
+        return null;
+      }
+
+      const currentSession = activeSessions[0];
+      const updatedSession = await this.updateSession(currentSession.id, updateData);
+
+      console.log('[session-tracking][update-current] Current session updated successfully', {
+        sessionId: currentSession.id,
+        sessionName: currentSession.session_name,
+      });
+
+      return updatedSession;
+    } catch (error) {
+      console.error('[session-tracking][update-current] Failed to update current session', {
+        error,
+        updateData,
+      });
+
+      // Show toast notification for the error
+      try {
+        const { error: errorNotification } = await getNotifications();
+        errorNotification('Failed to update current session');
+      } catch (notifError) {
+        console.warn('[session-tracking][error] Failed to show error notification', { notifError });
+      }
+
+      throw error;
+    }
+  }
+
+  /**
    * Calculate global analytics across all sessions
    */
   async getGlobalAnalytics(): Promise<{
