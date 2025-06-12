@@ -3,6 +3,23 @@
   <header class="cdd-header" :class="headerThemeClass" data-cy="cdd-header">
     <div class="cdd-header__container">
       <div class="cdd-header__content">
+        <!-- DB Health Indicator Dot - Top Left (Mobile/Tablet only) -->
+        <div
+          class="cdd-header__health-dot"
+          :class="{
+            'cdd-header__health-dot--healthy': connectionHealth.isHealthy.value,
+            'cdd-header__health-dot--checking': connectionHealth.isChecking.value,
+            'cdd-header__health-dot--error':
+              !connectionHealth.isHealthy.value && !connectionHealth.isChecking.value,
+          }"
+          :aria-label="`Database status: ${connectionHealth.connectionStatus.value}`"
+        >
+          <div class="cdd-header__health-indicator">
+            <div class="cdd-header__health-circle"></div>
+            <div v-if="connectionHealth.isChecking.value" class="cdd-header__health-pulse"></div>
+          </div>
+        </div>
+
         <!-- Title -->
         <h1 class="cdd-header__title">🎯 Baccarat Pro</h1>
 
@@ -18,9 +35,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useThemeStore } from '@/stores/themeStore';
+import { useSupabaseConnectionHealth } from '@/composables/useSupabaseConnectionHealth';
 import CDDThemeToggle from './CDDThemeToggle.vue';
 
 const themeStore = useThemeStore();
+const connectionHealth = useSupabaseConnectionHealth();
 
 // Dynamic theme class based on current theme
 const headerThemeClass = computed(() => {
@@ -245,6 +264,116 @@ const headerThemeClass = computed(() => {
   .cdd-header__title {
     font-size: 0.875rem; /* 14px - Absolute minimum readable size */
     letter-spacing: 0;
+  }
+}
+
+/* ==================== HEALTH INDICATOR DOT STYLES ==================== */
+
+.cdd-header__health-dot {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.cdd-header__health-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+.cdd-header__health-circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 300ms ease-out;
+}
+
+.cdd-header__health-pulse {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: headerHealthPulse 2s infinite;
+}
+
+/* Health States - Luxury Theme */
+.cdd-header--luxury .cdd-header__health-dot--healthy .cdd-header__health-circle {
+  background: var(--theme-health-healthy-color, #00d4aa);
+  filter: var(--theme-health-healthy-glow, drop-shadow(0 0 4px rgba(0, 212, 170, 0.6)));
+}
+
+.cdd-header--luxury .cdd-header__health-dot--checking .cdd-header__health-circle {
+  background: var(--theme-health-checking-color, #ffa500);
+  filter: var(--theme-health-checking-glow, drop-shadow(0 0 4px rgba(255, 165, 0, 0.6)));
+}
+
+.cdd-header--luxury .cdd-header__health-dot--checking .cdd-header__health-pulse {
+  background: var(--theme-health-checking-color, #ffa500);
+}
+
+.cdd-header--luxury .cdd-header__health-dot--error .cdd-header__health-circle {
+  background: var(--theme-health-error-color, #ff6b6b);
+  filter: var(--theme-health-error-glow, drop-shadow(0 0 4px rgba(255, 107, 107, 0.6)));
+}
+
+/* Health States - Elite Theme (Enhanced Visibility) */
+.cdd-header--elite .cdd-header__health-dot--healthy .cdd-header__health-circle {
+  background: var(--theme-health-healthy-color, #4ade80);
+  filter: var(--theme-health-healthy-glow, drop-shadow(0 0 6px rgba(74, 222, 128, 0.8)));
+}
+
+.cdd-header--elite .cdd-header__health-dot--checking .cdd-header__health-circle {
+  background: var(--theme-health-checking-color, #fbbf24);
+  filter: var(--theme-health-checking-glow, drop-shadow(0 0 4px rgba(251, 191, 36, 0.6)));
+}
+
+.cdd-header--elite .cdd-header__health-dot--checking .cdd-header__health-pulse {
+  background: var(--theme-health-checking-color, #fbbf24);
+}
+
+.cdd-header--elite .cdd-header__health-dot--error .cdd-header__health-circle {
+  background: var(--theme-health-error-color, #f87171);
+  filter: var(--theme-health-error-glow, drop-shadow(0 0 4px rgba(248, 113, 113, 0.6)));
+}
+
+/* Hide health dot on desktop (9900px+) - Desktop uses floating widget instead */
+@media (min-width: 62em) {
+  .cdd-header__health-dot {
+    display: none !important;
+  }
+}
+
+/* Pulse animation for checking state */
+@keyframes headerHealthPulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.3);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .cdd-header__health-circle {
+    transition: none;
+  }
+
+  .cdd-header__health-pulse {
+    animation: none;
   }
 }
 </style>

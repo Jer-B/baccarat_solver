@@ -1,0 +1,171 @@
+just re re re check again for top-notch excellence level verification of this big offline resilience feature. Aim for Over Excellence level. If you lose tracks of file there is a list down below:
+
+Is it dry ? 
+Is it top-notch excellence level ? 
+Is it complete ? 
+Is it well implemented with the online recording system and what its actually recording ? 
+does it requires some details to be externalize to a config file as constant? i mean an appropriate config files new or CDD refactoring related ones.
+does it have all requirements ?
+does necessary events are well emitted, managed and catched at upper level of the vue3 primordial standard ?
+does it have complete types, errors, and validation system ?
+does setup and cleanup pattern is good in all files of the offline, sync, etc... system ?
+Dont use OnMounted and OnUnmounted in the new Offline system. Change it for a clean setup and cleanup vu3 standard pattern. 
+Do all below files have a manual setup when needed, and an automatic setup when needed ?
+clean auto setup and cleanup init on component pattern to use as reference : /Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSupabaseConnectionHealth.ts
+
+recall:
+````
+Like this, do a top not-notch over excellence without lazy half made implementation with below guidelines for based on what we are actually recording at actual stage of the project and our CDD refactoring matters. 
+
+create completly separated file for the offline service, which will be init and used at the right timing and same places as were the online service will be used. 
+
+Exports logics should have their own files. Download logic can be with it.
+Auto switch monitoring and queued sync and conflict resolution should be separated.
+Dont use existing store for offline data. it should have its own store. unless it is impossible and doesnt allow a full session data export at the end.
+
+1. Hybrid recording service architecture: -> will be updated along we implement the rest of the project
+- Supabase when connected
+- Store in browser / locally until page close or files of full session metadata are downloaded when offline
+
+2. Offline Data persistence Options: -> will be updated along we implement the rest of the project
+- JSON export with full session metadata
+- CSV export for spreadsheet analysis  
+- Browser file download API integration
+
+3. Connection-Aware State Management -> will be updated along we implement the rest of the project
+- Auto-switching between online/offline modes
+- Queue-based sync when connection restored
+- Conflict resolution for simultaneous edits
+
+
+4. Data Recovery & Import System -> in a future step not now and will be updated along we implement the rest of the project
+- Batch import from offline files
+- Data validation and conflict detection
+- Ensures data integrity
+````
+
+
+In case you try to run yarn dev, know that we are already running "yarn dev --port 5173" so watch the log of it. its the one also used for cypress.
+
+I dont want things to be just production-ready with enterprise-level. i want things to be top-notch excellence level surpassing production-ready and enterprise-level levels. so be disciplined. Thats why i am just asking for double check as always.
+
+
+Session Controls and Supabase CDD refactored files:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/components/controls/CDDSessionControl.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/sessionRecordingValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/sessionControlValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/errors/sessionControlErrorHandler.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/errors/sessionNamingErrors.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/sessionRecordingTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/sessionControlTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/sessionControlStore.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/sessionRecordingService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/sessionNamingService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSessionRecording.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSessionControl.ts
+
+Original supabase lib:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/lib/supabase.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/databaseService.ts
+
+
+CDD design and theme toolkit:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/base.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/components.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/main.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/assets/styles/utilities.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/buttons.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/cards.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/components/index.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/elite.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/luxury.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/elite.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/luxury.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/build-themes.cjs
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/animations.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/borders.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/breakpoints.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/colors.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/shadows.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/spacing.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/tokens/typography.ts
+
+CDD gameview - history - settings pages:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/CDDMainContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/settings/CDDSettingsViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/settings/CDDSettingsView.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/history/CDDHistoryViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/history/CDDHistoryView.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/CDDGameViewContainer.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/views/game/CDDGameView.vue
+
+
+CDD Theme and toggle switch system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/config/persistence.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/elite.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/definitions/luxury.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/elite.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/generated/luxury.css
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/build-themes.cjs
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/cdd-design-system/themes/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/CDDThemeToggle.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useTheme.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/themeStore.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/errors/themeErrorHandler.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/themeValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/themeTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/errors/themeErrorTypes.ts
+
+
+
+CDD router system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/validation/routeValidation.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/utils/errors/routeErrorHandler.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/routeTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/router/index.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useRouter.ts
+
+CDD Common header system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/CDDCommonGameHeader.vue
+
+CDD Tab menu bar system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/CDDCommonTabMenu.vue
+
+CDD config for all systems:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/config/persistence.ts
+
+CDD state store for current game with pinia:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/sessionGameStore.ts
+
+Current Supbase Schema:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/supabase-schema.sql
+
+Supabase system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useSupabaseConnectionHealth.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/SupabaseConnectionStatus.vue
+
+
+Offline resilience system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/stores/offlineSessionStore.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/offlineSessionRecordingService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/hybridSessionRecordingService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/sessionExportService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/services/sessionSyncService.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/SystemStatusOverview.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/config/offlineResilienceConfig.ts
+
+
+
+Dynamic Layout Composition Engine system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/types/core/containerGeneratorTypes.ts
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/CDDContainerGenerator.vue
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/composables/useContainerGenerator.ts
+
+
+Common Footer:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/CDDCommonFooter.vue
+
+DB health status system:
+/Users/hei02/Desktop/Main/baccarat/improved_baccarat_assistant/src/components/common/ThemeAwareDbStatus.vue

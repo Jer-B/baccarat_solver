@@ -76,6 +76,23 @@ const generateCSS = () => {
       '--theme-switch-hover-color': theme.switchButton.hoverColor,
       '--theme-switch-hover-border': theme.switchButton.hoverBorder,
       '--theme-switch-hover-shadow': theme.switchButton.hoverShadow,
+      '--theme-health-healthy-color': theme.health.healthyColor,
+      '--theme-health-healthy-glow': theme.health.healthyGlow,
+      '--theme-health-checking-color': theme.health.checkingColor,
+      '--theme-health-checking-glow': theme.health.checkingGlow,
+      '--theme-health-error-color': theme.health.errorColor,
+      '--theme-health-error-glow': theme.health.errorGlow,
+      '--theme-health-bg': theme.health.background,
+      '--theme-health-border': theme.health.border,
+      '--theme-health-shadow': theme.health.shadow,
+      '--theme-health-text-shadow': theme.health.textShadow,
+      '--theme-body-bg': theme.body.background,
+      '--theme-unified-body-bg': theme.unified.bodyBackground,
+      '--theme-unified-content-bg': theme.unified.contentBackground,
+      '--theme-tab-menu-bg': theme.tabMenu.background,
+      '--theme-tab-menu-border-top': theme.tabMenu.borderTop,
+      '--theme-tab-menu-border-bottom': theme.tabMenu.borderBottom,
+      '--theme-tab-menu-shadow': theme.tabMenu.shadow,
     };
   };
 

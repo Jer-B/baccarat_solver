@@ -10,7 +10,8 @@
   }
 
   body {
-    @apply text-gray-900 bg-gray-50 antialiased;
+    @apply text-gray-900 antialiased;
+    background: var(--theme-body-bg, #f9fafb); /* Theme-aware background with fallback */
   }
 
   /* Focus styles */

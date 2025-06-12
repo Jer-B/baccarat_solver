@@ -14,3 +14,9 @@
 <script setup lang="ts">
 import CDDHistoryView from './CDDHistoryView.vue';
 </script>
+
+<style scoped>
+.cdd-history-container {
+  /* Container styles can be added here if needed */
+}
+</style>

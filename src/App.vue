@@ -23,6 +23,9 @@
     <main :class="isCDDRoute ? '' : 'container mx-auto px-4 py-6'">
       <router-view />
     </main>
+
+    <!-- Theme-Aware DB Status (Global) -->
+    <ThemeAwareDbStatus />
   </div>
 </template>
 
@@ -41,6 +44,7 @@ import ConnectionStatusBanner from './components/ConnectionStatusBanner.vue';
 import CommonAppHeader from './components/CommonAppHeader.vue';
 import DeveloperToolsPanel from './components/testing/DeveloperToolsPanel.vue';
 import CommonTabMenu from './components/common/CommonTabMenu.vue';
+import ThemeAwareDbStatus from './components/common/ThemeAwareDbStatus.vue';
 
 const store = useBaccaratStore();
 const connectionStore = useConnectionStore();

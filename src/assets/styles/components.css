@@ -2,3 +2,32 @@
 @import '../../cdd-design-system/components/index.css';
 
 @tailwind components;
+
+/* CDD Design System Components */
+
+/* Over-Excellence Header Full-Width Override */
+.cdd-header {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.cdd-header__container {
+  max-width: 90rem !important; /* 1440px */
+  margin: 0 auto !important;
+  padding: 0 1rem !important;
+}
+
+/* Responsive padding for header container */
+@media (min-width: 48em) {
+  .cdd-header__container {
+    padding: 0 1.5rem !important;
+  }
+}
+
+@media (min-width: 75em) {
+  .cdd-header__container {
+    padding: 0 2rem !important;
+  }
+}

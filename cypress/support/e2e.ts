@@ -29,6 +29,9 @@ import './commands';
 // Code coverage support
 import '@cypress/code-coverage/support';
 
+// Image snapshot support for visual regression testing
+import 'cypress-image-snapshot/command';
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
@@ -80,6 +83,13 @@ declare global {
        * Wait for router to be ready
        */
       waitForRouter(): Chainable<Element>;
+
+      /**
+       * Visual regression testing
+       */
+      matchImageSnapshot(name?: string): Chainable<Element>;
+      matchImageSnapshot(options: any): Chainable<Element>;
+      matchImageSnapshot(name: string, options: any): Chainable<Element>;
     }
   }
 }

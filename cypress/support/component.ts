@@ -12,11 +12,28 @@ import { mount } from 'cypress/vue';
 // Code coverage support for component testing
 import '@cypress/code-coverage/support';
 
+// Image snapshot support for visual regression testing
+import 'cypress-image-snapshot/command';
+
+// Enhanced Cypress plugins
+import '@cypress/grep';
+import 'cypress-real-events/support';
+import 'cypress-axe';
+
 // Augment the Cypress namespace to include type definitions for custom commands
 declare global {
   namespace Cypress {
     interface Chainable {
       mount: typeof mount;
+      matchImageSnapshot(name?: string): Chainable<Element>;
+      matchImageSnapshot(options: any): Chainable<Element>;
+      matchImageSnapshot(name: string, options: any): Chainable<Element>;
+
+      // Real events plugin
+      realClick(options?: any): Chainable<Element>;
+      realHover(options?: any): Chainable<Element>;
+      realPress(key: string, options?: any): Chainable<Element>;
+      realType(text: string, options?: any): Chainable<Element>;
     }
   }
 }

@@ -23,6 +23,9 @@ config.global.plugins = [
 
 // Mock browser APIs globally
 beforeEach(() => {
+  // Clear all mocks before each test
+  vi.clearAllMocks();
+
   // Mock localStorage
   const localStorageMock = {
     getItem: vi.fn(),

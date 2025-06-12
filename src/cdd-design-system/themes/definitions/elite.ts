@@ -34,28 +34,29 @@ export const eliteTheme = {
     textSecondary: 'rgba(229, 228, 226, 0.6)',
   },
 
-  // Tab Menu - CLEAR CONTRAST LIKE THEME TOGGLE
+  // Tab Menu (Harmonized Premium Fintech Approach)
   tabMenu: {
-    background: '#ffffff', // Clean white background
-    border: 'rgba(0, 0, 0, 0.08)',
+    background: 'linear-gradient(180deg, #2c2c2c, #333333)', // Harmonized gradient bridging header to content
+    border: 'rgba(229, 228, 226, 0.12)', // Subtle platinum border from header accent
+    borderTop: '1px solid rgba(229, 228, 226, 0.12)', // Top border connecting to header
+    borderBottom: '1px solid rgba(229, 228, 226, 0.08)', // Softer bottom border
+    shadow: '0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(229, 228, 226, 0.06)', // Enhanced professional depth
 
-    // INACTIVE = Light Gray (clearly secondary and faded)
     inactive: {
-      color: '#a1a1aa', // Light gray - faded appearance
+      color: 'rgba(229, 228, 226, 0.7)', // Harmonized platinum text
       background: 'transparent',
-      hoverColor: '#71717a', // Medium gray on hover
-      hoverBackground: 'rgba(0, 0, 0, 0.02)',
-      hoverShadow: 'none',
+      hoverColor: 'rgba(229, 228, 226, 0.9)',
+      hoverBackground: 'rgba(229, 228, 226, 0.05)', // Subtle platinum accent on hover
+      hoverShadow: '0 0 10px rgba(229, 228, 226, 0.08)',
     },
 
-    // ACTIVE = Dark/Prominent (stands out clearly)
     active: {
-      color: '#000000', // Pure black text - bold and prominent
-      background: '#ffffff', // Clean white background
-      border: '#000000', // Black border to match text
-      textShadow: 'none', // No shadow needed for dark text
-      textGlow: '0 0 8px rgba(229, 228, 226, 0.12)', // Subtle platinum glow
-      shadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // Subtle dark shadow
+      color: '#e5e4e2', // Full platinum color for active state
+      background: 'rgba(229, 228, 226, 0.08)', // Subtle platinum background
+      border: 'rgba(229, 228, 226, 0.2)', // Enhanced active border
+      textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)', // Subtle shadow for depth
+      textGlow: 'drop-shadow(0 0 2px rgba(229, 228, 226, 0.3))',
+      shadow: '0 0 15px rgba(229, 228, 226, 0.1)', // Enhanced glow for active state
     },
   },
 
@@ -70,6 +71,31 @@ export const eliteTheme = {
     hoverColor: '#f8f8ff',
     hoverBorder: 'rgba(248, 248, 255, 0.3)',
     hoverShadow: '0 4px 20px rgba(229, 228, 226, 0.15), 0 0 30px rgba(248, 248, 255, 0.1)',
+  },
+
+  // Health Indicators (Enhanced Visibility for Elite Theme)
+  health: {
+    healthyColor: '#4ade80', // Bright green for better visibility against dark background
+    healthyGlow: 'drop-shadow(0 0 6px rgba(74, 222, 128, 0.8))',
+    checkingColor: '#fbbf24', // Brighter yellow for elite theme
+    checkingGlow: 'drop-shadow(0 0 4px rgba(251, 191, 36, 0.6))',
+    errorColor: '#f87171', // Brighter red for elite theme
+    errorGlow: 'drop-shadow(0 0 4px rgba(248, 113, 113, 0.6))',
+    background: 'linear-gradient(135deg, #2c2c2c, #1a1a1a)',
+    border: 'rgba(255, 255, 255, 0.1)',
+    shadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
+  },
+
+  // Body Background (for full-width seamless appearance)
+  body: {
+    background: '#1a1a1a', // Darkest color from header gradient for seamless flow
+  },
+
+  // Unified Elegant Background (Professional Over-Excellence Level)
+  unified: {
+    bodyBackground: 'linear-gradient(180deg, #2c2c2c, #333333)', // Subtle upward gradient - middle platinum to lighter platinum
+    contentBackground: '#dbdddf', // Same gradient for seamless unity
   },
 } as const;
 

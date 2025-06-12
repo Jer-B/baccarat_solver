@@ -1,7 +1,7 @@
 /* ⚠️  AUTO-GENERATED CSS - DO NOT EDIT MANUALLY! ⚠️ 
  * Generated from: src/cdd-design-system/themes/definitions/elite.ts
  * To modify theme colors, edit the TypeScript file and run: yarn build:themes
- * Last generated: 2025-06-06T20:08:42.687Z
+ * Last generated: 2025-06-11T16:14:45.373Z
  */
 
 [data-theme='elite'] {
@@ -22,19 +22,19 @@
   --theme-primary-hover: #f8f8ff;
   --theme-text-primary: #e5e4e2;
   --theme-text-secondary: rgba(229, 228, 226, 0.6);
-  --theme-tab-menu-bg: #ffffff;
-  --theme-tab-menu-border: rgba(0, 0, 0, 0.08);
-  --theme-tab-inactive-color: #a1a1aa;
+  --theme-tab-menu-bg: linear-gradient(180deg, #2c2c2c, #333333);
+  --theme-tab-menu-border: rgba(229, 228, 226, 0.12);
+  --theme-tab-inactive-color: rgba(229, 228, 226, 0.7);
   --theme-tab-inactive-bg: transparent;
-  --theme-tab-inactive-hover-color: #71717a;
-  --theme-tab-inactive-hover-bg: rgba(0, 0, 0, 0.02);
-  --theme-tab-inactive-hover-shadow: none;
-  --theme-tab-active-color: #000000;
-  --theme-tab-active-bg: #ffffff;
-  --theme-tab-active-border: #000000;
-  --theme-tab-active-text-shadow: none;
-  --theme-tab-active-text-glow: 0 0 8px rgba(229, 228, 226, 0.6);
-  --theme-tab-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --theme-tab-inactive-hover-color: rgba(229, 228, 226, 0.9);
+  --theme-tab-inactive-hover-bg: rgba(229, 228, 226, 0.05);
+  --theme-tab-inactive-hover-shadow: 0 0 10px rgba(229, 228, 226, 0.08);
+  --theme-tab-active-color: #e5e4e2;
+  --theme-tab-active-bg: rgba(229, 228, 226, 0.08);
+  --theme-tab-active-border: rgba(229, 228, 226, 0.2);
+  --theme-tab-active-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --theme-tab-active-text-glow: drop-shadow(0 0 2px rgba(229, 228, 226, 0.3));
+  --theme-tab-active-shadow: 0 0 15px rgba(229, 228, 226, 0.1);
   --theme-switch-bg: linear-gradient(135deg, #2c2c2c, #1a1a1a);
   --theme-switch-color: #e5e4e2;
   --theme-switch-border: rgba(229, 228, 226, 0.2);
@@ -44,4 +44,20 @@
   --theme-switch-hover-color: #f8f8ff;
   --theme-switch-hover-border: rgba(248, 248, 255, 0.3);
   --theme-switch-hover-shadow: 0 4px 20px rgba(229, 228, 226, 0.15), 0 0 30px rgba(248, 248, 255, 0.1);
+  --theme-health-healthy-color: #4ade80;
+  --theme-health-healthy-glow: drop-shadow(0 0 6px rgba(74, 222, 128, 0.8));
+  --theme-health-checking-color: #fbbf24;
+  --theme-health-checking-glow: drop-shadow(0 0 4px rgba(251, 191, 36, 0.6));
+  --theme-health-error-color: #f87171;
+  --theme-health-error-glow: drop-shadow(0 0 4px rgba(248, 113, 113, 0.6));
+  --theme-health-bg: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+  --theme-health-border: rgba(255, 255, 255, 0.1);
+  --theme-health-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --theme-health-text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  --theme-body-bg: #1a1a1a;
+  --theme-unified-body-bg: linear-gradient(180deg, #2c2c2c, #333333);
+  --theme-unified-content-bg: #dbdddf;
+  --theme-tab-menu-border-top: 1px solid rgba(229, 228, 226, 0.12);
+  --theme-tab-menu-border-bottom: 1px solid rgba(229, 228, 226, 0.08);
+  --theme-tab-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(229, 228, 226, 0.06);
 }

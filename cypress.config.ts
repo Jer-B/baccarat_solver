@@ -28,6 +28,15 @@ export default defineConfig({
           console.log('Code coverage plugin not available:', error.message);
         });
 
+      // Image snapshot plugin
+      import('cypress-image-snapshot/plugin')
+        .then(plugin => {
+          plugin.addMatchImageSnapshotPlugin(on, config);
+        })
+        .catch(error => {
+          console.log('Image snapshot plugin not available:', error.message);
+        });
+
       // Browser optimizations (works for Chrome, Edge, Brave, Safari)
       on('before:browser:launch', (browser, launchOptions) => {
         // Optimizations for Chromium-based browsers (Chrome, Edge, Brave)
@@ -70,6 +79,15 @@ export default defineConfig({
         })
         .catch(error => {
           console.log('Code coverage plugin not available for component testing:', error.message);
+        });
+
+      // Image snapshot plugin for component testing
+      import('cypress-image-snapshot/plugin')
+        .then(plugin => {
+          plugin.addMatchImageSnapshotPlugin(on, config);
+        })
+        .catch(error => {
+          console.log('Image snapshot plugin not available for component testing:', error.message);
         });
 
       // Same browser optimizations for component testing

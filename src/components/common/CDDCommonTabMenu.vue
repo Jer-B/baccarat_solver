@@ -94,7 +94,14 @@ const switchToOriginal = (): void => {
 /* Theme-Aware Tab Menu - Uses CSS Custom Properties with Fallbacks */
 
 .cdd-tab-menu {
-  @apply bg-white shadow-sm;
+  /* Use harmonized background with professional borders and shadows */
+  background: var(--theme-tab-menu-bg, #ffffff);
+  border-top: var(--theme-tab-menu-border-top, 1px solid rgba(0, 0, 0, 0.1));
+  border-bottom: var(--theme-tab-menu-border-bottom, 1px solid rgba(0, 0, 0, 0.1));
+  box-shadow:
+    var(--theme-tab-menu-shadow, 0 2px 8px rgba(0, 0, 0, 0.1)),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease-in-out;
 }
 
@@ -134,37 +141,33 @@ const switchToOriginal = (): void => {
 
 /* Modern Luxury Theme Styles - Uses CSS Custom Properties with Fallbacks */
 .cdd-tab-menu--luxury {
-  border-bottom: 1px solid var(--theme-tab-menu-border, rgba(0, 212, 170, 0.12));
-  background: var(--theme-tab-menu-bg, linear-gradient(to bottom, #ffffff, #fefffe));
+  border-bottom: 2px solid rgba(0, 212, 170, 0.8);
+  /* Enhanced shadow effects for luxury theme */
+  box-shadow:
+    var(--theme-tab-menu-shadow, 0 2px 8px rgba(0, 0, 0, 0.1)),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 8px 25px rgba(0, 212, 170, 0.12);
 }
 
 .cdd-tab-link--luxury.cdd-tab-link--inactive {
-  @apply text-gray-600 hover:text-gray-800;
-  background: var(
-    --theme-tab-inactive-bg,
-    linear-gradient(to bottom, transparent, rgba(0, 212, 170, 0.02))
-  );
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
 }
 
 .cdd-tab-link--luxury.cdd-tab-link--inactive:hover {
-  background: var(
-    --theme-tab-inactive-hover-bg,
-    linear-gradient(to bottom, rgba(0, 212, 170, 0.06), rgba(0, 212, 170, 0.12))
-  );
-  color: var(--theme-tab-inactive-hover-color, #16213e);
-  box-shadow: var(--theme-tab-inactive-hover-shadow, 0 0 10px rgba(0, 212, 170, 0.1));
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 212, 170, 0.05);
+  box-shadow: 0 0 10px rgba(0, 212, 170, 0.1);
 }
 
 .cdd-tab-link--luxury.cdd-tab-link--active {
-  color: var(--theme-tab-active-color, #00d4aa);
-  background: var(
-    --theme-tab-active-bg,
-    linear-gradient(to bottom, rgba(0, 212, 170, 0.08), rgba(0, 212, 170, 0.15))
-  );
-  border-bottom-color: var(--theme-tab-active-border, #00d4aa);
+  color: #00d4aa;
+  background: rgba(0, 212, 170, 0.08);
+  border-bottom-color: rgba(0, 212, 170, 0.2);
   font-weight: 600;
-  text-shadow: var(--theme-tab-active-text-shadow, 0 1px 2px rgba(0, 212, 170, 0.3));
-  box-shadow: var(--theme-tab-active-shadow, 0 0 15px rgba(0, 212, 170, 0.15));
+  text-shadow: 0 1px 2px rgba(0, 212, 170, 0.2);
+  box-shadow: 0 0 15px rgba(0, 212, 170, 0.15);
 }
 
 .cdd-tab-link--luxury:focus-visible {
@@ -174,41 +177,33 @@ const switchToOriginal = (): void => {
 
 /* Platinum Elite Theme Styles - Uses CSS Custom Properties with Fallbacks */
 .cdd-tab-menu--elite {
-  border-bottom: 1px solid var(--theme-tab-menu-border, rgba(229, 228, 226, 0.15));
-  background: var(--theme-tab-menu-bg, linear-gradient(to bottom, #ffffff, #fafafa));
+  border-bottom: 2px solid var(--theme-tab-menu-border, rgba(229, 228, 226, 0.15));
+  /* Enhanced shadow effects for elite theme */
+  box-shadow:
+    var(--theme-tab-menu-shadow, 0 2px 8px rgba(0, 0, 0, 0.1)),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 6px 20px rgba(229, 228, 226, 0.04);
 }
 
 .cdd-tab-link--elite.cdd-tab-link--inactive {
-  @apply text-gray-600 hover:text-gray-800;
-  background: var(
-    --theme-tab-inactive-bg,
-    linear-gradient(to bottom, transparent, rgba(229, 228, 226, 0.02))
-  );
+  color: rgba(229, 228, 226, 0.7); /* Harmonized platinum text */
+  background: transparent;
 }
 
 .cdd-tab-link--elite.cdd-tab-link--inactive:hover {
-  background: var(
-    --theme-tab-inactive-hover-bg,
-    linear-gradient(to bottom, rgba(229, 228, 226, 0.08), rgba(229, 228, 226, 0.15))
-  );
-  color: var(--theme-tab-inactive-hover-color, #2c2c2c);
-  box-shadow: var(--theme-tab-inactive-hover-shadow, 0 0 15px rgba(229, 228, 226, 0.1));
+  color: rgba(229, 228, 226, 0.9);
+  background: rgba(229, 228, 226, 0.05); /* Subtle platinum accent on hover */
+  box-shadow: 0 0 10px rgba(229, 228, 226, 0.08);
 }
 
 .cdd-tab-link--elite.cdd-tab-link--active {
-  color: var(--theme-tab-active-color);
-  background: var(--theme-tab-active-bg);
-  border-bottom-color: var(--theme-tab-active-border);
+  color: #e5e4e2; /* Full platinum color for active state */
+  background: rgba(229, 228, 226, 0.08); /* Subtle platinum background */
+  border-bottom-color: rgba(229, 228, 226, 0.2); /* Enhanced active border */
   font-weight: 600;
-  text-shadow: var(--theme-tab-active-text-shadow);
-  filter: var(--theme-tab-active-text-glow);
-  box-shadow: var(--theme-tab-active-shadow);
-
-  /* Fallbacks */
-  color: #000000;
-  background: #ffffff;
-  border-bottom-color: #000000;
-  filter: drop-shadow(0 0 8px rgba(229, 228, 226, 0.6));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); /* Subtle shadow for depth */
+  box-shadow: 0 0 15px rgba(229, 228, 226, 0.1); /* Enhanced glow for active state */
 }
 
 .cdd-tab-link--elite:focus-visible {

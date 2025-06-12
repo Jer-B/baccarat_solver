@@ -1,10 +1,9 @@
-/// <reference types="vitest/config" />
+/// <reference types="vitest" />
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -16,16 +15,19 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'tests/', '**/*.d.ts', '**/*.config.*', '**/coverage/**'],
+      exclude: ['node_modules/', 'tests/', '**/*.d.ts', '**/*.config.{js,ts}', '**/coverage/**'],
     },
-  },
-  server: {
-    port: 5173,
-  },
-  preview: {
-    port: 5173,
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable',
+      },
+    },
   },
 });
